@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IAU Minor Planet Center</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/mpc.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/table-sorter.css">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+
+  <link media="all" rel="stylesheet" href="/css/all.css">
+
+  <link rel="icon" type="image/png" href="/iau/figs/MPClogo16.png">
+  <meta name="description" content="We are the official body that deals with
+      astrometric observations and orbits of minor planets (asteroids) and comets.">
+
+  <meta name="keywords" content="astrometry, observations, orbits,
+      minor planets, asteroids, comets, near earth objects, 
+      potentially hazardous asteroids">
+
+  <script type="text/javascript" src="/js/jquery-latest.js"></script>
+<!--  <script type="text/javascript" src="/js/jquery.main.js"></script> -->
+<!--  <script type="text/javascript" src="/js/jquery.metadata.js"></script> -->
+  <script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript" src="/js/webtrends.js"></script>
+  <script type="text/javascript" src="/js/track_pdfs.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+
+</head>
+  <body>
+  <!-- wrapper -->
+  <div id="wrapper">
+    <div class="w1">
+      <!-- header -->
+      <header id="header">
+        <div class="holder">
+          <!-- logo -->
+          <h1 class="logo"><a href="/">The International Astronomical Union Minor Planet Center</a></h1>
+          <div class="area">
+            <!-- top-nav -->
+            <nav class="top-nav">
+              <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+              </ul>
+            </nav>
+            <!-- search-form -->
+            <div class="form-holder">
+              <!-- This commented code opens a new page for the search. -->
+              <!--<form class="search-form" method="get" action="https://www.google.com/search" target="_blank">-->
+              <form class="search-form" method="get" action="https://www.google.com/search">
+                <fieldset>
+                  <!--<label for="search">Search</label>-->
+                  <input type="hidden" name="sitesearch" value="minorplanetcenter.net">
+                  <input type="text" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" id="search" name="q" value="Search MPC">
+                </fieldset>
+              </form>
+            </div>
+            <div class="social-bar">
+<!--              <a href="https://twitter.com/MinorPlanetCtr"><span class="social twitter">L</span></a> -->
+<!--              <a href="https://www.facebook.com/MinorPlanetCenter"><span class="social facebook">F</span></a> -->
+<!--              <a href="https://www.youtube.com/channel/UCtALMOQHuBxh5XMsYNiDhMg"><span class="social youtube">X</span></a> -->
+<!--              <a href="/iau/rss/mpc_feeds.html"><span class="social rss">R</span></a> -->
+            </div>
+          </div>
+        </div>
+        <nav class="nav-holder">
+          <!-- main navigation -->
+          <ul id="nav">
+            <li>
+              <a href="/iau/mpc.html"><span>OBSERVERS</span></a>
+              <ul>
+                <li><a href="/iau/MPEph/MPEph.html">Ephemeris Service</a></li>
+                <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
+                <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
+                <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
+                  <ul>
+                    <li><a href="/iau/MPCORB.html">MPCORB</a></li>
+                    <li><a href="/iau/ECS/MPCAT/MPCAT.html">MPCAT</a></li>
+                    <li><a href="/iau/ECS/MPCUPDATE/MPCUPDATE.html">MPCUPDATE</a></li>
+                    <li><a href="/iau/Ephemerides/SoftwareEls.html">Orbital Elements for Software</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/services/MPCServices.html">Publications Overview</a></li>
+                <li><a href="/iau/ECS/MPCArchive/MPCArchive_TBL.html">Publications Archive</a></li>              
+                <li><a href="/iau/NEO/TheNEOPage.html" class="nested">NEO Services</a>
+                  <ul>
+                    <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
+                    <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
+                    <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
+                    <li><a href="/cgi-bin/checkneo.cgi">NEOChecker</a></li>
+                    <li><a href="/cgi-bin/checkneocmt.cgi">NEOCMTChecker</a></li>
+                    <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
+                    <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
+                    <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                  </ul>
+                </li>
+                <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
+                  <ul>
+                    <li><a href="/whatsup">Observing Target List</a></li>
+                    <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
+                    <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
+                    <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
+                    <li><a href="/cgi-bin/checkcmt.cgi">CMTChecker</a></li>
+                    <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li>
+                    <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                  </ul>
+                </li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>
+
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+
+                <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
+                <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
+                <li><a href="/iau/MPC_Documentation.html" class="nested">Documentation</a>
+                  <ul>
+                    <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
+                    <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
+                    <li><a href="/iau/WhatsNew.html">What's New</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
+                  <ul>
+                    <li><a href="/iau/lists/MPLists.html">Minor Planets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/t_atens.html">Atens</a></li>
+                        <li><a href="/iau/lists/t_apollos.html">Apollos</a></li>
+                        <li><a href="/iau/lists/t_amors.html">Amors</a></li>
+                        <li><a href="/iau/lists/t_centaurs.html">Centaurs and Scattered Disk Objects</a></li>
+                        <li><a href="/iau/lists/t_tnos.html">Transneptunian Objects</a></li>
+                        <li><a href="/iau/lists/t_others.html">Other Unusual Objects</a></li>
+                        <li><a href="/iau/lists/t_dangerous.html">Potentially Hazardous Asteroids</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/CometLists.html">Comets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/LastCometObs.html">Date of Last Observation</a></li>
+                        <li><a href="/iau/lists/LastYear.html">Designations from the Past Year</a></li>
+                        <li><a href="http://www.icq.eps.harvard.edu/CometMags.html">Comet Magnitude Estimates</a></li>
+                        <li><a href="/iau/lists/ClosestComets.html">Closest Approaches</a></li>
+                        <li><a href="/iau/lists/PeriodicCodes.html">Periodic Comets</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/ObsCodesF.html">Observatory Codes</a></li>		    
+                    <li><a href="/iau/Animations/Animations.html">Animations</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/MPCStatus.html">MPC Status</a></li>
+                <!--<li><a href="/summary">Summary</a></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
+                <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+              </ul>
+            </li>
+            <li><a href="/data"><span>DATA</span></a>
+            </li>
+            <li><a href="http://iawn.net/" target="_blank"><span>IAWN</span></a>
+            </li>
+            <li><a href="https://minorplanetcenter.net/mpcops/beta/"><span>BETA</span></a></li>
+            <li><a href="/iau/MPCStatus.html"><span style="color:GoldenRod">STATUS</a></li>
+            <li><a href="https://sbnmpc.astro.umd.edu/"><span>SBN ANNEX</span></a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <!-- main -->
+      <div id="main">
+
+  <h3>
+  
+  
+  
+   87P/Bus 
+  
+  
+</h3>
+
+
+
+
+
+<br>
+<h2>Orbit</h2>
+
+
+    <br>
+    <div class="show-orbit-button">
+      <form accept-charset="UTF-8" action="/db_search/show_orbit" method="get"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /></div>
+        <input id="epoch" name="epoch" type="hidden" value="2020-04-21.0" />
+          <input id="number" name="number" type="hidden" value="87" />
+        <input id="name" name="name" type="hidden" value="87P/Bus" />
+        <input id="designation" name="designation" type="hidden" value="P/0087P" />
+        <input id="peri" name="peri" type="hidden" value="24.9287419" />
+        <input id="m" name="m" type="hidden" value="357.17851" />
+        <input id="node" name="node" type="hidden" value="181.8618813" />
+        <input id="incl" name="incl" type="hidden" value="2.6023311" />
+        <input id="e" name="e" type="hidden" value="0.389178681" />
+        <input id="a" name="a" type="hidden" value="3.4377322" />
+        <input name="commit" type="submit" value="Interactive Orbit Sketch" />
+</form>    </div>
+    <div>
+       Note: WebGL enabled browsers only.
+    </div>
+    <br>
+  <br>
+
+  <div class="half-line"> </div>
+    Orbits found for 10 epochs.
+  <br>
+  <br>
+  <div style="height: 50ex; overflow: auto;">
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2020-04-21.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2458960.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2020-05-09.24665</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2458978.74665</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.92874</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">181.86188</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.60233</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3891787</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.0998401</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4377322</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">357.17851</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15463072</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.776</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.37</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89267372</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.42075178</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16155982</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.45070107</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83451947</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31693185</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2017-09-04.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2458000.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2020-05-08.76434</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2458978.26434</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.80602</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">181.88194</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.60222</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3894898</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1005715</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4406821</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">209.00200</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.1544319</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.781</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.38</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89347997</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41925014</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16100581</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44910058</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83527392</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31721624</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2013-12-14.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2456640.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2013-12-19.56468</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2456646.06468</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.70943</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">181.90041</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.60074</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3888287</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1017598</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4389046</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">359.13997</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15455165</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.776</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.38</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89409157</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41810205</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16059557</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44788168</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83583873</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31745175</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2013-11-04.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2456600.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2013-12-19.56533</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2456646.06533</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.70933</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">181.90060</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.60076</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3887965</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1017548</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.1503</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.225637</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4387153</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">352.95722</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15456441</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.776</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.38</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89409093</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41810325</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16059605</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44788297</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83583824</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31745122</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2014-C43</td></tr>
+              <tr><td>observations used</td><td class="rj">244</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-02-07.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2013-04-18.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2456400.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2013-12-19.48441</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2456645.98441</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.68330</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">181.90439</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.60045</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3888251</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1020659</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">0.9903</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.357843</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4393854</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">322.06793</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15451925</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.777</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.38</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89426468</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41777705</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16047748</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44753593</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83599916</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31751693</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPC  69912</td></tr>
+              <tr><td>observations used</td><td class="rj">252</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-c</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0008h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1981-03-02.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2007-05-20.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCM</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2007-06-29.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2454280.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2007-07-07.21253</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2454288.71253</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.23699</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">182.18697</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.57709</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3764038</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1733240</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4851461</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">358.75592</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15148595</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.797</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.51</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.8955416</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41524995</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.15991474</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.4449745</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83709225</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31823617</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">2001-01-11.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2451920.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">2000-12-29.73084</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2451908.23084</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.14280</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">182.20657</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.57432</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3750088</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1808897</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4894727</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">1.85515</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.1512043</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.798</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.52</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89612022</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.4141475</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.1595318</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44380802</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.8376188</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31847951</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">1994-06-17.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2449520.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">1994-06-28.04166</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2449531.54166</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.39847</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">182.22120</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.57311</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3746174</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1831034</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">2.013</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.22965</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4908285</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">358.33143</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15111622</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.799</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.52</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89401659</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41808747</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16105031</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44803048</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83565062</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31773688</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">MPEC 2017-L52</td></tr>
+              <tr><td>observations used</td><td class="rj">257</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0038h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1993-01-01.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2014-05-03.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCW</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">1987-12-31.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2447160.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">1987-12-19.50723</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2447149.00723</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.53259</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">182.21162</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.57014</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3727950</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1927624</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">0.9903</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.357843</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4960858</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">1.73283</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15077548</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.799</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.54</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89304054</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.41989776</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16175432</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.44997288</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83472194</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31743296</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">CCO</td></tr>
+              <tr><td>observations used</td><td class="rj">252</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-c</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0008h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1981-03-02.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2007-05-20.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCM</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+      <table class="nb">
+        <tr>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>epoch</td><td class="rj">1981-06-05.0</td></tr>
+              <tr><td>epoch JD</td><td class="rj">2444760.5</td></tr>
+              <tr><td>perihelion date</td><td class="rj">1981-06-11.35490</td></tr>
+              <tr><td>perihelion JD</td><td class="rj">2444766.85490</td></tr>
+              <tr><td>argument of perihelion (°)</td><td class="rj">24.61856</td></tr>
+              <tr><td>ascending node (°)</td><td class="rj">182.24905</td></tr>
+              <tr><td>inclination (°)</td><td class="rj">2.57229</td></tr>
+              <tr><td>eccentricity</td><td class="rj">0.3747139</td></tr>
+              <tr><td>perihelion distance (AU)</td><td class="rj">2.1826897</td></tr>
+              <tr><td>radial non-grav. param.</td><td class="rj">0.9903</td></tr>
+              <tr><td>transverse non-grav. param.</td><td class="rj">-0.357843</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>semimajor axis (AU)</td><td class="rj">3.4907059</td></tr>
+              <tr><td>mean anomaly (°)</td><td class="rj">359.03962</td></tr>
+              <tr><td>mean daily motion (°/day)</td><td class="rj">0.15112418</td></tr>
+              <tr><td>aphelion distance (AU)</td><td class="rj">4.799</td></tr>
+              <tr><td>period (years)</td><td class="rj">6.52</td></tr>
+              <tr><td>P-vector [x]</td><td class="rj">-0.89206964</td></tr>
+              <tr><td>P-vector [y]</td><td class="rj">-0.42169007</td></tr>
+              <tr><td>P-vector [z]</td><td class="rj">-0.16244767</td></tr>
+              <tr><td>Q-vector [x]</td><td class="rj">0.45189452</td></tr>
+              <tr><td>Q-vector [y]</td><td class="rj">-0.83383245</td></tr>
+              <tr><td>Q-vector [z]</td><td class="rj">-0.31704067</td></tr>
+            </table>
+          </td>
+          <td valign="top" class="nb">
+            <table>
+              <tr><td>recip semimajor axis orig (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis future (AU)</td><td class="rj"></td></tr>
+              <tr><td>recip semimajor axis error (AU)</td><td class="rj"></td></tr>
+              <tr><td>reference</td><td class="rj">CCO</td></tr>
+              <tr><td>observations used</td><td class="rj">252</td></tr>
+              <tr><td>residual rms (arc-secs)</td><td class="rj">0.80</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-c</td></tr>
+              <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">0008h</td></tr>
+              <tr><td>first observation date used</td><td class="rj">1981-03-02.0</td></tr>
+              <tr><td>last observation date used</td><td class="rj">2007-05-20.0</td></tr>
+              <tr><td>computer name</td><td class="rj">MPCM</td></tr>
+              <tr><td><a href="https://www.minorplanetcenter.net/iau/info/UValue.html">orbit quality code</a></td><td class="rj"></td></tr>
+            </table>
+          </td>
+
+        </tr>
+      </table>
+  </div>
+
+  <br>
+
+    <table>
+      <tr><td>JD of orbit computation</td><td class="rj">2457908.467517</td></tr>
+      <tr><td>perihelion JD uncertainty</td><td class="rj">1.5465E-03</td></tr>
+      <tr><td>argument of perihelion uncertainty</td><td class="rj">5.5207E-04</td></tr>
+      <tr><td>ascending node uncertainty</td><td class="rj">2.5086E-04</td></tr>
+      <tr><td>inclination uncertainty</td><td class="rj">2.7594E-05</td></tr>
+      <tr><td>eccentricity uncertainty</td><td class="rj">7.5246E-07</td></tr>
+      <tr><td>perihelion distance uncertainty</td><td class="rj">2.5696E-06</td></tr>
+    </table>    
+
+
+<h2>Observations</h2>
+  801 total observations over interval:
+  1981 02 09.64757 &ndash; 2020 09 05.26032
+  <br>
+  These data are available for
+  <a href="../tmp/87P.txt" target="_blank">download</a>
+  (<a href="/iau/info/OpticalObs.html" target="_blank">format description</a>).
+  <br>
+  <br>
+  
+
+
+        </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer id="footer">
+    <div class="holder">
+      <nav class="nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li>
+        </ul>
+      </nav>
+      
+      <a href="https://www.cfa.harvard.edu">
+      <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
+      <p>
+      <p>
+      <p>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+  </footer>
+
+<script type="text/javascript">
+  $(window).on('load', (function() {
+    $("table").tablesorter();
+  })); 
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCustom=function(){
+// Add custom parameters here.
+//_tag.DCSext.param_name=param_value;
+}
+_tag.dcsCollect();
+//]]>
+</script>
+
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="//logs1.smithsonian.museum/dcsa7yzrmbdzpxzrosrn4tyep_5i1d/njs.gif?dcsuri=/nojavascript&amp;WT.js=No&amp;WT.tv=9.4.0&amp;dcssip=www.minorplanetcenter.net"/></div>
+</noscript>
+</body>
+
+</html>

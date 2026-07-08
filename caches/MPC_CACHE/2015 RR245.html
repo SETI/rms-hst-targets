@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IAU Minor Planet Center</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/mpc.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/table-sorter.css">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+
+  <link media="all" rel="stylesheet" href="/css/all.css">
+
+  <link rel="icon" type="image/png" href="/iau/figs/MPClogo16.png">
+  <meta name="description" content="We are the official body that deals with
+      astrometric observations and orbits of minor planets (asteroids) and comets.">
+
+  <meta name="keywords" content="astrometry, observations, orbits,
+      minor planets, asteroids, comets, near earth objects, 
+      potentially hazardous asteroids">
+
+  <script type="text/javascript" src="/js/jquery-latest.js"></script>
+<!--  <script type="text/javascript" src="/js/jquery.main.js"></script> -->
+<!--  <script type="text/javascript" src="/js/jquery.metadata.js"></script> -->
+  <script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript" src="/js/webtrends.js"></script>
+  <script type="text/javascript" src="/js/track_pdfs.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+
+</head>
+  
+<body>
+  <!-- wrapper -->
+  <div id="wrapper">
+    <div class="w1">
+      <!-- header -->
+      <header id="header">
+        <div class="holder">
+          <!-- logo -->
+          <h1 class="logo"><a href="/">The International Astronomical Union Minor Planet Center</a></h1>
+          <div class="area">
+            <!-- top-nav -->
+            <nav class="top-nav">
+              <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+		<li><a href="/mpcops/contact/">Contact</a></li>
+                <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+              </ul>
+            </nav>
+            <!-- search-form -->
+            <div class="form-holder">
+              <!-- This commented code opens a new page for the search. -->
+              <!--<form class="search-form" method="get" action="https://www.google.com/search" target="_blank">-->
+              <form class="search-form" method="get" action="https://www.google.com/search">
+                <fieldset>
+                  <!--<label for="search">Search</label>-->
+                  <input type="hidden" name="sitesearch" value="minorplanetcenter.net">
+                  <input type="text" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" id="search" name="q" value="Search MPC">
+                </fieldset>
+              </form>
+            </div>
+            <div class="social-bar">
+<!--              <a href="https://twitter.com/MinorPlanetCtr"><span class="social twitter">L</span></a> -->
+<!--              <a href="https://www.facebook.com/MinorPlanetCenter"><span class="social facebook">F</span></a> -->
+<!--              <a href="https://www.youtube.com/channel/UCtALMOQHuBxh5XMsYNiDhMg"><span class="social youtube">X</span></a> -->
+<!--              <a href="/iau/rss/mpc_feeds.html"><span class="social rss">R</span></a> -->
+            </div>
+          </div>
+        </div>
+        <nav class="nav-holder">
+          <!-- main navigation -->
+          <ul id="nav">
+            <li>
+              <a href="/iau/mpc.html"><span>OBSERVERS</span></a>
+              <ul>
+                <li><a href="/iau/MPEph/MPEph.html">Ephemeris Service</a></li>
+                <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
+                <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
+                <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>				
+                <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
+                  <ul>
+                    <li><a href="/iau/MPCORB.html">MPCORB</a></li>
+                    <li><a href="/iau/ECS/MPCAT/MPCAT.html">MPCAT</a></li>
+                    <li><a href="/iau/ECS/MPCUPDATE/MPCUPDATE.html">MPCUPDATE</a></li>
+                    <li><a href="/iau/Ephemerides/SoftwareEls.html">Orbital Elements for Software</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/services/MPCServices.html">Publications Overview</a></li>
+                <li><a href="/iau/ECS/MPCArchive/MPCArchive_TBL.html">Publications Archive</a></li>              
+                <li><a href="/iau/NEO/TheNEOPage.html" class="nested">NEO Services</a>
+                  <ul>
+                    <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
+                    <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
+                    <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
+                    <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
+                    <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
+                    <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                    <li><a href="/mpcops/neocp/neocp_plots/">NEOCP Plots</a></li>		    
+                    <li><a href="/iau/recovery/recovery.html">NEO Recovery</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="" class="nested">Observations</a>
+                  <ul>
+                    <li><a href="/wamo/">WAMO</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/mpcops/orbits/" class="nested">Orbits</a>
+                  <ul>
+                    <li><a href="https://data.minorplanetcenter.net/comparison/index.html">Orbit Comparison Tool</a></li>
+                    <li><a href="/mpcops/orbits/no-orbits-astrometry/">Request for archival astrometry</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
+                  <ul>
+                    <li><a href="/whatsup">Observing Target List</a></li>
+                    <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
+                    <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
+                    <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
+<!-- THIS PAGE IS NO LONGER SUPPORTED   <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li> -->
+                    <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                    <li><a href="/iau/delays/neocp_delay.html">Processing Times</a></li>		    
+                  </ul>
+                </li>
+		
+		<li><a href="/" class="nested">Identifications</a>
+		  <ul>
+		    <li><a href="/mpcops/documentation/identifications/">Documentation</a></li>		    
+		    <li><a href="/mpcops/documentation/identifications/submission-format/">Submission Format</a></li>
+                    <li><a href="/mpcops/submissions/identifications/">Submit</a></li>
+		  </ul>
+		</li>
+
+                <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
+                <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
+                <li><a href="/iau/MPC_Documentation.html" class="nested">Documentation</a>
+                  <ul>
+                    <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
+                    <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
+                    <li><a href="/mpcops/documentation/artificial-satellites/">Artificial Satellites</a></li>
+                    <li><a href="/submit_action_code">Submit Action Code</a></li>		    
+                    <li><a href="/mpcops/documentation/">Other</a></li>		    
+                    <!-- <li><a href="/iau/WhatsNew.html">What's New</a></li> -->
+                  </ul>                
+                </li>
+                <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
+                  <ul>
+                    <li><a href="/iau/lists/MPLists.html">Minor Planets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/t_atens.html">Atens</a></li>
+                        <li><a href="/iau/lists/t_apollos.html">Apollos</a></li>
+                        <li><a href="/iau/lists/t_amors.html">Amors</a></li>
+                        <li><a href="/iau/lists/t_centaurs.html">Centaurs and Scattered Disk Objects</a></li>
+                        <li><a href="/iau/lists/t_tnos.html">Transneptunian Objects</a></li>
+                        <li><a href="/iau/lists/t_others.html">Other Unusual Objects</a></li>
+                        <li><a href="/iau/lists/t_dangerous.html">Potentially Hazardous Asteroids</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/CometLists.html">Comets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/LastCometObs.html">Date of Last Observation</a></li>
+                        <li><a href="/iau/lists/LastYear.html">Designations from the Past Year</a></li>
+                        <li><a href="http://www.icq.eps.harvard.edu/CometMags.html">Comet Magnitude Estimates</a></li>
+                        <li><a href="/iau/lists/ClosestComets.html">Closest Approaches</a></li>
+                        <li><a href="/iau/lists/PeriodicCodes.html">Periodic Comets</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/ObsCodesF.html">Observatory Codes</a></li>		    
+                    <li><a href="/iau/Animations/Animations.html">Animations</a></li>
+                  </ul>                
+                </li>
+                <!--<li><a href="/summary">Summary</a></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
+                <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+                <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
+              </ul>
+            </li>
+            <li><a href="/data"><span>DATA</span></a></li>
+	    
+            <li><a href="/"><span>NEW</span></a>
+	      <ul>
+		<li><a href="/mpcops/new/developments/">Developments</a></li>
+<!--		<li><a href="/mpcops/new/releases/">New Releases</a></li> -->
+		<li><a href="/mpcops/new/existing-upgrades/">Existing Upgrades</a></li>
+		<li><a href="/mpcops/new/newsletters/">Newsletters</a></li>
+	      </ul>
+	    </li>
+	    
+            <li><a href="/iau/MPCStatus.html"><span style="color:Green">STATUS</a></li>
+
+	    <li><a href="/mpcops/documentation/"><span>DOCUMENTATION</span></a>
+
+            <li><a href="/"><span>EXTERNAL</span></a>
+	      <ul id="external">
+	      	<li><a href="https://mpcmug.astro.umd.edu/" target="_blank">MPC User Group (MUG)</a></li>
+		<li><a href="http://iawn.net/" target="_blank">IAWN</a></li>
+		<li><a href="https://sbnmpc.astro.umd.edu/" target="_blank">SBN Annex</a></li>
+		<li><a href="https://www.wgsbn-iau.org/" target="_blank">WGSBN</a></li>
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+	      </ul>
+	    </li>
+	    
+          </ul>
+        </nav>
+      </header>
+
+   <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#nav li ');
+            function getDirectTextContent(element) {
+                let directTextContent = '';
+                element.childNodes.forEach(node => {
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEW') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                        directTextContent += node.textContent.trim();
+                    }
+                });
+                return directTextContent;
+            }
+
+            listItems.forEach(function (li) {
+                const directText = getDirectTextContent(li);
+                const textLength = directText.length;  
+
+                // Log the length of each item to the console
+                //console.log(`Text: "${li.textContent.trim()}", Length: ${textLength}`);
+
+                // Apply class based on length
+                if (textLength <= 5) {
+                    li.classList.add('short-word');
+                } else if (textLength <= 10) {
+                    li.classList.add('medium-word');
+                } else {
+                    li.classList.add('long-word');
+                }
+            });
+        });
+    </script>
+
+      <!-- main -->
+      <div id="main">
+
+  <h3>
+   (523794) 
+  
+  
+  
+    = 2015 RR245 
+  
+</h3>
+
+    Discovered at Haleakala
+  on 2010-09-13
+
+  by Pan-STARRS 1.
+
+
+
+<br>
+<h2>Orbit</h2>
+
+    Orbit type: Distant object
+  <br>
+
+    Object is a characterized TNO in the <a href="http://www.ossos-survey.org/tnodb.html"> Outer Solar System Origins Survey</a>; absolutely-calibrated survey information available.
+    <br>
+
+
+    <br>
+    <div class="show-orbit-button">
+      <form accept-charset="UTF-8" action="/db_search/show_orbit" method="get"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /></div>
+        <input id="number" name="number" type="hidden" value="523794" />
+        <input id="designation" name="designation" type="hidden" />
+        <input id="name" name="name" type="hidden" />
+        <input id="epoch" name="epoch" type="hidden" value="2024-10-17.0" />
+        <input id="peri" name="peri" type="hidden" value="260.0581195" />
+        <input id="m" name="m" type="hidden" value="327.80785" />
+        <input id="node" name="node" type="hidden" value="211.8350782" />
+        <input id="incl" name="incl" type="hidden" value="7.5248754" />
+        <input id="e" name="e" type="hidden" value="0.589521955" />
+        <input id="a" name="a" type="hidden" value="82.9937869149616" />
+        <input name="commit" type="submit" value="Interactive Orbit Sketch" />
+</form>    </div>
+    <div>
+       Note: WebGL enabled browser required.
+    </div>
+
+    
+
+
+  <br>
+  <table class="nb">
+    <tr>
+      <td valign="top" class="nb">
+        <table>
+          <tr><td>epoch</td><td class="rj">2024-10-17.0</td></tr>
+          <tr><td>epoch JD</td><td class="rj">2460600.5</td></tr>
+          <tr><td>perihelion date</td><td class="rj">2092-05-28.31196</td></tr>
+          <tr><td>perihelion JD</td><td class="rj">2485295.81196</td></tr>
+          <tr><td>argument of perihelion (°)</td><td class="rj">260.05812</td></tr>
+          <tr><td>ascending node (°)</td><td class="rj">211.83508</td></tr>
+          <tr><td>inclination (°)</td><td class="rj">7.52488</td></tr>
+          <tr><td>eccentricity</td><td class="rj">0.5895220</td></tr>
+          <tr><td>perihelion distance (AU)</td><td class="rj">34.0671274</td></tr>
+          <tr><td>Tisserand w.r.t. Jupiter</td><td class="rj">6.5</td></tr>
+          <tr><td>&Delta;V w.r.t. Earth (km/sec)</td><td class="rj">10.7</td></tr>
+        </table>
+      </td>
+      <td valign="top" class="nb">
+        <table>
+          <tr><td>semimajor axis (AU)</td><td class="rj">82.9937869</td></tr>
+          <tr><td>mean anomaly (°)</td><td class="rj">327.80785</td></tr>
+          <tr><td>mean daily motion (°/day)</td><td class="rj">0.00130360</td></tr>
+          <tr><td>aphelion distance (AU)</td><td class="rj">131.920</td></tr>
+          <tr><td>period (years)</td><td class="rj">756</td></tr>
+          <tr><td>P-vector [x]</td><td class="rj">-0.36840327</td></tr>
+          <tr><td>P-vector [y]</td><td class="rj">0.89601118</td></tr>
+          <tr><td>P-vector [z]</td><td class="rj">0.24787698</td></tr>
+          <tr><td>Q-vector [x]</td><td class="rj">-0.92709626</td></tr>
+          <tr><td>Q-vector [y]</td><td class="rj">-0.33427391</td></tr>
+          <tr><td>Q-vector [z]</td><td class="rj">-0.16956852</td></tr>
+          <tr><td>absolute magnitude</td><td class="rj">3.98</td></tr>
+          <tr><td>phase slope</td><td class="rj">0.15</td></tr>
+        </table>
+      </td>
+      <td valign="top" class="nb">
+        <table>
+
+            <tr><td><a href="/iau/info/UValue.html">uncertainty</a></td><td class="rj">4</td></tr>
+
+          <tr><td>reference</td><td class="rj">MPEC 2024-T213</td></tr>
+          <tr><td>observations used</td><td class="rj">275</td></tr>
+          <tr><td>oppositions</td><td class="rj">15</td></tr>
+          <tr><td>arc length (days)</td><td class="rj">7299</td></tr>
+          <tr><td>first opposition used</td><td class="rj">2004</td></tr>
+          <tr><td>last opposition used</td><td class="rj">2024</td></tr>
+          <tr><td>residual rms (arc-secs)</td><td class="rj">0.83</td></tr>
+          <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
+          <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">003Ek</td></tr>
+          <tr><td>first observation date used</td><td class="rj">2004-10-15.0</td></tr>
+          <tr><td>last observation date used</td><td class="rj">2024-10-09.0</td></tr>
+          <tr><td>computer name</td><td class="rj">MPCLINUX</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>    
+
+  <table class="nb">
+    <tr>
+      <td valign="top" class="nb">
+      </td>
+      <td width=100px> </td>
+
+      <td valign="top" class="nb">
+    Minimum Orbit Intersection Distances (in AU)<br>for orbit epoch: 2460600.5, reference: E2024-Q11<br>
+          <table>
+            <tr><td>Mercury</td><td>33.7579</td></tr>
+            <tr><td>Venus</td><td>33.3582</td></tr>
+            <tr><td>Earth</td><td>33.0931</td></tr>
+            <tr><td>Mars</td><td>32.4662</td></tr>
+            <tr><td>Jupiter</td><td>28.8917</td></tr>
+            <tr><td>Saturn</td><td>25.1006</td></tr>
+            <tr><td>Uranus</td><td>15.6721</td></tr>
+            <tr><td>Neptune</td><td>5.44887</td></tr>
+          </table>    
+          <br>
+      </td>
+    </tr>
+  </table>
+
+
+<h2>Observations</h2>
+  280 total observations over interval:
+  2004 10 15.245241 &ndash; 2024 10 09.374514
+  <br>
+  These data are available for
+  <a href="../tmp2/523794.txt" target="_blank">download</a>
+  (<a href="/iau/info/OpticalObs.html" target="_blank">format description</a>).
+  <br>
+  <br>
+  
+
+
+        </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer id="footer">
+    <div class="holder">
+      <nav class="nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+	  <!-- Contact link changed to Jira and name changed to helpdesk.
+	       Should be consistent with top right of banner -->
+          <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+<!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
+        </ul>
+      </nav>
+      
+      <a href="https://www.cfa.harvard.edu">
+      <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
+      <p>
+      <p>
+      <p>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+  </footer>
+
+<script type="text/javascript">
+  $(window).on('load', (function() {
+    $("table").tablesorter();
+  })); 
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCustom=function(){
+// Add custom parameters here.
+//_tag.DCSext.param_name=param_value;
+}
+_tag.dcsCollect();
+//]]>
+</script>
+
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="//logs1.smithsonian.museum/dcsa7yzrmbdzpxzrosrn4tyep_5i1d/njs.gif?dcsuri=/nojavascript&amp;WT.js=No&amp;WT.tv=9.4.0&amp;dcssip=www.minorplanetcenter.net"/></div>
+</noscript>
+</body>
+
+</html>
