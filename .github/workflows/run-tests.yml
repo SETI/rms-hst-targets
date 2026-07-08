@@ -37,7 +37,7 @@ jobs:
 
       - name: Mypy
         run: |
-          mypy src tests
+          MYPYPATH=targets mypy tests
 
       - name: Sphinx
         run: |

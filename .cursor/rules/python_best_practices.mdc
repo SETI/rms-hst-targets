@@ -60,7 +60,7 @@ Apply these rules to ALL new and modified Python code. This project is a Python 
 
 ### Mypy
 
-- NEVER run `mypy` on the src directory tree.
+- NEVER run `mypy` on the `targets/` or `support/` directory trees.
 - Run `mypy` on the tests after changes. Fix all errors before delivering.
 - In exceptional, unfixable cases use a minimal line-level ignore: `# type: ignore[error-code]  # <brief justification>`.
 

@@ -45,23 +45,23 @@ Issues = "https://github.com/SETI/rms-hst-targets/issues"
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "src"
+  "targets"
 ]
 testpaths = ["tests"]
 # TODO Update desired parallelism
-addopts = ["-n", "auto", "--cov=src", "--strict-markers", "--strict-config"]
+addopts = ["-n", "auto", "--cov=targets", "--strict-markers", "--strict-config"]
 markers = []
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["targets"]
 
 [tool.setuptools.package-data]
 "targets" = ["py.typed"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-write_to = "src/targets/_version.py"
+write_to = "targets/_version.py"
 
 [project.optional-dependencies]
 dev = [
@@ -107,6 +107,14 @@ fail_under = 90
 [tool.mypy]
 strict = true
 disallow_subclassing_any = false
+# Permanently exclude the targets/ and support/ trees from type checking. mypy is
+# only ever run on tests/. Note: `exclude` only affects recursive discovery
+# (e.g. `mypy .`); the targets/support paths are also kept off every explicit
+# mypy invocation (see scripts/run-all-checks.sh and .github/workflows/run-tests.yml).
+exclude = [
+  "^targets/",
+  "^support/",
+]
 
 [[tool.mypy.overrides]]
 module = "targets._version"
@@ -151,10 +159,10 @@ enabled = false
 # Uncomment when enabling bandit in [project.optional-dependencies].dev.
 # [tool.bandit]
 # exclude_dirs = ["tests", "venv", ".venv"]
-# targets = ["src"]
+# targets = ["targets"]
 
 # Uncomment when enabling vulture in [project.optional-dependencies].dev.
 # [tool.vulture]
-# paths = ["src"]
+# paths = ["targets"]
 # exclude = ["tests/"]
 # min_confidence = 70

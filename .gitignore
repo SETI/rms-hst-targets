@@ -177,4 +177,4 @@ HST/*.db
 .vscode
 
 # HST moving-target support files (bulk MAST download, not versioned)
-support/SPT_CACHE/
+caches/SPT_CACHE

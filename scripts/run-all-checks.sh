@@ -376,7 +376,9 @@ run_code_checks() {
 
     if [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ]; then
         print_info "Running mypy..."
-        if MYPYPATH=src python -m mypy src tests; then
+        # mypy is never run on targets/ or support/; only tests/ is type-checked.
+        # MYPYPATH=targets is kept so imports of the package still resolve.
+        if MYPYPATH=targets python -m mypy tests; then
             print_success "Mypy passed"
         else
             print_error "Mypy failed"

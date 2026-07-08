@@ -24,8 +24,8 @@ Run from **project root** with the project **virtual environment activated** (e.
 # Lint (ruff)
 python -m ruff check src tests examples
 
-# Type check (mypy)
-python -m mypy src tests examples
+# Type check (mypy) — NEVER on targets/ or support/; only tests/ is type-checked
+MYPYPATH=targets python -m mypy tests
 
 # Tests (pytest; use -n auto for parallel when tests are independent)
 python -m pytest tests -q
@@ -74,7 +74,7 @@ Set `VENV` or `VENV_PATH` to point to the virtual environment if it is not at `.
 ```markdown
 Check Progress:
 - [ ] Ruff check (src, tests, examples)
-- [ ] Mypy (src, tests, examples)
+- [ ] Mypy (tests only; never targets/ or support/)
 - [ ] Pytest (tests)
 - [ ] PyMarkdown scan (docs/, .cursor/, README, CONTRIBUTING)
 - [ ] Sphinx build (docs/) with SPHINXOPTS="-W"
