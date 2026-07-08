@@ -18,9 +18,12 @@ convention, so a correct entry should reproduce RA_TARG to ~arcsec.  Large
 offsets flag suspect header values, mis-entered elements, or frame issues
 (e.g. B1950 elements, which orbital_radec does not precess).
 
-Run from the targets/ directory:  python reality_check_radec.py
+Run:  python support/reality_check_radec.py [--asteroids] [--comets] [-o FILE]
+By default both asteroids and comets are checked; pass --asteroids or --comets to
+restrict to one type.
 """
 
+import argparse
 import csv
 import math
 import os
@@ -28,18 +31,19 @@ import sys
 from datetime import datetime, timedelta
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, _HERE)                       # orbital_radec
-sys.path.insert(0, os.path.join(_HERE, "tests"))  # SPT_TESTS
+_ROOT = os.path.dirname(_HERE)
+sys.path.insert(0, os.path.join(_ROOT, "targets"))  # orbital_radec
+sys.path.insert(0, os.path.join(_ROOT, "tests"))    # SPT_TESTS
 
 from orbital_radec import asteroid_radec, comet_radec
 from SPT_TESTS import SPT_TESTS
 
 DEFAULT_SCALE = "UTC"      # assumed T/EPOCH time scale when none is given
-# Header position to check the propagated sky position against:
-#   ("RA_REF", "DEC_REF")   aperture reference / actual pointing  (current)
-#   ("RA_TARG", "DEC_TARG") nominal target position
-COORD = ("RA_REF", "DEC_REF")
-CSV_OUT = os.path.join(_HERE, "reality_check_offsets.csv")
+# Header position to check the propagated sky position against: the nominal target
+# position RA_TARG / DEC_TARG. (RA_REF/DEC_REF, the aperture reference, is no longer
+# carried in SPT_TESTS.)
+COORD = ("RA_TARG", "DEC_TARG")
+DEFAULT_CSV_OUT = os.path.join(_HERE, "reality_check_offsets.csv")
 
 _MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
         "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
@@ -195,11 +199,29 @@ def fmt_off(arcsec):
     return "%.3f deg" % (arcsec / 3600)
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Reality-check RA_TARG/DEC_TARG in tests/SPT_TESTS.py against "
+                    "two-body propagation of the MT_LV1_* orbital elements.")
+    parser.add_argument("--asteroids", action="store_true",
+                        help="include TYPE=ASTEROID entries (default: both types)")
+    parser.add_argument("--comets", action="store_true",
+                        help="include TYPE=COMET entries (default: both types)")
+    parser.add_argument("--output", "-o", default=DEFAULT_CSV_OUT,
+                        help="output CSV path (default: %(default)s)")
+    args = parser.parse_args(argv)
+
+    # With neither flag given, include both types; otherwise only those requested.
+    include_asteroids = args.asteroids or not args.comets
+    include_comets = args.comets or not args.asteroids
+    csv_out = args.output
+
     results, skips = [], []
     for key, entry in SPT_TESTS:
         typ = entry.get("MT_LV1_1", "").replace(" ", "").upper()
-        if not (typ.startswith("TYPE=ASTEROID") or typ.startswith("TYPE=COMET")):
+        is_ast = typ.startswith("TYPE=ASTEROID")
+        is_com = typ.startswith("TYPE=COMET")
+        if not ((is_ast and include_asteroids) or (is_com and include_comets)):
             continue
         r = check(key, entry)
         (skips if "skip" in r else results).append(r)
@@ -207,7 +229,7 @@ def main():
     results.sort(key=lambda r: r["offset"], reverse=True)
 
     # full CSV
-    with open(CSV_OUT, "w", newline="") as f:
+    with open(csv_out, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["key", "targname", "tarkey1", "type", "equinox", "obs_time",
                     COORD[0].lower(), COORD[1].lower(), "ra_calc", "dec_calc",
@@ -228,7 +250,7 @@ def main():
           % (COORD[0], COORD[1]))
     print("=" * 78)
     print("checked: %d   skipped: %d   (full table -> %s)"
-          % (n, len(skips), os.path.basename(CSV_OUT)))
+          % (n, len(skips), os.path.basename(csv_out)))
     if n:
         srt = sorted(offs)
         pct = lambda p: srt[min(n - 1, int(p / 100 * n))]
@@ -268,7 +290,7 @@ def main():
               (r["key"], clip(r["targname"], 20), clip(r["tarkey1"], 18),
                r["type"], fmt_off(r["offset"]), "; ".join(note) or "-"))
     if len(bad) > 60:
-        print("... %d more in %s" % (len(bad) - 60, os.path.basename(CSV_OUT)))
+        print("... %d more in %s" % (len(bad) - 60, os.path.basename(csv_out)))
 
     # Why are they off?  (categories are not exclusive; "unexplained" = none apply)
     def explained(r):
