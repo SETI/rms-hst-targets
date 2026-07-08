@@ -9,8 +9,15 @@ description = "TODO"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+  "anyascii",
+  "astropy",
+  "astroquery",
+  "beautifulsoup4",
+  "lxml",
+  "numpy",
   "palpy",
-  "TODO"
+  "requests",
+  "rms-pdslogger",
 ]
 license = {text = "Apache-2.0"}
 authors = [
