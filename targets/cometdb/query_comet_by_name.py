@@ -1,27 +1,21 @@
 ##########################################################################################
-# cometdb/query_comet_by_name.py
+# targets/cometdb/query_comet_by_name.py
 ##########################################################################################
-
-from logging import Logger
 
 from ._utils import comet_dicts
 
 
-def query_comet_by_name(
-    name: str, *,
-    ambiguous: bool = False,
-    logger: Logger | None = None
-) -> dict | list[dict]:
+def query_comet_by_name(name, *, ambiguous=True, logger=None):
     """Get information about a comet in CometDB.
 
     Parameters:
-        name: The name or designation of a comet.
-        ambiguous: True to return a list of matches when `name` is ambiguous.
-        logger: An optional Logger for messages.
+        name (str): The name or designation of a comet.
+        ambiguous (bool): True to return a list of matches when `name` is ambiguous.
+        logger (Logger): Optional Logger for messages.
 
     Returns:
-        A comet dictionary or a list of comet dictionaries if multiple names match. If no
-        match is found, an empty list is returned.
+        dict or list[dict]: A comet dictionary or a list of comet dictionaries if multiple
+        names match. If no match is found, an empty list is returned.
     """
 
     key = name.upper()

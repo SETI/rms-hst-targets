@@ -1,9 +1,45 @@
 ##########################################################################################
-# standard_bodies.py
+# targets/standard_bodies.py
 ##########################################################################################
+"""Define STANDARD_BODY_DICT and STANDARD_BODY_LOOKUP.
 
-from .roman import int_to_roman
-from .STANDARD_BODY_LIST import *
+Read the complete list of standard body definitions in _STANDARD_BODY_LIST.py and create
+two lookup dictionaries:
+
+* STANDARD_BODY_DICT is a dictionary keyed by the default PDS4 name of the body, using
+  standard capitalization.
+* STANDARD_BODY_LOOKUP is keyed by almost every alternative name for each body, in both
+  standard capitalization and upper case.
+
+The entries in the table includes all standard bodies as defined for HST (planets, dwarf
+planets, and their satellites), plus the planetary systems, ring (including "Mars Rings"),
+and the Io torus.
+
+Each dictionary value is a dictionary with these items:
+
+* "name": Standard name with preferred capitalization.
+* "ttype": A TargetType letter indication the target type: "P" for planet, "S" for
+  satellite, "D" for dwarf planet, "p" for planetary system, "R" for ring, or "t" for
+  plasma cloud.
+* "parent_key": Key for the parent body, if any. This identifies the central body for all
+  satellites, the "system" for the planets with multiple satellites, and is blank for
+  other bodies.
+* "aliases": A list of standard aliases for this body, using standard capitalization.
+  Each of these is always a key in the STANDARD_BODY_LOOKUP.
+* "naif_id": The NAIF body ID, if any.
+* "lookups": A list of all possible lookups for this body. This includes the name,
+  standard aliases, and any non-standard alternatives (e.g., "J1" for Io).
+* "ambiguous": A list of potentially ambiguous names for the bodies. This list is always
+  empty for the standard bodies.
+
+To use::
+
+    from targets.standard_bodies import STANDARD_BODY_DICT, STANDARD_BODY_LOOKUP
+
+"""
+
+from targets.roman import int_to_roman
+from targets._STANDARD_BODY_LIST import _STANDARD_BODY_LIST
 
 _NAME     = 0
 _NUMBER   = 1
@@ -20,10 +56,10 @@ def _replace_dollars():
     """Replace the dollar sign in each alias with the name of the parent body."""
 
     # Construct a dictionary
-    lookup = {info[_NAME]: info for info in STANDARD_BODY_LIST}
+    lookup = {info[_NAME]: info for info in _STANDARD_BODY_LIST}
 
     # Update aliases
-    for k, info in enumerate(STANDARD_BODY_LIST):
+    for k, info in enumerate(_STANDARD_BODY_LIST):
         old_aliases = info[5]
         new_aliases = []
         changed = False
@@ -37,16 +73,26 @@ def _replace_dollars():
             else:
                 new_aliases.append(alias)
         if changed:
-            STANDARD_BODY_LIST[k] = info[:_ALIASES] + (new_aliases,) + info[_ALT_KEYS:]
+            _STANDARD_BODY_LIST[k] = info[:_ALIASES] + (new_aliases,) + info[_ALT_KEYS:]
 
 # Execute at import
 _replace_dollars()
 
 
-_BY_NAME = {info[0]: info for info in STANDARD_BODY_LIST}
+def _unique_keys(keys):
+    """Remove duplicated items from the given list of keys."""
+    unique_keys = []
+    for key in keys:
+        if key not in unique_keys:
+            unique_keys.append(key)
+    return unique_keys
+
+
+_BY_NAME = {info[0]: info for info in _STANDARD_BODY_LIST}
+
 
 def _to_dict(info):
-    """Convert one tuple in STANDARD_BODY_LIST to a dictionary."""
+    """Convert one tuple in _STANDARD_BODY_LIST to a dictionary."""
 
     parent_key = info[_PNAME]
     body = {'name': info[_NAME], 'ttype': info[_TTYPE], 'parent_key': parent_key}
@@ -57,7 +103,7 @@ def _to_dict(info):
             aliases.append(info[_PNAME] + ' ' + int_to_roman(info[_NUMBER]))
         else:
             body['mnum'] = info[_NUMBER]
-    body['aliases'] = aliases
+    body['aliases'] = _unique_keys(aliases)
 
     if info[_NAIF_ID]:
         body['naif_id'] = info[_NAIF_ID]
@@ -82,7 +128,11 @@ def _to_dict(info):
                     extras.append(p1 + year + ' ' + parent_key + ' ' + num)
         lookups += extras
 
-    body['lookups'] = lookups
+    # Add three-letter abbreviations of the planets
+    if info[_TTYPE] == 'P':
+        lookups.append(info[_NAME][:3].upper())
+
+    body['lookups'] = _unique_keys(lookups)
     body['ambiguous'] = []
 
     return body
@@ -94,7 +144,7 @@ def _build_dicts():
     global STANDARD_BODY_DICT, STANDARD_BODY_LOOKUP
 
     STANDARD_BODY_DICT = {}
-    for info in STANDARD_BODY_LIST:
+    for info in _STANDARD_BODY_LIST:
         body = _to_dict(info)
         STANDARD_BODY_DICT[info[_NAME]] = body
 
@@ -103,11 +153,13 @@ def _build_dicts():
         lookups = body['lookups']
         uppercase = [k.upper() for k in lookups]
         lookups = lookups + uppercase
-        print(lookups)
         for lookup in lookups:
             STANDARD_BODY_LOOKUP[lookup] = body
 
+
 # Execute at import
 _build_dicts()
+
+__all__ = ['STANDARD_BODY_DICT', 'STANDARD_BODY_LOOKUP']
 
 ##########################################################################################

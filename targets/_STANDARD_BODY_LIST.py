@@ -1,13 +1,15 @@
 ##########################################################################################
-# STANDARD_BODY_LIST.py
+# _STANDARD_BODY_LIST.py
 ##########################################################################################
 """
-==================
-STANDARD_BODY_LIST
-==================
+===================
+_STANDARD_BODY_LIST
+===================
+
 This is a maintained list of information about Solar System bodies that are defined as
 "standard" targets in APT. This list excludes small bodies unless they are in some way
-exceptional.
+exceptional. It includes the planets, dwarf planets, planetary systems, rings, and the Io
+torus.
 
 Each standard body is represented by a tuple as follows::
 
@@ -27,7 +29,7 @@ where:
   really a valid alias.
 """
 
-STANDARD_BODY_LIST = [
+_STANDARD_BODY_LIST = [
     ('Sun'        ,  0,    10, '*', '', []),
 
     ('Mars System'   , 0, 4, 'p', '', []),
@@ -275,5 +277,7 @@ STANDARD_BODY_LIST = [
     # Io Torus
     ('Io Torus', 0, 0, 'Plasma Stream', 'Jupiter', []),
 ]
+
+__all__ = ['_STANDARD_BODY_LIST']
 
 ##########################################################################################

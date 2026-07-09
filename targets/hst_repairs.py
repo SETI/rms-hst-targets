@@ -1,5 +1,5 @@
 ##########################################################################################
-# hst_repairs.py
+# targets/hst_repairs.py
 ##########################################################################################
 
 import re
@@ -9,28 +9,35 @@ from targets.mpc_tools import mpc_unpack, MPC_PACKED_PATTERN
 from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
 
 from targets._TARGNAME_PREFIX_SUFFIX_PATTERNS import (_TARGNAME_PREFIX_PATTERNS,
-                                                      _TARGNAME_SUFFIX_PATTERNS)
+                                                      _TARGNAME_SUFFIX_PATTERNS,
+                                                      _TARGNAME_SUFFIX_PATTERNS_NO_TAIL)
 from targets._TARGET_STRING_REPAIRS import _TARGET_STRING_REPAIRS
-from targets._UNDIAGNOSTIC_TARGET_WORDS import _UNDIAGNOSTIC_TARGET_WORDS
+from targets._UNDIAGNOSTIC_TARGET_WORDS import (_UNDIAGNOSTIC_TARGET_WORDS,
+                                                _UNDIAGNOSTIC_SHORT_WORDS)
 
 _TARGET_REPAIRS = []  # an ordered list of tuples (re.Pattern, substitution string)
 
+# These patterns cover anything unimportant after a dash in the TARGNAME. The dash is
+# required. It deletes one or more of the substrings, along with a possible trailing dash
+# and digits and maybe a trailing letter. The "$" in the substitution pattern indicates
+# that the remaining part of the string is re-processed.
 for _pattern in _TARGNAME_SUFFIX_PATTERNS:
-    # These suffixes can also have a version suffix involving "V" plus digits and a letter
     _regex = re.compile(rf'(.*)-{_pattern}\d*(?:-\d+|-\d?\d?[A-Z]|)$', re.I)
-    _TARGET_REPAIRS.append((_regex, r'\1'))
+    _TARGET_REPAIRS.append((_regex, r'$\1'))
 
+# These patterns cover anything unimportant at the beginning of a TARGNAME, followed by a
+# dash.
 for _pattern in _TARGNAME_PREFIX_PATTERNS:
     _regex = re.compile(rf'{_pattern}-(.*)$', re.I)
-    _TARGET_REPAIRS.append((_regex, r'\1'))
+    _TARGET_REPAIRS.append((_regex, r'$\1'))
 
+# These patterns correct misspellings and other weirdness in a target name.
 for _pattern, _template in _TARGET_STRING_REPAIRS:
     _regex = re.compile(_pattern + '$', re.I)
     _TARGET_REPAIRS.append((_regex, _template))
 
 # These are more complicated patterns to convert a non-standard identification into a
 # standard one.
-
 _NUM = r'([1-9]\d*)'
 _MPNAME = r"([A-Za-z'`]{2,}(?:[- ]?[A-Z'`]{2,})*)"  # allows for "Purple Mountain"
 _MYEAR = r'(1[89]\d\d|20[0-3]\d)'
@@ -43,6 +50,10 @@ _CYEAR = r'(1[6-9]\d\d|20[0-3]\d)'
 _CSUFF = r'([A-HJ-Y][1-9]\d*)'
 _CSUFF2 = r'([A-HJ-Y][A-HJ-Z]?[1-9]\d*)'
 
+# Any fully-matching string is removed in favor of its replacement.
+# A vertical bar separates distinct, recognized units.
+# A letter in square brackets is a target type.
+# A "$" preceeds any piece of the pattern that should be repaired again.
 _TARGET_TRANSFORM_PATTERNS = [
     # Rarely, a comet has a second letter in the suffix. We only tolerate this if "COMET"
     # (or "C") is explicit in the target string.
@@ -51,32 +62,35 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'COMET[- ]?C?{_CYEAR}[- ]?{_CSUFF2}',                r'C/\1 \2|[C]'),
     (rf'COMET[- ]?C?([7-9]\d)[- ]?{_CSUFF2}',               r'C/19\1 \2|[C]'),
     (rf'COMET[- ]?C?([0-3]\d)[- ]?{_CSUFF2}',               r'C/20\1 \2|[C]'),
-    (rf'COMET[- ]{_CNAME}[- ]C?/?{_CYEAR} ?{_CSUFF2}',      r'C/\2 \3|[C]$\1'),
+    (rf'COMET[- ]{_CNAME}[- ]C?/?{_CYEAR}[- ]?{_CSUFF2}',   r'C/\2 \3|[C]$\1'),
     (rf'COMET[- ]{_CNAME}[- ]C?([7-9]\d)-?{_CSUFF2}',       r'C/19\2 \3|[C]$\1'),
     (rf'COMET[- ]{_CNAME}[- ]C?([0-3]\d)-?{_CSUFF2}',       r'C/20\2 \3|[C]$\1'),
     (rf'COMET[- ]{_CNAME}[- ]?(\d)',                        r'\1 \2|[C]'),
     (rf'COMET[- ]([A-Z]{3,}) ([A-Z]{3,}) C?/?{_CYEAR} ?{_CSUFF2}',
-                                                            r'C/\3 \4|[C]|$\1-\2'),
+                                                            r'C/\3 \4|[C]$\1-\2'),
     (rf'COMET[- ]{_CNAME}[ -](\d\d[A-Z])[ -](\d\d)({_ROMAN_99})',
                                                             r'\1|19\2|19\3 \4|[C]'),
     (rf'C{_CYEAR}[- ]?{_CSUFF2}-{_CNAME}',                  r'C/\1 \2|[C]$\3'),
     (rf'C{_CYEAR}[- ]?{_CSUFF2}',                           r'C/\1 \2|[C]'),
 
     # Other comet patterns only allow one letter in the designation code
-    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}(\d)',                   r'\1/\2 \3'),
-    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}',                       r'\1/\2'),
-    (rf'([PCXDAI])-?{_CYEAR}[- ]?{_CSUFF}',                 r'\1/\2 \3'),
-    (rf'{_CYEAR}-?{_CSUFF}-{_CNAME}',                       r'P/\1 \2$\3'),
-    (rf'(?:C|C1|){_CYEAR}-?{_CSUFF}',                       r'C/\1 \2'),
-    (rf'C?{_NUM}P[- ]([A-Z-]*)',                            r'\1P/\2'),
-    (rf'([PCXDAI]){_NUM}[-/ ]{_MPNAME}',                    r'\2\1/\3'),
-    (rf'{_NUM}([PCXDAI])[-/ ]{_MPNAME}',                    r'\1\2/\3'),
+    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}(\d)',                   r'\1/\2 \3|[C]'),
+    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}',                       r'\1/\2|[C]'),
+    (rf'([PCXDAI])-?{_CYEAR}[- ]?{_CSUFF}',                 r'\1/\2 \3|[C]'),
+    (rf'{_CYEAR}-?{_CSUFF}-{_CNAME}',                       r'P/\1 \2|[C]$\3'),
+    (rf'(?:C|C1|){_CYEAR}-?{_CSUFF}',                       r'C/\1 \2|[C]'),
+    (rf'C?{_NUM}P[- ]([A-Z-]*)',                            r'\1P/\2|[C]'),
+    (rf'([PCXDAI]){_NUM}[-/ ]{_MPNAME}',                    r'\2\1/\3|[C]'),
+    (rf'{_NUM}([PCXDAI])[-/ ]{_MPNAME}',                    r'\1\2/\3|[C]'),
+    (rf'{_NUM}([PI]){_MPNAME}',                             r'\1\2/\3|[C]'),
     (rf'{_CYEAR}([a-hj-uwyz]1?)',                           r'\1\2|[C]'), # not roman
-    (rf'{_CYEAR}-?({_ROMAN_99})',                           r'\1 \2'),
+    (rf'{_CYEAR}-?({_ROMAN_99})',                           r'\1 \2|[C]'),
+    (rf'([PC])/?(20[0-3]\d) ?([A-HJ-UWYZ]\d)v2',              r'\1/\2 \3|[C]'),
 
+    (rf'\(?{_NUM}\)?[- ]{_MYEAR}[- ]{_MSUFF}',              r'(\1)|\2 \3|[M]'),
     (rf'ASTEROID[- ]0*{_NUM}[- ]{_MPNAME}',                 r'(\1) \2|[A]'),
-    (rf'ASTEROID[- ]{_MYEAR}[- ]{_MSUFF}',                  r'\1 \2|[A]'),
-    (rf'ASTEROID[- ]0*{_NUM}',                              r'(\1)|[A]'),
+    (rf'ASTEROID[- ]{_MYEAR}[- ]{_MSUFF}',                  r'\1 \2|[M]'),
+    (rf'ASTEROID[- ]0*{_NUM}',                              r'(\1)|[M]'),
     (rf'{_NUM}[=-]?\({_MPNAME}\)',                          r'(\1) \2'),
     (rf'{_NUM}-{_MPNAME}',                                  r'(\1) \2'),
     (rf'MP-?{_NUM}-{_MPNAME}',                              r'(\1) \2|[M]'),
@@ -99,13 +113,19 @@ _TARGET_TRANSFORM_PATTERNS = [
 
     # Transposition of a designation
     (rf'{_MYEAR}([A-HJ-Y])(\d+)([A-HJ-Z])',                 r'\1 \2\4\3'),
+
+    # Planet abbreviations
+    ('JUP',                                                 r'JUPITER|[P]'),
+    #('SAT',                                                r'SATURN|[P]'), or satellite!
+    ('URA',                                                 r'URANUS|[P]'),
+    ('NEP',                                                 r'NEPTUNE|[P]'),
 ]
 
 for _pattern, _template in _TARGET_TRANSFORM_PATTERNS:
     _regex = re.compile(_pattern + '$', re.I)
     _TARGET_REPAIRS.append((_regex, _template))
 
-# This table takes target types and embeds them into the returned string with newlines
+# This table takes target types and embeds them into the returned string
 _TARGET_CATEGORIZER_PATTERNS = [
     (r'(MAIN[- ]BELT |JUPITER FAMILY |)COMET',  r'[C]'),
     (r'INTERSTELLAR?',                          r'[C]'),
@@ -125,11 +145,12 @@ _TARGET_CATEGORIZER_PATTERNS = [
     (r'CENTAUR[RS]?',                           r'[H]'),
     (r'(SMALL|BIG) CENT Q ?. ?\d+',             r'[H]'),
     (r'MINOR[- ]PLANET',                        r'[M]'),
-    (r'PLANET',                                 r'[P]'),
-    (r'(RINGS?|ARCS?|ANSA\d?)',                 r'[R]'),
+    (r'PLANET',                                 r''),       # could still be Pluto
+    (r'(RINGS?|RPX)',                           r'[R]'),
     (r'MOON',                                   r'[S]'),
     (r'SATELLITE',                              r'[S]'),
-    (r'TORUS',                                  r'[t]'),
+    (r'GALILI?EAN',                             r'[S]'),
+    (r'(TORUS|IOFOOT\d?)',                      r'[t]'),
 
     (r'HOT( CANDIDATE|CLASSICAL)',              r'[T]'),
     (r'KBO\d?',                                 r'[T]'),
@@ -149,9 +170,16 @@ for _pattern, _template in _TARGET_CATEGORIZER_PATTERNS:
     _regex = re.compile(rf'\(?{_pattern}\)?$', re.I)
     _TARGET_REPAIRS.append((_regex, _template))
 
-for _word in _UNDIAGNOSTIC_TARGET_WORDS:
+# Lots of words do not contribute to the target id. These patterns delete them.
+for _word in _UNDIAGNOSTIC_TARGET_WORDS + _UNDIAGNOSTIC_SHORT_WORDS:
     _regex = re.compile(rf'{_word}$', re.I)
     _TARGET_REPAIRS.append((_regex, ''))
+
+# Certain short patterns at the end of a TARGNAME are ambiguous. We only delete them if
+# they still remain after other steps have been completed.
+for _pattern in _TARGNAME_SUFFIX_PATTERNS_NO_TAIL:
+    _regex = re.compile(rf'(.*)-{_pattern}$', re.I)
+    _TARGET_REPAIRS.append((_regex, r'\1'))
 
 # Strip possessives
 _regex = re.compile(r"([^ ]*[A-Z])'S", re.I)
@@ -165,13 +193,21 @@ for _regex, _template in _TARGET_REPAIRS:
     _LAST_INPUT[_regex.pattern] = ''
 
 ##########################################################################################
+# hst_repairs()
 ##########################################################################################
 
-def hst_repairs(
-    strings: list[str] | str
-) -> list[str]:
+def hst_repairs(strings, logger=None):
     """Given a list of strings defining TARKEY or TARGNAME values, isolate the strings
     that represent target bodies and convert them to their proper form.
+
+    Parameters:
+        strings (str | list[str]): One or more strings to recognize.
+        logger (Logger, optional): Logger to report debugging message.
+
+    Returns:
+        list[str]: Zero or more strings identified in the `strings` and converted if
+        possible to their canonical form. Target types are indicated by a single letter
+        `TargetType` code inside square brackets.
     """
 
     if isinstance(strings, str):
@@ -180,7 +216,7 @@ def hst_repairs(
     # Misc. string cleanup...
 
     # Split at commas, equal, period
-    for char in (',', '=', '.', '(', ')'):
+    for char in (',', '=', '.', '(', ')', '"'):
         cleaned = []
         for string in strings:
             cleaned += string.split(char)
@@ -191,19 +227,48 @@ def hst_repairs(
     strings = [s.replace('_', ' ') for s in strings]
     strings = [s for s in strings if s]
 
-    answers = _repair_list(strings, sep=' ')
-    answers = _repair_list(answers, sep='-')
+    logger and logger.info(f'Repairing: {strings}')
+
+    answers = _repair_list(strings, sep=' ', logger=logger)
+    answers2 = []
+    for answer in answers:
+        answers2 += answer.split('|')
+    answers = _repair_list(answers2, sep='-', logger=logger)
 
     # Vertical bar marks separators
     answers2 = []
     for answer in answers:
         answers2 += answer.split('|')
-    return answers2
+    answers = answers2
 
-def _repair_list(
-    strings: list[str],
-    sep: str = ' '
-) -> list[str]:
+    # Split at "+"
+    answers2 = []
+    for answer in answers:
+        answers2 += answer.split('+')
+    answers = answers2
+
+    # Separate types from answers; delete blanks; eliminate duplicates ignoring case;
+    # replace underscores with dashes.
+    types = []
+    answers2 = []
+    answers_uc = set()
+    for item in answers:
+        if item:
+            if item[0] == '[':
+                types.append(item[1])
+            else:
+                item_uc = item.upper().replace('_', '-')
+                if item_uc not in answers_uc:
+                    answers_uc.add(item_uc)
+                    answers2.append(item.replace('_', '-'))
+    answers = answers2
+
+    types = ''.join(sorted(types))
+    logger and logger.info(f'Repaired: {answers}, "{types}"')
+    return answers, types
+
+
+def _repair_list(strings, sep=' ', logger=None):
     """Return a list of repaired strings based on a list of string inputs.
 
     Separator `sep` can be " " or "-".
@@ -211,21 +276,25 @@ def _repair_list(
 
     answers = []
     for string in strings:
-        answers += _repair_string(string, sep=sep)
+        answers += _repair_string(string, sep=sep, logger=logger)
     return answers
 
-def _repair_string(
-    string: str,
-    sep: str = ' '
-) -> list[str]:
+
+LOW_LEVEL = 2  # Show lowest-level DEBUG messages only for LEVEL=2
+
+
+def _repair_string(string, sep=' ', logger=None):
     """Return a list of repaired strings based on a single string input.
 
     Separator `sep` can be " " or "-".
     """
 
     def repair1(target):
+        logger and logger.log(LOW_LEVEL, f'>>> "{target}"')
         prev_target = ''
         while prev_target != target:
+            if prev_target:
+                logger and logger.log(LOW_LEVEL, f'     "{prev_target}", "{target}"')
             prev_target = target
             for regex, template in _TARGET_REPAIRS:
                 match = regex.match(target)
@@ -239,12 +308,18 @@ def _repair_string(
                     else:
                         return template(target)  # used by mpc_tools.unpack
 
-        return target.strip()
+        target = target.strip()
+        logger and logger.log(LOW_LEVEL, f'     <<< "{target}"')
+        return target
+
+    input_string = string
+    logger and logger.log(LOW_LEVEL, f'Repairing: "{string}"')
 
     BAR = '|'  # indicates DO NOT append to the last string in the answers list
     answers = [BAR]
     strings = deque([string])
     while strings:
+        logger and logger.log(LOW_LEVEL, f'{str(strings)[6:-1]}')
         string = strings.popleft()
         if not string:
             continue
@@ -334,6 +409,7 @@ def _repair_string(
 
     # Remove anything extraneous
     answers = [a for a in answers if a and a != BAR]
+    logger and logger.debug(f'Repaired: "{input_string}" -> {answers}')
     return answers
 
 
@@ -342,6 +418,7 @@ if False:
     from targets.tests.SPT_TESTS import SPT_TESTS
 
     for filename, spt in SPT_TESTS:
+        # if filename != '15623/idwo02byq_spt.fits': continue
         strings = []
         for k in range(1, 7):
             key = 'TARKEY' + str(k)
@@ -349,7 +426,7 @@ if False:
                 break
             strings.append(spt[key])
         strings.append(spt['TARGNAME'])
-        answer = hst_repairs(strings)
-        print(repr(filename), '---', answer)
+        result = hst_repairs(strings, logger=None)
+        print(repr(filename), '---', result)
 
 ##########################################################################################

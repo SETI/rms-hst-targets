@@ -14,29 +14,57 @@ the right.
 Include "[C]" in the returned string to indicate that this name refers to a comet.
 Similarly, any TargetType character between square brackets "[]" indicates that this is a
 target body of the specified type.
+
+Underscores replace dashes so the results don't get split apart on the second pass (where
+the splitting is by dashes. The underscores are replaced at the end of the process.
 """
 
 _TARGET_STRING_REPAIRS = [
-    (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (Hyakutake)|[C]'),
-    (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\d)([A-Z]1?)(-\w+|)',
-                                                r'Shoemaker-Levy|\1\2|[C]'),
-    (r'SL',                                     'Shoemaker-Levy'),
-    (r'(\d+P/)?CH.RYUMOV-GER[A-Z]*',            r'\1CHURYUMOV-GERASIMENKO'),
-    (r'(\d+P/)?CG',                             r'\1CHURYUMOV-GERASIMENKO'),
-    (r'(?:29P/?-?)?SW1',                        r'29P/Schwassmann-Wachmann 1'),
-    (r'(?:73P-)?SW3-?([A-Z]|)[AB]?',            r'73P/Schwassmann-Wachmann 3-\1'),
-    (r'SCHWASSMANW3-?([A-Z]|)[AB]?',            r'\1Schwassmann-Wachmann 3-\2'),
-    (r'SCHWASSMAN-WACHMAN-1',                   r'Schwassmann-Wachmann 1'),
-    (r'WKI ?1?',                                r'76P/West-Kohoutek-Ikemura|[C]'),
-    (r'(MARS).*(SIDING SPRING).*',              r'[P]|Mars|[C]|Siding Spring|C/2013 A1'),
+    (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (HYAKUTAKE)|[C]'),
+    (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\D)([A-Z]1?)(-\W+|)',
+                                                r'SHOEMAKER_LEVY|\1\2|[C]'),
+    (r'SL',                                     r'SHOEMAKER_LEVY'),
+    (r'(\d+P/)?CH.RYUMOV-GER[A-Z]*',            r'\1CHURYUMOV_GERASIMENKO'),
+    (r'(\d+P/)?CG',                             r'\1CHURYUMOV_GERASIMENKO'),
+    (r'(?:29P/?-?)?SW1',                        r'29P/SCHWASSMANN_WACHMANN 1'),
+    (r'(?:73P-)?SW3-?([A-Z]|)[AB]?',            r'73P/SCHWASSMANN_WACHMANN 3-\1'),
+    (r'SCHWASSMANW3-?([A-Z]|)[AB]?',            r'\1SCHWASSMANN_WACHMANN 3-\2'),
+    (r'SCHWASSMAN-WACHMAN-1',                   r'SCHWASSMANN_WACHMANN 1'),
+    (r'WKI ?1?',                                r'76P/WEST_KOHOUTEK_IKEMURA|[C]'),
+    (r'(MARS).*(SIDING SPRING).*',              r'[P]|MARS|[C]|SIDING SPRING|C/2013 A1'),
     (r'288P',                                   r'288P|[C]|(300163) 2006 VW139|[A]'),
-    (r'SANTA',                                  r'Haumea'),
-    (r'JOVIAN',                                 r'JUPITER'),
-    (r'PL-?CH',                                 r'PLUTO|CHARON'),
-    (r'(?:2I|I2)?-?BOROSOV',                    r'2I/Borisov'),
+    (r'SANTA',                                  r'HAUMEA'),
+    (r'(?:2I|I2)?-?BOROSOV',                    r'2I/BORISOV'),
     (r'(HARTLEY|TEMPEL|WILD|GEHRELS|REINMUTH)(\d)',
                                                 r'\1 \2'),
-    (r'FORBES2',                                r'Forbes'),
+    (r'FORBES2',                                r'FORBES'),
+    (r'MARS[- ]?DUST',                          r'MARS|[R]'),
+    (r'IO[ -]?(WAKE|TORUS)',                    r'IO|[t]'),
+    (r'IO[- ]N(EUTRAL)?[- ]?CLOUD.*',           r'IO|[t]'),
+    (r'GANY(FOOT)?',                            r'GANYMEDE|[S]'),
+    (r'EUROFOOT',                               r'EUROPA|[S]'),
+    (r'PL(UTO)?-CH(AR(ON)?)?',                  r'PLUTO|CHARON|[D]|[S]'),
+
+    # These fixes are too obscure and un-anticipatable. Instead, we can test standard body
+    # names by splitting at dashes.
+    # (r'(VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE)[- ]?([NSEWA-G]|AX|TEST)?\D*',
+    #                                           r'\1|[P]'),
+    # (r'(PLUTO)[- ]?([NSEWA-G]|AX|TEST)?\d*',  r'\1|[D]'),
+    # (r'JUP-?(FOC\d?|STIS|((LO|HI)RES\d?-)?ARC\d|NTB)',
+    #                                           r'JUPITER|[P]'),
+    # (r'MARS-2003',                            r'MARS|[P]'),
+    # (r'JUPITER-[7-9]\d-(INGRESS|EGRESS|PJ)',  r'JUPITER|[P]'),
+    # (r'IO[- ]PELE.*',                         r'IO|[S]'),
+    # (r'\d+ *IO',                              r'IO|[S]'),
+    # (r'(PANDORA)-(PROMETHEUS)',               r'\1|\2|[S]'),
+    # (r'(MAB)-(CUPID)',                        r'\1|\2|[S]'),
+    # (r'(CUPID)-(MAB)',                        r'\1|\2|[S]'),
+    # (r'(URANUS)-(CUPID)',                     r'\1|\2|[S]|[P]'),
+    # (r'(URANUS)-(PERDITA)',                   r'\1|\2|[S]|[P]'),
+    # (r'(MAB)-(PUCK)-(MIRANDA)',               r'\1|\2|\3|[S]'),
+    # (r'(ADRASTEA)-\d+',                       r'\1|[S]'),
+    # (r'(STYX)-(KERBEROS)',                    r'\1|\2|[D]|[S]'),
+    # (r'SATMAG',                               r'SATURN|[P]'),
 ]
 
 ##########################################################################################

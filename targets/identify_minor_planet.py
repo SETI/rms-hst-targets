@@ -13,8 +13,8 @@ _YEAR = r'(?:19\d\d|20\d\d)'
 _NAME = r"(?:[A-Z']{2,}(?:[- ]?[A-Z']{2,})*)"
 _DESIG = rf'(?:{_YEAR} [A-HJ-Y][A-HJ-Z]{_NUM}?)'
 
-# Confidence > 5 means this pattern almost surely defines a minor planet
-# If minor planet confidence exceeds comet confidence, comets will be checked second
+# Confidence > 5 means this pattern most likely defines a minor planet.
+# If minor planet confidence exceeds comet confidence, comets will be checked second.
 _PATTERNS = [
     (rf'({_DESIG})'                 , 7),
     (rf'\(?({_NUM})\)? ({_NAME})'   , 9),
@@ -28,13 +28,64 @@ _PATTERNS = [
 _REGEXES = [(re.compile(pattern, re.I), conf) for pattern, conf in _PATTERNS]
 
 
-def identify_minor_planet(
+def minor_planet_identifiers(strings):
+    """Interpret one or more strings as minor planet identifiers.
+
+    Parameters:
+        strings (str or list[str]): One or more potential identifiers for a minor planet.
+
+    Returns:
+        tuple: `(formatted, unused, confidence)`:
+
+        * formatted (set[str]): The subset of input strings in the format of a possible
+          minor planet identifier.
+        * unused (list[str]): The list of input strings that are not in a recognized
+          format of minor planet identifier.
+        * confidence (int): A numeric value 0-9 indicating the level of confidence that
+          the strings represent a minor planet.
+    """
+
+    if isinstance(strings, str):
+        strings = [strings]
+
+    formatted = set()
+    unused = []
+    confidence = 0
+    for string in strings:
+        for regex, conf in _REGEXES:
+            match = regex.match(string)
+            if match:
+                formatted |= set(match.groups())
+                confidence = max(confidence, conf)
+                break
+        if not match:
+            unused.append(string)
+
+    return formatted, unused, confidence
+
+
+def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
+    """Try to identify a minor planet based on a list of possible name strings and
+    optional orbital elements.
+
+    Parameters:
+
     strings: list[str],
     elements: dict[str, float], *,
     confidence: int,
     rms: float = 0.05,
     logger: Logger | None = None
-) -> tuple[dict | None, float, bool]:
+
+    Returns:
+        tuple: `(best_body, best_rms, valid)`:
+
+        best_body (dict or None): A dictionary describing the attributes of the best-match
+            minor planet; None if no body was recognized.
+        best_rms (float): The fractional root-mean-square discrepancy between the orbital
+            elements provided and the orbital elements of the body identified.
+        valid (bool): True if the identification is believed to be valid, based on the
+            string and the elements.
+    """
 
     has_elements = ('A' in elements or 'Q' in elements)
 
@@ -138,9 +189,21 @@ def identify_minor_planet(
     return (best_body, best_rms, valid)
 
 
-def _identify_minor_planets_by_strings(
-    strings: list[str]
-) -> tuple[list[dict], dict[str, dict], list[str], bool]:
+def _identify_minor_planets_by_strings(strings):
+    """Identify one or more minor planets by a name or list of alternative names.
+
+    Parameters:
+        strings (str or list[str]): One or more strings potentially identifying a minor
+            planet.
+
+    Returns:
+        tuple: `(mpc_dicts, used, unused, single)`:
+
+        * mpc_dicts (list[dict]): One or more identified minor planets.
+        * used (dict[str, dict]): The list of strings that were recognized as identifiers.
+        * unused (list[str]): The list of string that were not recognized as identifiers.
+        * single (bool): True if a single, unambiguous body was identified.
+    """
 
     # Separate the formatted and un-formatted strings
     formatted, unused, confidence = minor_planet_identifiers(strings)
@@ -159,8 +222,7 @@ def _identify_minor_planets_by_strings(
                 unused.append(string)
                 continue
 
-            # Otherwise, see if is the same as one already in the list
-            # If yes, merge the content
+            # Otherwise, see if it is the same as one already in the list; if yes, merge
             same = False
             for mpc_dict in mpc_dicts:
                 same |= _same_minor_planet(mpc_dict, new_dict)
@@ -174,11 +236,12 @@ def _identify_minor_planets_by_strings(
         except RuntimeError:
             unused.append(string)
 
-    return mpc_dicts, used, unused, len(mpc_dicts) == 1
+    return (mpc_dicts, used, unused, len(mpc_dicts) == 1)
 
 
 def _same_minor_planet(dict1, dict2):
-    """True if these dicts describe the same minor planet; also merge content into first.
+    """True if these dicts describe the same minor planet; also merge content into the
+    first.
     """
 
     desigs1 = ({dict1['desig']} | set(dict1['alt_desigs'])) -  {''}
@@ -203,24 +266,5 @@ def _same_minor_planet(dict1, dict2):
 
     return True
 
-
-def minor_planet_identifiers(
-    strings: list[str]
-) -> tuple[list[str], list[str], int]:
-
-    formatted = set()
-    unused = []
-    confidence = 0
-    for string in strings:
-        for regex, conf in _REGEXES:
-            match = regex.match(string)
-            if match:
-                formatted |= set(match.groups())
-                confidence = max(confidence, conf)
-                break
-        if not match:
-            unused.append(string)
-
-    return formatted, unused, confidence
 
 ##########################################################################################
