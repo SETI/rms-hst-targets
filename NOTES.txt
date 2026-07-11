@@ -1,3 +1,23 @@
+7/9/26
+
+hst_repairs() now does a good job.
+For standard objects, it will be necessary to split away the parts at dashes to capture every possibility ('URANUS-PERDITA')
+You can reject the digits in "JUPITER-77".
+Use the TargetTypes to assess which category gets the most votes (after converting ATHx to "M")
+
+standard_bodies dicts are in good shape
+
+For comets with orbital elemensts, perform the proximity test.
+Unrecognized comet -> try all;
+recognized -> try the match first; on error, try others, report warnings
+
+For MPs,
+unrecognized -> 
+    Use MPC to get a bunch of nearby bodies based on orbital elements
+    Try each for nearest match using image time.
+recognized -> try the matches; on errors, report warnings
+
+
 NOTES:
 
 I'm still working on identify_small_body.py along with identify_comet.py and identify_minor_planet.py. To run, use the code in IDENTIFY_SMALL_BODY_TESTER.py after def of "identify_small_body"

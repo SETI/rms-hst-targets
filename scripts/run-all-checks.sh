@@ -354,7 +354,7 @@ run_code_checks() {
 
     if [ "$RUN_RUFF_CHECK" = true ] && [ "$ENABLE_RUFF_CHECK" = true ]; then
         print_info "Running ruff check..."
-        if python -m ruff check src tests; then
+        if python -m ruff check targets tests; then
             print_success "Ruff check passed"
         else
             print_error "Ruff check failed"
@@ -365,7 +365,7 @@ run_code_checks() {
 
     if [ "$RUN_RUFF_FORMAT" = true ] && [ "$ENABLE_RUFF_FORMAT" = true ]; then
         print_info "Running ruff format --check..."
-        if python -m ruff format --check src tests; then
+        if python -m ruff format --check targets tests; then
             print_success "Ruff format check passed"
         else
             print_error "Ruff format check failed"
@@ -389,7 +389,7 @@ run_code_checks() {
 
     # -n controls parallelism; --dist loadscope keeps each test module on one
     # worker to avoid time-mocking and fixture-isolation interference.
-    # Coverage (--cov=psfmodel) and strict options come from pyproject.toml addopts.
+    # Coverage (--cov=targets) and strict options come from pyproject.toml addopts.
     if [ "$RUN_PYTEST" = true ] && [ "$ENABLE_PYTEST" = true ]; then
         print_info "Running pytest (-n ${PYTEST_WORKERS})..."
         if python -m pytest -q -n "$PYTEST_WORKERS" --dist loadscope tests; then
@@ -414,7 +414,7 @@ run_code_checks() {
 
     if [ "$RUN_BANDIT" = true ] && [ "$ENABLE_BANDIT" = true ]; then
         print_info "Running bandit..."
-        if python -m bandit -c pyproject.toml -r src -q; then
+        if python -m bandit -c pyproject.toml -r targets -q; then
             print_success "Bandit passed"
         else
             print_error "Bandit failed"
@@ -425,7 +425,7 @@ run_code_checks() {
 
     if [ "$RUN_VULTURE" = true ] && [ "$ENABLE_VULTURE" = true ]; then
         print_info "Running vulture..."
-        if python -m vulture src tests; then
+        if python -m vulture targets tests; then
             print_success "Vulture passed"
         else
             print_error "Vulture failed"
