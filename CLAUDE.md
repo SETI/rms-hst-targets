@@ -21,7 +21,7 @@ The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `pa
 - Type-check: `MYPYPATH=targets python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `support/`; it only ever runs on `tests/`.** Don't run mypy against the package.
 - Lint / format: `ruff check` and `ruff format`.
 
-**Do not use `scripts/run-all-checks.sh`, `.github/workflows/run-tests.yml`, or `README.md` as references** — they are stale project-template artifacts. They point ruff/bandit/coverage at a nonexistent `src/`, have literal `REPONAME` job names, and the README's env vars (`HST_STAGING`, etc.) belong to a different project. `pyproject.toml` is the source of truth.
+**Do not use `scripts/run-all-checks.sh`, `.github/workflows/run-tests.yml`, or the Sphinx files in `docs/` (`conf.py`, `*.rst`, `Makefile`) as references** — they are stale project-template artifacts pointing at a nonexistent `src/` with literal `REPONAME` names. `pyproject.toml` is the source of truth for tooling. Real documentation is `README.md` and the Markdown files in `docs/` (`how-it-works.md`, `handling-identification-failures.md`, `data-and-caches.md`) — keep these in sync with behavior changes.
 
 ## Style
 
