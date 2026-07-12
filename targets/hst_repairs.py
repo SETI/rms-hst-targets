@@ -4,6 +4,7 @@
 
 import re  # noqa: I001  (keep the hand-aligned import wrapping below)
 from collections import deque
+from logging import Logger
 
 from targets._TARGET_STRING_REPAIRS import _TARGET_STRING_REPAIRS
 from targets._TARGNAME_PREFIX_SUFFIX_PATTERNS import (_TARGNAME_PREFIX_PATTERNS,
@@ -194,7 +195,8 @@ for _regex, _template in _TARGET_REPAIRS:
 # hst_repairs()
 ##########################################################################################
 
-def hst_repairs(strings, logger=None):
+def hst_repairs(strings: str | list[str],
+                logger: Logger | None = None) -> tuple[list[str], str]:
     """Given a list of strings defining TARKEY or TARGNAME values, isolate the strings
     that represent target bodies and convert them to their proper form.
 
@@ -409,22 +411,5 @@ def _repair_string(string, sep=' ', logger=None):
     answers = [a for a in answers if a and a != BAR]
     logger and logger.debug(f'Repaired: "{input_string}" -> {answers}')
     return answers
-
-
-# For interactive testing...
-if False:
-    from targets.tests.SPT_TESTS import SPT_TESTS
-
-    for filename, spt in SPT_TESTS:
-        # if filename != '15623/idwo02byq_spt.fits': continue
-        strings = []
-        for k in range(1, 7):
-            key = 'TARKEY' + str(k)
-            if key not in spt:
-                break
-            strings.append(spt[key])
-        strings.append(spt['TARGNAME'])
-        result = hst_repairs(strings, logger=None)
-        print(repr(filename), '---', result)
 
 ##########################################################################################
