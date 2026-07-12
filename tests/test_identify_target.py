@@ -410,6 +410,29 @@ def test_no_target_sentinels() -> None:
     assert identify_target(_header('12537/ibu5110e1_spt.fits')) == []  # parallel
 
 
+def test_nicknamed_targets_resolved_by_override() -> None:
+    # Survey-internal and pre-announcement names mapped to real designations
+    pytest.importorskip('palpy')
+    bodies = identify_target(_header('9110/o6e945010_spt.fits'))    # "MINIXENA"
+    assert bodies[0]['full_name'] == '55565 Aya'
+
+    bodies = identify_target(_header('9678/j8i701011_spt.fits'))    # "OBJECTX"
+    assert bodies[0]['full_name'] == 'Quaoar'
+    assert bodies[0]['ttype'] == 'T'
+
+    bodies = identify_target(_header('16183/iedk15ifq_spt.fits'))   # "P959EB2C"
+    assert bodies[0]['full_name'] == '2020 KD54'
+
+    bodies = identify_target(_header('14498/id3t01n9q_spt.fits'))   # "P2010-V-C-OFFSET"
+    assert bodies[0]['full_name'] == '332P/Ikeya-Murakami-C'
+
+
+def test_undesignated_tno_sentinel() -> None:
+    # Survey candidates that never received an MPC designation
+    assert identify_target(_header('16183/iedk11dbq_spt.fits')) == []   # "P72X4B2"
+    assert identify_target(_header('12887/ibzx01g4q_spt.fits')) == []   # "VNH0034"
+
+
 def test_internal_calibration_targnames() -> None:
     # Lamp/calibration exposures (COS "WAVE", FOS "TALED") are not sky targets
     assert identify_target(_header('17780/lfee01fgq_spt.fits')) == []

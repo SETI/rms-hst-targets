@@ -912,9 +912,11 @@ def identify_target(
                     float(dec_targ), radec_tolerance=radec_tolerance, mp_rms=mp_rms,
                     targname=targname, logger=logger)
 
-    # When a minor planet could not be identified by name or by elements alone, search
-    # the MPC for nearby orbits and select by sky position
-    if small_body is None and kind1 == 'ASTEROID' and not offset_pointing:
+    # When a body could not be identified by name or by elements alone, search the MPC
+    # for nearby orbits and select by sky position. This applies to TYPE=COMET headers
+    # too: TNOs and Centaurs are often expressed as comet elements, and dual-designated
+    # comets are in the MPC database as well.
+    if small_body is None and kind1 in ('ASTEROID', 'COMET') and not offset_pointing:
         result = _identify_asteroid_by_position(
             match_elements, obs_dt,
             None if ra_targ is None else float(ra_targ),
