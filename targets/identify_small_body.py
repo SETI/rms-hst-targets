@@ -4,9 +4,15 @@
 
 from logging import Logger
 
-from targets.identify_minor_planet import identify_minor_planet, minor_planet_identifiers
-from targets.identify_comet import identify_comet, comet_identifiers
+from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets.hst_repairs import hst_repairs
+from targets.identify_comet import comet_identifiers, identify_comet
+from targets.identify_minor_planet import identify_minor_planet, minor_planet_identifiers
+from targets.targettype import TargetType
+
+__all__ = ['identify_small_body']
+
+_DISALLOWED_UC = {name.upper() for name in _DISALLOWED_MINOR_PLANET_NAMES}
 
 
 def identify_small_body(
@@ -16,43 +22,78 @@ def identify_small_body(
     mp_rms: float = 0.08,
     logger: Logger | None = None
 ) -> tuple[dict | None, float, bool]:
+    """Identify a comet or minor planet from name strings and orbital elements.
+
+    Parameters:
+        strings: One or more strings that potentially identify a small body, e.g., the
+            values of the TARKEY*, TARGNAME, and TARDESCR keywords of an SPT/SHF header.
+        elements: A dictionary of orbital elements keyed by element name, as follows:
+
+            * "A": semimajor axis in AU.
+            * "Q": perihelion distance in AU.
+            * "I": inclination in degrees.
+            * "O": ascending node in degrees.
+            * "E": eccentricity.
+            * "W": argument of pericenter in degrees.
+
+            An empty dictionary if no orbital elements are available.
+        comet_rms: Upper limit on the fractional root-mean-square discrepancy between the
+            given orbital elements and those of a comet for the match to be accepted.
+        mp_rms: Upper limit on the fractional root-mean-square discrepancy between the
+            given orbital elements and those of a minor planet for the match to be
+            accepted.
+        logger: An optional Logger for messages.
+
+    Returns:
+        A tuple `(body, rms, valid)`:
+
+        * `body`: A dictionary describing the attributes of the identified comet or minor
+          planet; None if no body was identified.
+        * `rms`: The fractional root-mean-square discrepancy between the orbital elements
+          provided and those of the identified body; zero if no elements were compared.
+        * `valid`: True if the identification is believed to be valid, based on the
+          strings and the elements.
+    """
 
     logger and logger.info('HST identification strings: ' + str(strings))
 
-    options = hst_repairs(strings)
-    maybe_minor = ('[M]' in options or '[T]' in options or '[H]' in options
-                   or '[A]' in options or ['D'] in options)
-    maybe_comet = ('[C]' in options or '[H]' in options)
-    options = [o for o in options if o[0] != '[']
-    options = list(set(options))  # remove duplicates
+    options, types = hst_repairs(strings, logger=logger)
+    maybe_minor = bool(set(TargetType.MCODES + TargetType.MINOR_PLANET) & set(types))
+    maybe_comet = bool({TargetType.COMET, TargetType.CENTAUR} & set(types))
 
-    cwords, cunused, comet_conf = comet_identifiers(options)
-    mwords, munused, mp_conf = minor_planet_identifiers(options)
+    # Names reserved for a satellite or comet never identify a minor planet unless the
+    # header explicitly marks the target as one.
+    mp_options = options
+    if not maybe_minor:
+        mp_options = [o for o in options if o.upper() not in _DISALLOWED_UC]
+        excluded = [o for o in options if o.upper() in _DISALLOWED_UC]
+        if excluded:
+            logger and logger.info('Excluded from minor planet search: ' + str(excluded))
+
+    _, _, comet_conf = comet_identifiers(options)
+    _, _, mp_conf = minor_planet_identifiers(mp_options)
 
     try_comet = maybe_comet or not maybe_minor or comet_conf >= mp_conf
     if try_comet:
         logger and logger.info('Testing comets')
-        comet_info = identify_comet(options, elements, confidence=comet_conf,
-                                    rms=comet_rms, logger=logger)
-        (comet, comet_rms, comet_status) = comet_info
-        if comet_status:
-            return comet
+        comet, rms, status = identify_comet(options, elements, confidence=comet_conf,
+                                            rms=comet_rms, logger=logger)
+        if status:
+            return (comet, rms, True)
 
     logger and logger.info('Testing minor planets')
-    minor_planet_info = identify_minor_planet(options, elements, confidence=mp_conf,
+    body, rms, status = identify_minor_planet(mp_options, elements, confidence=mp_conf,
                                               rms=mp_rms, logger=logger)
-    (minor_planet, mp_rms, mp_status) = minor_planet_info
-    if mp_status:
-        return minor_planet
+    if status:
+        return (body, rms, True)
 
     if not try_comet:
         logger and logger.info('Testing comets')
-        comet_info = identify_comet(options, elements, confidence=comet_conf,
-                                    rms=comet_rms, logger=logger)
-        (comet, comet_rms, comet_status) = comet_info
-        if comet_status:
-            return comet
+        comet, rms, status = identify_comet(options, elements, confidence=comet_conf,
+                                            rms=comet_rms, logger=logger)
+        if status:
+            return (comet, rms, True)
 
-    return None
+    return (None, 0., False)
 
 ##########################################################################################

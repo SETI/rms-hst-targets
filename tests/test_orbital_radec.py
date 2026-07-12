@@ -17,7 +17,7 @@ palpy = pytest.importorskip("palpy")            # skip if PAL wrapper absent
 from orbital_radec import asteroid_radec, comet_radec
 
 
-def _sep_arcsec(ra1, dec1, ra2, dec2):
+def _sep_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> float:
     """Angular separation between two (deg, deg) positions, in arcsec."""
     d = palpy.dsep(math.radians(ra1), math.radians(dec1),
                    math.radians(ra2), math.radians(dec2))
@@ -48,13 +48,13 @@ _HALLEY_TIME = "25-JUN-2013:00:00:00"
 _HALLEY_RADEC = (126.73603, 2.08732)
 
 
-def test_asteroid_matches_horizons():
+def test_asteroid_matches_horizons() -> None:
     r = asteroid_radec(**_CERES, time=_CERES_TIME,
                        epoch_scale="TDB", time_scale="UTC")
     assert _sep_arcsec(r.ra, r.dec, *_CERES_RADEC) < 0.1
 
 
-def test_comet_matches_horizons():
+def test_comet_matches_horizons() -> None:
     r = comet_radec(**_HALLEY, time=_HALLEY_TIME,
                     peri_time_scale="TDB", epoch_scale="TDB", time_scale="UTC")
     assert _sep_arcsec(r.ra, r.dec, *_HALLEY_RADEC) < 0.1
@@ -71,26 +71,26 @@ _HALLEY_B1950 = dict(q=0.5779409967071421, e=0.9679696861149191, incl=161.990527
                      peri_time="05-DEC-1985:02:41:21.140", epoch="25-JUN-2012:00:00:00")
 
 
-def test_asteroid_b1950_rotated_to_j2000():
+def test_asteroid_b1950_rotated_to_j2000() -> None:
     r = asteroid_radec(**_CERES_B1950, time=_CERES_TIME, equinox="B1950",
                        epoch_scale="TDB", time_scale="UTC")
     assert _sep_arcsec(r.ra, r.dec, *_CERES_RADEC) < 1.0
 
 
-def test_comet_b1950_rotated_to_j2000():
+def test_comet_b1950_rotated_to_j2000() -> None:
     r = comet_radec(**_HALLEY_B1950, time=_HALLEY_TIME, equinox="B1950",
                     peri_time_scale="TDB", epoch_scale="TDB", time_scale="UTC")
     assert _sep_arcsec(r.ra, r.dec, *_HALLEY_RADEC) < 1.0
 
 
-def test_b1950_without_rotation_is_wrong():
+def test_b1950_without_rotation_is_wrong() -> None:
     """Guard: treating B1950 elements as J2000 must be far off (~arcmin)."""
     r = asteroid_radec(**_CERES_B1950, time=_CERES_TIME, equinox="J2000",
                        epoch_scale="TDB", time_scale="UTC")
     assert _sep_arcsec(r.ra, r.dec, *_CERES_RADEC) > 60.0
 
 
-def test_asteroid_and_comet_interfaces_agree():
+def test_asteroid_and_comet_interfaces_agree() -> None:
     """The a,M (JFORM=2) and q,T (JFORM=3) forms of one orbit must coincide."""
     ra = asteroid_radec(**_CERES, time=_CERES_TIME,
                         epoch_scale="TDB", time_scale="UTC")
@@ -101,7 +101,7 @@ def test_asteroid_and_comet_interfaces_agree():
     assert _sep_arcsec(ra.ra, ra.dec, rc.ra, rc.dec) < 0.01
 
 
-def test_twobody_is_exact_at_epoch():
+def test_twobody_is_exact_at_epoch() -> None:
     """Pure two-body reproduces the state exactly at the element epoch."""
     # Evaluate at the epoch instant in UTC to match the Horizons UTC reference
     # (the elements' TDB epoch and 00:00 UTC differ by TDB-UTC ~ 66 s).
@@ -111,7 +111,7 @@ def test_twobody_is_exact_at_epoch():
     assert _sep_arcsec(r.ra, r.dec, 357.17819, -11.93995) < 0.1
 
 
-def test_perturbations_reduce_drift():
+def test_perturbations_reduce_drift() -> None:
     """Perturbed propagation must beat pure two-body far from the epoch."""
     common = dict(**_CERES, time=_CERES_TIME, epoch_scale="TDB", time_scale="UTC")
     two_body = asteroid_radec(**common, perturb=False)

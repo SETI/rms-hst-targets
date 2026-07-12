@@ -43,13 +43,13 @@ Checked against JPL Horizons for (1) Ceres, geocentric, J2000.  With
 interfaces reproduce the same orbit to the last digit.
 """
 
-from collections import namedtuple
 import math
+from collections import namedtuple
 
 import numpy as np
 import palpy as pal
 
-__all__ = ["asteroid_radec", "comet_radec", "RaDec"]
+__all__ = ["RaDec", "asteroid_radec", "comet_radec", "rotate_elements_to_j2000"]
 
 # Light travel time for 1 AU, in days  (= 1 / 173.1446 AU per day).
 _TAU_PER_AU = 0.00577551833109
@@ -90,7 +90,7 @@ def _parse_epoch_to_tt(datestr, scale):
         hour, minute, sec = int(hh), int(mm), float(ss)
     except (ValueError, KeyError):
         raise ValueError(
-            "date must look like '25-DEC-2011:00:00:00', got %r" % datestr)
+            "date must look like '25-DEC-2011:00:00:00', got %r" % datestr) from None
 
     mjd0 = pal.cldj(year, month, day)                 # MJD at 0h of that day
     mjd = mjd0 + (hour * 3600.0 + minute * 60.0 + sec) / 86400.0
@@ -180,6 +180,30 @@ def _orientation(incl, node, arg_peri, equinox):
     if str(equinox).upper().replace(" ", "") in ("B1950", "1950", "FK4"):
         oi, an, pe = _rotate_elements_to_j2000(oi, an, pe)
     return oi, an, pe
+
+
+def rotate_elements_to_j2000(elements, equinox="B1950"):
+    """Return a copy of an orbital element dictionary with the orientation angles
+    rotated from the given equinox to J2000.
+
+    Parameters:
+        elements : dict containing at least "I" (inclination), "O" (ascending node),
+                   and "W" (argument of pericenter), all in degrees.  Any other items
+                   (a/q, e, epochs, ...) are frame-independent and copied unchanged.
+        equinox  : the equinox of the input angles; "B1950" (default) rotates them,
+                   "J2000" is a no-op.
+
+    Returns:
+        A new dict with "I", "O" and "W" referred to the J2000 ecliptic & equinox
+        and "EQUINOX" set to "J2000".
+    """
+    oi, an, pe = _orientation(elements["I"], elements["O"], elements["W"], equinox)
+    rotated = dict(elements)
+    rotated["I"] = math.degrees(oi)
+    rotated["O"] = math.degrees(an)
+    rotated["W"] = math.degrees(pe)
+    rotated["EQUINOX"] = "J2000"
+    return rotated
 
 
 # --------------------------------------------------------------------------

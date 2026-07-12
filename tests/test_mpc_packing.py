@@ -2,7 +2,7 @@
 # hst_targets/tests/test_mpc_packing.py
 ##########################################################################################
 
-from mpc_packing import mpc_pack, mpc_unpack, mpc_is_valid_packed, mpc_is_valid_unpacked
+from mpc_tools.mpc_packing import mpc_is_valid_packed, mpc_is_valid_unpacked, mpc_pack, mpc_unpack
 
 # Examples defined here:
 # https://minorplanetcenter.net/mpcops/documentation/provisional-designation-definition
@@ -37,7 +37,7 @@ _UNPACKED_VS_PACKED = [
 ]
 
 
-def test_mpc_packing():
+def test_mpc_packing() -> None:
 
     for unpacked, packed in _UNPACKED_VS_PACKED:
         test = mpc_pack(unpacked)

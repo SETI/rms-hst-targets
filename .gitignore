@@ -178,3 +178,4 @@ HST/*.db
 
 # HST moving-target support files (bulk MAST download, not versioned)
 caches/SPT_CACHE
+targets/_version.py

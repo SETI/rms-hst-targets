@@ -32,7 +32,7 @@ SPT_REPAIRS = {
     '12535_3'   : 'TNO_SURVEY',
     '12535_4'   : 'TNO_SURVEY',
     '12535_5'   : 'TNO_SURVEY',
-    '13633_*':  : 'TNO_SURVEY',
+    '13633_*'   : 'TNO_SURVEY',
     '14498_1'   : {'TARGNAME': 'P2010-V1'},         # was "P2010-V-C-OFFSET"
     '16183_6'   : {'MT_LV1_1': 'FILE='},
 

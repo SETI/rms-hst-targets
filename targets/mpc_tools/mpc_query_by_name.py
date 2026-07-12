@@ -2,11 +2,9 @@
 # mpc_tools/mpc_query_by_name.py
 ##########################################################################################
 
-from logging import Logger
-import math
 import os
 import pathlib
-import re
+from logging import Logger
 
 import bs4
 import requests
@@ -22,6 +20,21 @@ _MPC_BY_NAME = 'https://minorplanetcenter.net/db_search/show_object?object_id='
 _MPC_BY_PROPERTIES = 'https://www.minorplanetcenter.net/db_search/show_by_properties?'
 _MPC_CACHING = True
 
+_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+           'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+
+def _mpc_date_to_str(text: str) -> str:
+    """Convert an MPC date of the form "YYYY-MM-DD.ddddd" to "DD-MON-YYYY:hh:mm:ss"."""
+
+    year, month, day = text.strip().split('-')
+    dd = int(float(day))
+    secs = min(round((float(day) - dd) * 86400.), 86399)
+    hh, remainder = divmod(secs, 3600)
+    mm, ss = divmod(remainder, 60)
+    return (f'{dd:02d}-{_MONTHS[int(month) - 1]}-{int(year):04d}:'
+            f'{hh:02d}:{mm:02d}:{ss:02d}')
+
 
 def mpc_query_by_name(
     name: str, *,
@@ -34,21 +47,20 @@ def mpc_query_by_name(
         logger: An optional Logger for messages.
 
     Returns:
-        A tuple (`body`, `rms`) (if `count` == 1) or a list thereof. Here, `body` is the
-        dictionary of body parameters and `rms` is the root-mean-square fractional
-        discrepancy between the given `elements` and those in the database.
+        A dictionary of body parameters as returned by `mpc_body_dict`, including the
+        body's aliases and its orbital elements keyed by element name, as follows:
 
-        (names, elements): A list of body aliases (probably including `name`) and a
-            dictionary of orbital elements keyed by element name, as follows:
+        * "A": semimajor axis in AU.
+        * "Q": perihelion distance in AU.
+        * "I": inclination in degrees.
+        * "O": ascending node in degrees.
+        * "E": eccentricity.
+        * "W": argument of pericenter in degrees.
+        * "M": mean anomaly at EPOCH in degrees, if available.
+        * "EPOCH": epoch of the elements as "DD-MON-YYYY:hh:mm:ss", if available.
+        * "T": time of perihelion passage as "DD-MON-YYYY:hh:mm:ss", if available.
 
-            * "A": semimajor axis in AU.
-            * "Q": perihelion distance in AU.
-            * "I": inclination in degrees.
-            * "O": ascending node in degrees.
-            * "E": eccentricity.
-            * "W": argument of pericenter in degrees.
-
-        If the name is not found, a warning is issued to the `logger` and ([], {}) is
+        If the name is not found, a warning is issued to the `logger` and None is
         returned.
 
     Raises:
@@ -104,7 +116,8 @@ def mpc_query_by_name(
     try:
         info = divs[0].h3.text
     except AttributeError:
-        raise RuntimeError(f'non-standard "show_object" response for MPC key "{name}"')
+        raise RuntimeError(f'non-standard "show_object" response for MPC key '
+                           f'"{name}"') from None
 
     # Another sign of failure
     if info.strip().startswith('Data about'):
@@ -125,7 +138,7 @@ def mpc_query_by_name(
     if names[0].startswith('('):
         parts = names[0].partition(')')
         if parts[2]:  # if it has a name as well as a number
-            names = [parts[0][1:], parts[2].lstrip()] + names[1:]
+            names = [parts[0][1:], parts[2].lstrip(), *names[1:]]
         else:
             names[0] = parts[0][1:]
 
@@ -148,9 +161,29 @@ def mpc_query_by_name(
             pass
 
     if not elements:
-        logger and logger.warn('MPC has no orbital elements for "{name}"')
+        logger and logger.warn(f'MPC has no orbital elements for "{name}"')
     elif len(elements) < 5:
-        logger and logger.warn('Orbital element parsing error for "{name}"')
+        logger and logger.warn(f'Orbital element parsing error for "{name}"')
+
+    # Mean anomaly, plus the element epoch and perihelion time as date strings; these
+    # support sky-position calculations via orbital_radec.
+    cell = soup.find('td', string='mean anomaly (°)')
+    if cell:
+        try:
+            elements['M'] = float(cell.parent.find_all('td')[1].get_text())
+        except ValueError:  # pragma: no cover - malformed cell
+            pass
+
+    for key, text in [('EPOCH', 'epoch'),
+                      ('T', 'perihelion date'),
+                     ]:
+        cell = soup.find('td', string=text)
+        if not cell:
+            continue
+        try:
+            elements[key] = _mpc_date_to_str(cell.parent.find_all('td')[1].get_text())
+        except ValueError:  # pragma: no cover - malformed cell
+            pass
 
     return mpc_body_dict(names, elements)
 

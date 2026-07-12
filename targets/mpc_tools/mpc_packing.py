@@ -146,7 +146,7 @@ def _mpc_unpack_extended(packed: str) -> str:
 
 # Year uses "A" for 1800-1925, is valid through 2099
 _MPYEAR = r'(?:A8\d\d|A9(?:[01]\d|2[0-4])|19(?:2[5-9]|[3-9]\d)|20\d\d)'
-MPC_UNPACKED_PATTERN = rf'(?:{_MPYEAR} [A-HJ-Y][A-HJ-Z]\d*|\d{4} (?:P-L|T-[123]))'
+MPC_UNPACKED_PATTERN = rf'(?:{_MPYEAR} [A-HJ-Y][A-HJ-Z]\d*|\d{{4}} (?:P-L|T-[123]))'
 MPC_PACKED_PATTERN = (r'(?:[IJK]\d\d[A-HJ-Y][0-9A-Za-z]\d[A-HJ-Z]'
                       r'|(?:PL|T[123])S[1-9]\d{3})')
 MPC_EXTENDED_PATTERN = '_[P-Z][A-HJ-Y][0-9A-Za-z]{4}'
@@ -176,9 +176,7 @@ def mpc_is_valid_packed(name: str, *, extended: bool = False) -> bool:
 
     if _PACKED.match(name):
         return True
-    if extended and _EXTENDED.match(name):
-        return True
-    return False
+    return bool(extended and _EXTENDED.match(name))
 
 
 def _to_base62(n: int) -> str:
