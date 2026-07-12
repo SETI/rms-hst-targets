@@ -3,6 +3,10 @@
 ##########################################################################################
 
 SPT_REPAIRS = {
+    '1431'      : 'ANTISOLAR_POINTING',             # TARGNAME "ANTISUN"; RA/DEC_TARG is
+    '1478'      : 'ANTISOLAR_POINTING',             #   the anti-solar point (no body)
+    'ANTISUN'   : 'ANTISOLAR_POINTING',             # ditto; these have TARG_ID="ANTISUN"
+    'ASLAG'     : 'ANTISOLAR_POINTING',             # prog 3069; pointing is anti-solar
     '2442'      : {'TARGNAME': 'COMET-SL-1991A1'},  # was a random string
     '2569'      : {'MT_LV1_1': 'STD=PLUTO'},        # missing TARG_ID, no MT_LV1 in some
     '9991_1'    : {'TARGNAME': 'KBO1999RZ253'},     # was "ANY"; same as prev
@@ -26,15 +30,44 @@ SPT_REPAIRS = {
     '10514_174' : {'TARGNAME': '02PP149'},          # was "ANY"; from APT file
     '10514_191' : {'TARGNAME': '02VU130'},          # was "ANY"; from APT file
     '10514_197' : {'TARGNAME': '02XV93'},           # was "ANY"; from APT file
+    '5590_1'    : {'TARGNAME': 'D/1993 F2'},        # was "SL-COL": SL9 pre-impact
+    '5834_1'    : {'MT_LV1_1': 'TYPE=COMET , Q = 2.6993596 , E = 0.9988181 , '
+                               'I = 116.66543 , O =',
+                   'MT_LV1_2': ' 49.69009 , W = 235.46970 , T = 06-SEP-85:08:03:14 '
+                               ', EPOCH = 29'},
+                                                    # header I/O/W were wrong in no
+                                                    #   recognizable frame; Q, E, and T
+                                                    #   match C/1984 K1 (Shoemaker), so
+                                                    #   its catalog angles are used
+    '6497_1'    : 'TNO_SURVEY',                     # "Kuiper belt field 1", blind search
+    '6841_2'    : {'MT_LV1_1': 'TYPE=COMET,Q=.5320503,E=.8242432, I=4.24869,'
+                               'O=89.15214,W=326.05'},  # header had Q=.05320503 (10x off)
+    '8800_*'    : 'SLEW_TEST',                      # "Slew while exposing", dummy elements
     '10545_22'  : {'TARKEY2':  'HAUMEA'},           # was "KBO-Santa"
+    '10781_11'  : {'MT_LV1_1': 'TYPE=COMET,Q=5.83260440906976,'
+                               'E=0.4564002785487747,I=4.34413174'},
+                                                    # header had Q=10.7296 (the semimajor
+                                                    #   axis); the program itself re-flew
+                                                    #   target "2000EC98-CORRECTION"
+    '11113_14'  : {'TARGNAME': '05XU100'},          # was "05UX100" (letters transposed);
+                                                    #   confirmed by elements + position
     '11113_18'  : {'MT_LV1_1': 'FILE='},
     '11113_52'  : {'TARGNAME': '05SD278'},          # was "05SD258"
     '12535_3'   : 'TNO_SURVEY',
     '12535_4'   : 'TNO_SURVEY',
     '12535_5'   : 'TNO_SURVEY',
+    '12891_8'   : {'TARGNAME': '16974'},            # was "TROJAN13331", but the elements
+                                                    #   and position are (16974) Iphthime
     '13633_*'   : 'TNO_SURVEY',
     '14498_1'   : {'TARGNAME': 'P2010-V1'},         # was "P2010-V-C-OFFSET"
+    '15108_1'   : {'TARGNAME': '14OS393'},          # was "K14OD3S": packed "K14Od3S"
+                                                    #   (2014 OS393) upcased in the header
     '16183_6'   : {'MT_LV1_1': 'FILE='},
+    '16192_2'   : {'TARGNAME': '300163'},           # was "288P2"; 288P = (300163), which
+    '16192_3'   : {'TARGNAME': '300163'},           #   is not in the comet database
+    '16687_2'   : {'TARGNAME': '300163'},           # was "288P-B" (binary component)
+    '17707_1'   : {'TARGNAME': '469705'},           # was "KAGARA": (469705) ǂKá̦gára has
+                                                    #   click letters the MPC can't match
 
     # Occultation studies
     '2771'      : {'MT_LV1_1': 'STD=SATURN'},       # HSP Saturn occ

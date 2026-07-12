@@ -216,6 +216,18 @@ def test_comet_rescued_by_elements_and_name() -> None:
     assert bodies[0]['full_name'] == 'C/1991 T2 (Shoemaker-Levy)'
 
 
+def test_element_typo_fixed_by_override() -> None:
+    # Program 6841 header had Q=.05320503 (10x too small); the override repairs it
+    bodies = identify_target(_header('6841/u33k0201t_shm.fits'))
+    assert bodies[0]['full_name'] == '45P/Honda-Mrkos-Pajdusakova'
+
+
+def test_sl9_precollision_override() -> None:
+    # TARGNAME "SL-COL" (ephemeris from file): the override names D/1993 F2 directly
+    bodies = identify_target(_header('5590/u2640101t_shm.fits'))
+    assert bodies[0]['full_name'] == 'D/1993 F2 (Shoemaker-Levy 9)'
+
+
 ##########################################################################################
 # Minor planets
 ##########################################################################################
@@ -301,19 +313,67 @@ def test_asteroid_position_winnow_fails(monkeypatch: pytest.MonkeyPatch) -> None
         identify_target(header)
 
 
-def test_asteroid_position_incompatible_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    # A body identified by name whose sky position contradicts RA_TARG/DEC_TARG raises
-    # when no better candidate exists
+def test_inconsistent_ra_targ_skips_position_check(
+        caplog: pytest.LogCaptureFixture) -> None:
+    # When RA_TARG/DEC_TARG does not track the header's own ephemeris, the pointing is
+    # not at the body and the sky-position check must be skipped, not failed
     pytest.importorskip('palpy')
     header = _header('9110/o6e939010_spt.fits')      # TARGNAME "1999RZ253"
     header['RA_TARG'] = (float(header['RA_TARG']) + 90.) % 360.
 
-    def _no_candidates(*args: Any, **kwargs: Any) -> list[tuple[dict[str, Any], float]]:
-        return []
+    logger = logging.getLogger('test_skip')
+    with caplog.at_level(logging.INFO, logger='test_skip'):
+        bodies = identify_target(header, logger=logger)
+    assert bodies[0]['full_name'] == '66652 Borasisi'
+    assert 'position check skipped' in caplog.text
 
-    monkeypatch.setattr('targets.mpc_tools.mpc_query_by_elements', _no_candidates)
+
+def test_pholus_pointing_not_at_body() -> None:
+    # Program 7239: RA_TARG is ~68 degrees from where both the header orbit and the
+    # catalog put Pholus; the body is still identified from the name and elements
+    pytest.importorskip('palpy')
+    bodies = identify_target(_header('7239/n4je09010_spt.fits'))
+    assert bodies[0]['full_name'] == '5145 Pholus'
+
+
+def test_asteroid_position_incompatible_raises() -> None:
+    # Program 11113 target 14 ("05UX100") carries orbital elements that are not
+    # 2005 UX100's: with the SPT_REPAIRS override suppressed, the position check must
+    # reject the name match (the offline network ban keeps the replacement search empty)
+    pytest.importorskip('palpy')
+    header = _header('11113/u9yz1401m_shm.fits')
+    header['TARG_ID'] = '11113_999'                  # suppress the TARGNAME repair
     with pytest.raises(TargetIdentificationError, match='beyond the tolerance'):
         identify_target(header)
+
+
+def test_mislabeled_targname_fixed_by_override() -> None:
+    # The same entry with its override identifies the body actually observed
+    pytest.importorskip('palpy')
+    bodies = identify_target(_header('11113/u9yz1401m_shm.fits'))
+    assert bodies[0]['full_name'] == '(308634) 2005 XU100'
+
+
+def test_revised_orbit_accepted(caplog: pytest.LogCaptureFixture) -> None:
+    # (19308) 1996 TO66: the catalog orbit was revised after the observation, so the
+    # propagated position misses RA_TARG, but the elements still match; accept
+    pytest.importorskip('palpy')
+    logger = logging.getLogger('test_revised')
+    with caplog.at_level(logging.INFO, logger='test_revised'):
+        bodies = identify_target(_header('8258/o5lk05g2q_spt.fits'), logger=logger)
+    assert bodies[0]['full_name'] == '(19308) 1996 TO66'
+    assert bodies[0]['ttype'] == 'T'
+    assert 'revised after the observation' in caplog.text
+
+
+def test_comet_rescued_from_wrong_name() -> None:
+    # TARGNAME "KUSHIDA" resolves to 144P/Kushida, but the elements identify
+    # 147P/Kushida-Muramatsu, whose name also matches
+    bodies = identify_target(_header('8699/u65z7a01r_shm.fits'))
+    assert bodies[0]['full_name'] == '147P/Kushida-Muramatsu'
+
+    bodies = identify_target(_header('8699/u65z7i01r_shm.fits'))
+    assert bodies[0]['full_name'] == 'C/1999 T1 (McNaught-Hartley)'
 
 
 def test_palpy_unavailable_degrades(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -339,6 +399,22 @@ def test_tno_survey_sentinel() -> None:
     # TARG_ID 12535_3 is flagged TNO_SURVEY: no identifiable target, no exception
     bodies = identify_target(_header('12535/ibr001faq_spt.fits'))
     assert bodies == []
+
+
+def test_no_target_sentinels() -> None:
+    # Anti-solar pointings, slew tests, and parallel fields have no identifiable target
+    assert identify_target(_header('1431/w0aqxp01t_shf.fits')) == []   # ANTISUN
+    assert identify_target(_header('3069/v0e10101t_shf.fits')) == []   # ASLAG
+    assert identify_target(_header('8800/u69va201r_shm.fits')) == []   # SLEW-11
+    assert identify_target(_header('6497/o45001010_spt.fits')) == []   # Kuiper field
+    assert identify_target(_header('12537/ibu5110e1_spt.fits')) == []  # parallel
+
+
+def test_internal_calibration_targnames() -> None:
+    # Lamp/calibration exposures (COS "WAVE", FOS "TALED") are not sky targets
+    assert identify_target(_header('17780/lfee01fgq_spt.fits')) == []
+    assert identify_target(_header('2569/y11e0c03t_shf.fits')) == []
+    assert identify_target({'TARGNAME': 'DARK', 'TARG_ID': '1_1'}) == []
 
 
 def test_wildcard_override() -> None:
@@ -407,6 +483,15 @@ def test_parse_mt_lv_other_kinds() -> None:
                         'MT_LV2') == ('OFFSET', None)
     assert _parse_mt_lv({}, 'MT_LV1') == (None, None)
     assert _parse_mt_lv({'MT_LV1_1': '   '}, 'MT_LV1') == (None, None)
+
+
+def test_parse_mt_lv_drops_free_text() -> None:
+    # Program 6854: a scheduling comment follows the STD field after a comma; it must
+    # not be glued onto the value
+    header = {'MT_LV1_1': 'STD = SATURN,CML OF SATURN FROM EARTH BETWEEN 0 60'}
+    assert _parse_mt_lv(header, 'MT_LV1') == ('STD', 'SATURN')
+    bodies = identify_target(_header('6854/o4bd04vmq_spt.fits'))
+    assert bodies[0]['name'] == 'Saturn'
 
 
 def test_collect_strings_skips_category() -> None:
