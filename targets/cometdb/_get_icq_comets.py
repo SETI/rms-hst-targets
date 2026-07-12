@@ -6,7 +6,7 @@ from logging import Logger
 
 import bs4
 
-from ._utils import _read_content, _compare_content, _fetch
+from ._utils import _compare_content, _fetch, _read_content
 
 _ICQ_URL = 'http://www.icq.eps.harvard.edu/names1.html'
 _ICQ_BASENAME = 'icq_names1.txt'

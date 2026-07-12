@@ -170,7 +170,3 @@ interactive tester artifacts, **not** collected by pytest:
 * `SPT_TESTS_OUTPUT.txt` — baseline output of running `hst_repairs` over the
   whole corpus (regenerate via the `if False:` block at the bottom of
   `targets/hst_repairs.py`); diff after changing the repair tables.
-* `_IDENTIFY_SMALL_BODY_TESTER_OUPUT.txt` — captured log of a bulk
-  `identify_small_body` run over the corpus, with each `*** FAILED! ***` case
-  and its full log narrative; the driver loop it records is preserved in git
-  history as `_IDENTIFY_SMALL_BODY_TESTER.py`.

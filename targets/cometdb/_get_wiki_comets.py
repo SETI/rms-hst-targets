@@ -2,14 +2,15 @@
 # cometdb/_get_wiki_comets.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
 import anyascii
 import bs4
 
-from ._utils import _read_content, _compare_content, _fetch
 from targets.mpc_tools import mpc_query_by_name
+
+from ._utils import _compare_content, _fetch, _read_content
 
 _WIKI_URLS = [('https://en.wikipedia.org/wiki/List_of_periodic_comets', 12),
               ('https://en.wikipedia.org/wiki/List_of_Halley-type_comets', 12),
@@ -170,7 +171,7 @@ _NP_NAME_N_FRAG2 = re.compile(r'.*\(\s*' + _NP_NAME_N_FRAG.pattern[:-1] + r'\s*\
                               re.DOTALL)
 
 # Extracted from https://en.wikipedia.org/wiki/Halley%27s_Comet#List_of_apparitions
-_HALLEY_DESIGS = ['P/−239 K1', 'P/−163 U1', 'P/−86 Q1', 'P/−11 Q1', 'P/66 B1',
+_HALLEY_DESIGS = ['P/-239 K1', 'P/-163 U1', 'P/-86 Q1', 'P/-11 Q1', 'P/66 B1',
                   'P/141 F1', 'P/218 H1', 'P/295 J1', 'P/374 E1', 'P/451 L1',
                   'P/530 Q1', 'P/607 H1', 'P/684 R1', 'P/760 K1', 'P/837 F1',
                   'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
@@ -263,7 +264,7 @@ def _get_wiki_numbered_comets(
     comets[0]['year'] = _HALLEY_DESIGS[0][3:7]
 
     # Read the fragment tables
-    for k, row in enumerate(rows):
+    for row in rows:
         cells = row.find_all('td')
         if len(cells) != 10:  # these tables all have 10 columns per row
             continue

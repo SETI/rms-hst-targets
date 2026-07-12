@@ -90,7 +90,7 @@ def _parse_epoch_to_tt(datestr, scale):
         hour, minute, sec = int(hh), int(mm), float(ss)
     except (ValueError, KeyError):
         raise ValueError(
-            "date must look like '25-DEC-2011:00:00:00', got %r" % datestr) from None
+            f"date must look like '25-DEC-2011:00:00:00', got {datestr!r}") from None
 
     mjd0 = pal.cldj(year, month, day)                 # MJD at 0h of that day
     mjd = mjd0 + (hour * 3600.0 + minute * 60.0 + sec) / 86400.0
@@ -101,7 +101,7 @@ def _parse_epoch_to_tt(datestr, scale):
         return mjd + (pal.dat(mjd) + _TT_MINUS_TAI) / 86400.0
     if scale in ("TDB", "TDT", "TT"):
         return mjd                                    # TDB ~ TT to < 2 ms
-    raise ValueError("scale must be 'UTC' or 'TDB', got %r" % scale)
+    raise ValueError(f"scale must be 'UTC' or 'TDB', got {scale!r}")
 
 
 # --------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def _hms(ra_rad):
     m = (h - hh) * 60.0
     mm = int(m)
     ss = (m - mm) * 60.0
-    return "%02d:%02d:%06.3f" % (hh, mm, ss)
+    return f"{hh:02d}:{mm:02d}:{ss:06.3f}"
 
 
 def _dms(dec_rad):
@@ -124,7 +124,7 @@ def _dms(dec_rad):
     m = (d - dd) * 60.0
     mm = int(m)
     ss = (m - mm) * 60.0
-    return "%s%02d:%02d:%05.2f" % (sign, dd, mm, ss)
+    return f"{sign}{dd:02d}:{mm:02d}:{ss:05.2f}"
 
 
 # --------------------------------------------------------------------------
@@ -149,7 +149,7 @@ def _rotate_elements_to_j2000(orbinc, anode, perih):
     from the B1950 ecliptic/equinox to J2000.  a/q, e and the phase are
     unchanged, so only these three angles are transformed."""
     si, ci = math.sin(orbinc), math.cos(orbinc)
-    sO, cO = math.sin(anode), math.cos(anode)
+    sO, cO = math.sin(anode), math.cos(anode)  # noqa: N806  (Ω, the ascending node)
     sw, cw = math.sin(perih), math.cos(perih)
     # orbital angular-momentum pole and pericenter direction, B1950 ecliptic
     pole = np.array([si * sO, -si * cO, ci])
@@ -264,7 +264,7 @@ def asteroid_radec(a, e, incl, node, arg_peri, mean_anom, epoch,
     """Geocentric RA/Dec of an asteroid / elliptical body (JFORM=2).
 
     Elements are heliocentric, referred to the ecliptic & equinox given by
-    `equinox` (Minor Planet Circular convention):
+    ``equinox`` (Minor Planet Circular convention)::
 
         a          semimajor axis                     [AU]   (0 <= e < 1)
         e          eccentricity                       [ ]
@@ -275,12 +275,12 @@ def asteroid_radec(a, e, incl, node, arg_peri, mean_anom, epoch,
         epoch      epoch of the elements    'DD-MON-YYYY:hh:mm:ss'
         time       instant to evaluate      'DD-MON-YYYY:hh:mm:ss'
 
-    epoch_scale, time_scale : 'UTC' or 'TDB' for the two date strings.
-    apparent : True -> apparent place of date; False -> astrometric J2000.
-    perturb  : True -> apply major-planet perturbations (recommended);
-               False -> pure two-body (exact only near EPOCH).
-    equinox  : 'J2000' (default) or 'B1950'; B1950 orientation angles
-               (i, node, arg_peri) are rotated to J2000 before propagation.
+        epoch_scale, time_scale  'UTC' or 'TDB' for the two date strings.
+        apparent   True -> apparent place of date; False -> astrometric J2000.
+        perturb    True -> apply major-planet perturbations (recommended);
+                   False -> pure two-body (exact only near EPOCH).
+        equinox    'J2000' (default) or 'B1950'; B1950 orientation angles
+                   (i, node, arg_peri) are rotated to J2000 before propagation.
 
     Returns RaDec(ra_deg, dec_deg, delta_au, ra_hms, dec_dms).
     """
@@ -299,7 +299,7 @@ def comet_radec(q, e, incl, node, arg_peri, peri_time, epoch,
                 equinox="J2000"):
     """Geocentric RA/Dec of a comet / near-parabolic body (JFORM=3).
 
-    Same as :func:`asteroid_radec` except:
+    Same as :func:`asteroid_radec` except::
 
         q          pericenter distance                [AU]   (any e >= 0)
         peri_time  time of pericenter passage   (T)   'DD-MON-YYYY:hh:mm:ss'
@@ -310,14 +310,14 @@ def comet_radec(q, e, incl, node, arg_peri, peri_time, epoch,
                    which the given elements osculate, from which the planetary
                    perturbations are integrated forward to `time`.
 
-    Handles elliptical, parabolic (e == 1) and hyperbolic (e > 1) comets.
+    Handles elliptical, parabolic (e == 1) and hyperbolic (e > 1) comets::
 
-    peri_time_scale, epoch_scale, time_scale : 'UTC' or 'TDB' for each date.
-    apparent : True -> apparent place of date; False -> astrometric J2000.
-    perturb  : True -> apply major-planet perturbations (recommended);
-               False -> pure two-body (exact only near perihelion/epoch).
-    equinox  : 'J2000' (default) or 'B1950'; B1950 orientation angles
-               (i, node, arg_peri) are rotated to J2000 before propagation.
+        peri_time_scale, epoch_scale, time_scale  'UTC' or 'TDB' for each date.
+        apparent   True -> apparent place of date; False -> astrometric J2000.
+        perturb    True -> apply major-planet perturbations (recommended);
+                   False -> pure two-body (exact only near perihelion/epoch).
+        equinox    'J2000' (default) or 'B1950'; B1950 orientation angles
+                   (i, node, arg_peri) are rotated to J2000 before propagation.
 
     Returns RaDec(ra_deg, dec_deg, delta_au, ra_hms, dec_dms).
     """

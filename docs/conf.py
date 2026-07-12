@@ -9,24 +9,22 @@ import datetime
 import importlib.metadata
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
 
-# Verify the source path exists
-if not os.path.exists(os.path.abspath('../src')):
-    import warnings
-    warnings.warn("Source directory '../src' not found. API documentation may be incomplete.")
+# The importable package lives at the repository root as targets/, so the repo
+# root must be on the path for autodoc to import it.
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'REPONAME'
+project = 'rms-hst-targets'
 copyright = f'{datetime.date.today().year}, SETI Institute'
 author = 'SETI Institute'
 
 # The full version, including alpha/beta/rc tags
 try:
-    release = importlib.metadata.version('REPONAME')
+    release = importlib.metadata.version('rms-hst-targets')
 except importlib.metadata.PackageNotFoundError:
-    release = '1.0.0'  # fallback for development
+    release = '0.0.0'  # fallback for an uninstalled working tree
 
 # -- General configuration ---------------------------------------------------
 
@@ -98,6 +96,10 @@ myst_enable_extensions = [
     "colon_fence",
     "deflist",
 ]
+
+# Generate anchors for h1-h3 headings so in-page links like [text](#some-heading)
+# in the Markdown guides resolve.
+myst_heading_anchors = 3
 
 # Mermaid settings — use client-side rendering so no mmdc binary is required
 # in CI or on ReadTheDocs.

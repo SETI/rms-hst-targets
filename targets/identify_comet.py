@@ -5,8 +5,7 @@
 import re
 from logging import Logger
 
-from targets import cometdb
-from targets import mpc_tools
+from targets import cometdb, mpc_tools
 from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
 
 _NUM = r'(?:[1-9]\d*)'
@@ -94,7 +93,7 @@ def identify_comet_by_strings(strings, *, logger=None):
         strings = [strings]
 
     # Select the properly formatted options
-    formatted, unused, confidence = comet_identifiers(strings)
+    _formatted, unused, _confidence = comet_identifiers(strings)
 
     # Interpret each string as a comet name
     comets = {}     # comet key -> comet
@@ -163,7 +162,7 @@ def identify_comet(
     has_elements = ('A' in elements or 'Q' in elements)
 
     # Query by strings
-    comets, used, unused, status = identify_comet_by_strings(strings)
+    comets, used, unused, _status = identify_comet_by_strings(strings)
 
     # For an empty list of comets, query by elements alone
     if not comets:

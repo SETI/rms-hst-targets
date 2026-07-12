@@ -3,7 +3,6 @@
 ##########################################################################################
 
 import re
-from logging import Logger
 
 from targets import mpc_tools
 
@@ -69,12 +68,14 @@ def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
     optional orbital elements.
 
     Parameters:
-
-    strings: list[str],
-    elements: dict[str, float], *,
-    confidence: int,
-    rms: float = 0.05,
-    logger: Logger | None = None
+        strings: One or more strings that potentially identify a minor planet.
+        elements: A dictionary of orbital elements keyed by element name; empty if
+            no orbital elements are available.
+        confidence: Numeric 0-9 confidence that the strings name a minor planet, as
+            returned by `minor_planet_identifiers`.
+        rms: Upper limit on the fractional root-mean-square element discrepancy for a
+            match to be accepted.
+        logger: An optional Logger for messages.
 
     Returns:
         tuple: `(best_body, best_rms, valid)`:
@@ -90,7 +91,7 @@ def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
     has_elements = ('A' in elements or 'Q' in elements)
 
     # Query by strings
-    bodies, used, unused, status = _identify_minor_planets_by_strings(strings)
+    bodies, used, unused, _status = _identify_minor_planets_by_strings(strings)
 
     # For an empty list of bodies, query by elements alone
     if not bodies:
@@ -206,7 +207,7 @@ def _identify_minor_planets_by_strings(strings):
     """
 
     # Separate the formatted and un-formatted strings
-    formatted, unused, confidence = minor_planet_identifiers(strings)
+    formatted, unused, _confidence = minor_planet_identifiers(strings)
 
     used = {}  # string -> mpc result as a dict
     mpc_dicts = []

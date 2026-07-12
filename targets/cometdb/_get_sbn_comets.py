@@ -2,12 +2,12 @@
 # cometdb/_get_sbn_comets.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
 import bs4
 
-from ._utils import _read_content, _compare_content, _fetch
+from ._utils import _compare_content, _fetch, _read_content
 
 _SBN_URL = 'https://pds-smallbodies.astro.umd.edu/data_sb/resources/periodic_comets.shtml'
 _SBN_BASENAME = 'sbn_periodic_comets.txt'

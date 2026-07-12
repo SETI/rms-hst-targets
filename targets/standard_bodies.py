@@ -38,8 +38,8 @@ To use::
 
 """
 
-from targets.roman import int_to_roman
 from targets._STANDARD_BODY_LIST import _STANDARD_BODY_LIST
+from targets.roman import int_to_roman
 
 _NAME     = 0
 _NUMBER   = 1
@@ -149,7 +149,7 @@ def _build_dicts():
         STANDARD_BODY_DICT[info[_NAME]] = body
 
     STANDARD_BODY_LOOKUP = {}
-    for key, body in STANDARD_BODY_DICT.items():
+    for body in STANDARD_BODY_DICT.values():
         lookups = body['lookups']
         uppercase = [k.upper() for k in lookups]
         lookups = lookups + uppercase

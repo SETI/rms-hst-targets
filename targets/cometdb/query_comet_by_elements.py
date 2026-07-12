@@ -4,14 +4,15 @@
 
 from logging import Logger
 
-from ._utils import comet_dicts
 from targets.mpc_tools import element_resid
+
+from ._utils import comet_dicts
 
 
 def query_comet_by_elements(
     elements: dict[str, float], *,
     count: int = 1,
-    comets: list[dict] = [],
+    comets: list[dict] | None = None,
     fragments: bool = True,
     logger: Logger | None = None
 ) -> tuple[str, float] | list[tuple[str, float]]:
@@ -65,7 +66,7 @@ def query_comet_by_elements(
     if count == 1:
         return comet_dict[key], rms
 
-    rms_list = ', '.join(['%.4f' % resid[0] for resid in resids[1:count]])
+    rms_list = ', '.join([f'{resid[0]:.4f}' for resid in resids[1:count]])
     logger and logger.info(f'Next-best orbit residuals: [{rms_list}]')
     pairs = []
     for resid in resids[:count]:

@@ -2,14 +2,14 @@
 # cometdb/_get_wiki_centaurs.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
 import anyascii
 import bs4
 import requests
 
-from ._utils import _read_content, _compare_content
+from ._utils import _compare_content, _read_content
 
 _WIKI_CENTAUR_URL = ('https://en.wikipedia.org/wiki/List_of_centaurs_(small_Solar_System'
                      '_bodies)')

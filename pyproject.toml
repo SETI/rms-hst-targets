@@ -169,12 +169,19 @@ quote-style = "single"
 # N = pep8-naming; PT = pytest-style; RUF = Ruff-specific (e.g. unused noqa).
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "A", "N", "PT", "RUF"]
 # PT011 - pytest.raises is too broad.
+# SIM102 - Use a single if instead of nested ifs.
 # SIM105 - Use contextlib.suppress for suppressions.
 # SIM108 - Use ternary operator for simple if/else.
-extend-ignore = ["PT011", "SIM105", "SIM108"]
+# RUF005 - Prefer iterable unpacking over concatenation ([*a, b] vs a + [b]).
+extend-ignore = ["PT011", "SIM102", "SIM105", "SIM108", "RUF005"]
 
 [tool.ruff.lint.per-file-ignores]
-#"TODO" = ["TODO"]
+# TargetType.NAME is an intentional class-level constant lookup, not a per-instance
+# mutable default.
+"targets/targettype.py" = ["RUF012"]
+# The caps-named data-table modules (_HST_PROGRAM_OVERRIDES, _STANDARD_BODY_LIST, ...)
+# use SCREAMING_SNAKE_CASE deliberately to mark them as constant tables.
+"targets/_*.py" = ["N999"]
 
 [tool.pymarkdown.plugins.md013]
 # Line length (disable so README/CONTRIBUTING can use longer lines).

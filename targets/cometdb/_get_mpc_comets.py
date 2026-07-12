@@ -2,12 +2,12 @@
 # cometdb/_get_mpc_comets.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
 import bs4
 
-from ._utils import _read_content, _compare_content, _fetch
+from ._utils import _compare_content, _fetch, _read_content
 
 _MPC_URL = 'https://www.minorplanetcenter.net/iau/lists/PeriodicCodes.html'
 _MPC_BASENAME = 'mpc_PeriodicCodes.txt'
@@ -46,7 +46,7 @@ def _get_mpc_comets(
 
     # Extract comet info from table
     comets = []
-    for rec in recs:
+    for k, rec in enumerate(recs):
         error_found = False
         for test in _COLUMN_TESTS:
             col, chars = test if isinstance(test, tuple) else (test, ' ')

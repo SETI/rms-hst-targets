@@ -9,7 +9,7 @@ Identifies HST small-body moving targets (comets, asteroids/minor planets, stand
 The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `packages.find where = ["targets"]` and pytest `pythonpath = ["targets"]`, so modules import bare, e.g. `import identify_comet`, `from mpc_tools import mpc_packing`.
 
 - `targets/` — main package: identification logic (`identify_small_body.py`, `identify_comet.py`, `identify_minor_planet.py`, `standard_bodies.py`, `orbital_radec.py`), data modules (`_STANDARD_BODY_LIST.py`, `_HST_PROGRAM_OVERRIDES.py`, etc.), and subpackages `cometdb/` (comet/centaur DB builders & scrapers) and `mpc_tools/` (MPC packing/queries).
-- `tests/` — pytest tests. Also holds non-pytest tester scripts and fixtures named in caps (`_IDENTIFY_SMALL_BODY_TESTER.py`, `SPT_TESTS.py`, `_TEST_OUTPUT.txt`) — these are not collected by pytest.
+- `tests/` — pytest tests. Also holds non-pytest fixtures/baselines named in caps (`SPT_TESTS.py`, `SPT_TESTS_OUTPUT.txt`) — these are not collected by pytest.
 - `support/` — maintenance / data-refresh scripts (`update_cometdb.py`, `retrieve_mast_moving_target_spts.py`, `reality_check_radec.py`). Not shipped.
 - `caches/` — on-disk data caches: `COMET_CACHE/`, `MPC_CACHE/`, `TARGET_XML_CACHE/` (committed). Modules find these by repo-relative path, falling back to `./NAME`.
 

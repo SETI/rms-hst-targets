@@ -3,11 +3,11 @@
 ##########################################################################################
 
 import datetime
-from logging import Logger
 import os
 import pathlib
 import pickle
 import re
+from logging import Logger
 
 import requests
 
@@ -126,7 +126,7 @@ def _compare_content(
     if changed:
         try:
             cache_path.write_text(content)
-        except IOError as e:
+        except OSError as e:
             logger and logger.warn(f'Unable to write COMET_CACHE/{basename}: {e}')
         else:
             verb = 'rewritten' if found else 'written'

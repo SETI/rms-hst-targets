@@ -4,9 +4,10 @@
 
 from logging import Logger
 
-from ._get_johnston_centaurs import _get_johnston_centaurs
 # from ._get_wiki_centaurs import _get_wiki_centaurs  # not used
 from targets.targettype import TargetType
+
+from ._get_johnston_centaurs import _get_johnston_centaurs
 
 
 def _build_centaur_dicts(

@@ -2,16 +2,17 @@
 # cometdb/_build_comet_dicts.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
 from targets.targettype import TargetType
-from .repair_comet import repair_comet
+
 from ._get_icq_comets import _get_icq_comets
 from ._get_mpc_comets import _get_mpc_comets
 from ._get_sbn_comets import _get_sbn_comets
 from ._get_ssd_comets import _get_ssd_comets
 from ._get_wiki_comets import _get_wiki_comets
+from .repair_comet import repair_comet
 
 _INT_MATCH = re.compile(r'(-?\d+)')
 
@@ -118,7 +119,7 @@ def _build_comet_dicts(
                 _merge_comets(comets[key], comet, first_elements=False, logger=logger)
 
     # For named, numbered comets, move the designation to the alt list
-    for key, comet in comets.items():
+    for comet in comets.values():
         if len(comet['prefix']) > 1 and comet.get('name', '') and comet.get('desig', ''):
             desig_frag = comet['desig'] + ('-' + comet.get('fragment', '')).rstrip('-')
             comet.setdefault('alt_desigs', []).append(desig_frag)
@@ -333,7 +334,7 @@ def _complete_comets(
         logger and logger.info(f'Parent comet {parent_key} constructed')
 
     # Make sure fragments have all the designations of their parent
-    for key, comet in comets.items():
+    for comet in comets.values():
         parent_key = comet.get('parent_key', '')
         if parent_key:
             parent = comets[parent_key]
@@ -353,7 +354,7 @@ def _complete_comets(
         _clean_comet(comet)  # because this could create new duplicate alt_desigs
 
     # Fill in year
-    for key, comet in comets.items():
+    for comet in comets.values():
 
         # Fill in year
         years = [-9999]  # if no year is found
@@ -378,12 +379,12 @@ def _complete_comets(
             logger and logger.warn(f'Comet year is unavailable for {key}')
 
     # Fill in NAIF IDs for minor planets
-    for key, comet in comets.items():
+    for comet in comets.values():
         if 'mnum' in comet and 'naif_id' not in comet:
             comet['naif_id'] = 2000000 + int(comet['mnum'])
 
     # Fill in full names and aliases
-    for key, comet in comets.items():
+    for comet in comets.values():
         _fill_comet_aliases(comet)
 
 
@@ -431,8 +432,11 @@ def _clean_comet(
     comet['ttype'] = TargetType.COMET
 
 
-def _clean_list(list_: list[str], extras: list[str] = []) -> list[str]:
+def _clean_list(list_: list[str], extras: list[str] | None = None) -> list[str]:
     """Strip duplicates and designation "extras" from a list."""
+
+    if extras is None:
+        extras = []
 
     cleaned_list = []
     for item in list_:

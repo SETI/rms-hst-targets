@@ -2,9 +2,9 @@
 # mpc_tools/mpc_query_by_elements.py
 ##########################################################################################
 
-from logging import Logger
 import math
 import re
+from logging import Logger
 
 import numpy as np
 import requests
@@ -23,7 +23,7 @@ def mpc_query_by_elements(
     elements: dict,
     delta: float = 0.04, *,
     count: int = 1,
-    bodies: list[dict] = [],
+    bodies: list[dict] | None = None,
     logger: Logger | None = None
 ) -> tuple[str, float] | list[tuple[str, float]]:
     """Identify a body in the MPC database based on orbital elements.
@@ -78,7 +78,7 @@ def mpc_query_by_elements(
         if count == 1:
             return body, rms
 
-        rms_list = ', '.join(['%.4f' % resid[0] for resid in resids[1:count]])
+        rms_list = ', '.join([f'{resid[0]:.4f}' for resid in resids[1:count]])
         logger and logger.info(f'Next-best orbit residuals: [{rms_list}]')
         pairs = []
         for resid in resids[:count]:
@@ -88,7 +88,7 @@ def mpc_query_by_elements(
         return pairs
 
     reduced = False
-    for iterations in range(5):
+    for _ in range(5):
         url = _mpc_element_query_url(elements, delta)
         try:
             table = _read_mpc_element_table(url)
@@ -117,7 +117,7 @@ def mpc_query_by_elements(
     if count == 1:
         return (mpc_query_by_name(key), rms)
 
-    rms_list = ', '.join(['%.4f' % resid[0] for resid in resids[1:count]])
+    rms_list = ', '.join([f'{resid[0]:.4f}' for resid in resids[1:count]])
     logger and logger.debug(f'Next-best orbit residuals: [{rms_list}]')
 
     return [(mpc_query_by_name(key), rms) for rms, key in resids[:count]]

@@ -2,18 +2,16 @@
 # targets/hst_repairs.py
 ##########################################################################################
 
-import re
+import re  # noqa: I001  (keep the hand-aligned import wrapping below)
 from collections import deque
 
-from targets.mpc_tools import mpc_unpack, MPC_PACKED_PATTERN
-from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
-
+from targets._TARGET_STRING_REPAIRS import _TARGET_STRING_REPAIRS
 from targets._TARGNAME_PREFIX_SUFFIX_PATTERNS import (_TARGNAME_PREFIX_PATTERNS,
                                                       _TARGNAME_SUFFIX_PATTERNS,
                                                       _TARGNAME_SUFFIX_PATTERNS_NO_TAIL)
-from targets._TARGET_STRING_REPAIRS import _TARGET_STRING_REPAIRS
-from targets._UNDIAGNOSTIC_TARGET_WORDS import (_UNDIAGNOSTIC_TARGET_WORDS,
-                                                _UNDIAGNOSTIC_SHORT_WORDS)
+from targets._UNDIAGNOSTIC_TARGET_WORDS import _UNDIAGNOSTIC_SHORT_WORDS, _UNDIAGNOSTIC_TARGET_WORDS
+from targets.mpc_tools import MPC_PACKED_PATTERN, mpc_unpack
+from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
 
 _TARGET_REPAIRS = []  # an ordered list of tuples (re.Pattern, substitution string)
 
@@ -85,7 +83,7 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'{_NUM}([PI]){_MPNAME}',                             r'\1\2/\3|[C]'),
     (rf'{_CYEAR}([a-hj-uwyz]1?)',                           r'\1\2|[C]'), # not roman
     (rf'{_CYEAR}-?({_ROMAN_99})',                           r'\1 \2|[C]'),
-    (rf'([PC])/?(20[0-3]\d) ?([A-HJ-UWYZ]\d)v2',              r'\1/\2 \3|[C]'),
+    (r'([PC])/?(20[0-3]\d) ?([A-HJ-UWYZ]\d)v2',              r'\1/\2 \3|[C]'),
 
     (rf'\(?{_NUM}\)?[- ]{_MYEAR}[- ]{_MSUFF}',              r'(\1)|\2 \3|[M]'),
     (rf'ASTEROID[- ]0*{_NUM}[- ]{_MPNAME}',                 r'(\1) \2|[A]'),
@@ -315,7 +313,7 @@ def _repair_string(string, sep=' ', logger=None):
     input_string = string
     logger and logger.log(LOW_LEVEL, f'Repairing: "{string}"')
 
-    BAR = '|'  # indicates DO NOT append to the last string in the answers list
+    BAR = '|'  # noqa: N806  indicates DO NOT append to the last string in the answers list
     answers = [BAR]
     strings = deque([string])
     while strings:

@@ -312,9 +312,7 @@ may be in the escape hatch, not the data.
      description harvested from the SPT cache (regenerate with
      `python support/build_spt_tests.py` — requires the `caches/SPT_CACHE`
      SSD to be mounted). Loop `identify_target` (or `identify_small_body`)
-     over it and diff the failures against the previous run; the historical
-     tester loop is preserved in `tests/_IDENTIFY_SMALL_BODY_TESTER_OUPUT.txt`
-     and in git history as `_IDENTIFY_SMALL_BODY_TESTER.py`.
+     over it and diff the failures against the previous run.
    * `hst_repairs` regressions: run the `if False:` block at the bottom of
      `targets/hst_repairs.py` over `SPT_TESTS` and diff the output against
      `tests/SPT_TESTS_OUTPUT.txt`.

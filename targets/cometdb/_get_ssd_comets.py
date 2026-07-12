@@ -2,10 +2,10 @@
 # cometdb/_get_ssd_comets.py
 ##########################################################################################
 
-from logging import Logger
 import re
+from logging import Logger
 
-from ._utils import _read_content, _compare_content, _fetch
+from ._utils import _compare_content, _fetch, _read_content
 
 _SSD_URL = 'https://ssd-api.jpl.nasa.gov/sbdb_query.api'
 _SSD_BASENAME = 'sbdb_query_results.csv'

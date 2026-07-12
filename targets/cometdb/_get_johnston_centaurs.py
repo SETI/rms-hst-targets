@@ -3,11 +3,10 @@
 ##########################################################################################
 
 from logging import Logger
-import re
 
 import bs4
 
-from ._utils import _read_content, _compare_content, _fetch
+from ._utils import _compare_content, _fetch, _read_content
 
 _JOHNSTON_URL = 'https://www.johnstonsarchive.net/astro/tnoslist.html'
 _JOHNSTON_BASENAME = 'johnstonarchive_tnoslist.txt'

@@ -13,7 +13,6 @@ This file is to be actively maintained, such that known errors and inconsistenci
 online source files are corrected before they become part of the database.
 """
 
-import re
 
 # (old designation, repaired designation)
 _DESIG_REPAIRS = [('D/1977 C1', 'D/1977 DV3'),
