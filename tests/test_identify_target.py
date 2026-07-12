@@ -396,9 +396,20 @@ def test_disallowed_minor_planet_name() -> None:
 ##########################################################################################
 
 def test_tno_survey_sentinel() -> None:
-    # TARG_ID 12535_3 is flagged TNO_SURVEY: no identifiable target, no exception
+    # TARG_ID 12535_3 is flagged TNO_SURVEY: a placeholder body named for the program
     bodies = identify_target(_header('12535/ibr001faq_spt.fits'))
-    assert bodies == []
+    assert len(bodies) == 1
+    assert bodies[0]['name'] == 'Survey HST-12535'
+    assert bodies[0]['full_name'] == 'Survey HST-12535'
+    assert bodies[0]['desig'] == ''
+    assert bodies[0]['ttype'] == 'T'
+    assert bodies[0]['ttype_name'] == 'trans-neptunian_object'
+    assert bodies[0]['lid_suffix'] == 'trans-neptunian_object.survey_hst-12535'
+
+    # The program ID is zero-padded to five digits
+    bodies = identify_target(_header('6497/o45001010_spt.fits'))    # Kuiper field
+    assert len(bodies) == 1
+    assert bodies[0]['name'] == 'Survey HST-06497'
 
 
 def test_no_target_sentinels() -> None:
@@ -406,7 +417,6 @@ def test_no_target_sentinels() -> None:
     assert identify_target(_header('1431/w0aqxp01t_shf.fits')) == []   # ANTISUN
     assert identify_target(_header('3069/v0e10101t_shf.fits')) == []   # ASLAG
     assert identify_target(_header('8800/u69va201r_shm.fits')) == []   # SLEW-11
-    assert identify_target(_header('6497/o45001010_spt.fits')) == []   # Kuiper field
     assert identify_target(_header('12537/ibu5110e1_spt.fits')) == []  # parallel
 
 
@@ -429,8 +439,17 @@ def test_nicknamed_targets_resolved_by_override() -> None:
 
 def test_undesignated_tno_sentinel() -> None:
     # Survey candidates that never received an MPC designation
-    assert identify_target(_header('16183/iedk11dbq_spt.fits')) == []   # "P72X4B2"
-    assert identify_target(_header('12887/ibzx01g4q_spt.fits')) == []   # "VNH0034"
+    bodies = identify_target(_header('16183/iedk11dbq_spt.fits'))   # "P72X4B2"
+    assert len(bodies) == 1
+    assert bodies[0]['name'] == 'Unknown HST-16183'
+    assert bodies[0]['full_name'] == 'Unknown HST-16183'
+    assert bodies[0]['desig'] == ''
+    assert bodies[0]['ttype'] == 'T'
+    assert bodies[0]['lid_suffix'] == 'trans-neptunian_object.unknown_hst-16183'
+
+    bodies = identify_target(_header('12887/ibzx01g4q_spt.fits'))   # "VNH0034"
+    assert len(bodies) == 1
+    assert bodies[0]['name'] == 'Unknown HST-12887'
 
 
 def test_internal_calibration_targnames() -> None:
@@ -443,7 +462,9 @@ def test_internal_calibration_targnames() -> None:
 def test_wildcard_override() -> None:
     # TARG_ID "13633_*" flags every target of program 13633 as TNO_SURVEY
     header = {'TARG_ID': '13633_5', 'TARGNAME': 'ANY'}
-    assert identify_target(header) == []
+    bodies = identify_target(header)
+    assert len(bodies) == 1
+    assert bodies[0]['name'] == 'Survey HST-13633'
 
 
 def test_unidentifiable_raises() -> None:

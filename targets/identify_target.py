@@ -779,8 +779,11 @@ def identify_target(
         the field of view first and the body HST tracked (if distinct) last. Every
         dictionary contains at least "name", "full_name", "ttype", "ttype_name",
         "naif_id" (or None), "aliases", "parent_key", and "lid_suffix"; small bodies
-        also carry their orbital elements. The list is empty only for programs known to
-        have no identifiable target (e.g., blind TNO surveys).
+        also carry their orbital elements. Blind TNO surveys yield a single placeholder
+        body named "Survey HST-nnnnn", and TNOs that never received an MPC designation
+        one named "Unknown HST-nnnnn", where nnnnn is the five-digit HST program ID.
+        The list is empty only for programs known to have no identifiable target (e.g.,
+        anti-solar pointings and slew tests).
 
     Raises:
         TargetIdentificationError: If no target can be identified, or if a target
@@ -792,6 +795,16 @@ def identify_target(
         header = dict(header.items())       # accept an astropy.io.fits.Header
 
     header, sentinel = _apply_overrides(header, logger)
+    if sentinel in ('TNO_SURVEY', 'UNDESIGNATED_TNO'):
+        prefix = 'Survey' if sentinel == 'TNO_SURVEY' else 'Unknown'
+        program = str(header.get('TARG_ID', '')).partition('_')[0]
+        body = _normalize_body({'name': f'{prefix} HST-{int(program):05d}',
+                                'desig': '',
+                                'ttype': TargetType.TRANS_NEPTUNIAN_OBJECT},
+                               '', logger)
+        logger and logger.info(f'Placeholder target for a program flagged '
+                               f'"{sentinel}": {body["full_name"]}')
+        return [body]
     if sentinel:
         logger and logger.info(f'No identifiable target: program is flagged '
                                f'"{sentinel}"')
