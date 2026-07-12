@@ -5,7 +5,7 @@ description: Run all linting, type checking, tests, Markdown lint, and documenta
 
 # Run All Checks
 
-Execute all project checks (lint, typecheck, test, Markdown lint, docs) and fix any errors found. This skill aligns with the `scripts/run-all-checks.sh` script and a standard Python package layout (e.g. `src/`, `tests/`, `docs/`).
+Execute all project checks (lint, typecheck, test, Markdown lint, docs) and fix any errors found. This skill aligns with the `scripts/run-all-checks.sh` script. The importable package is `targets/`; tests live in `tests/`.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ Run from **project root** with the project **virtual environment activated** (e.
 
 ```bash
 # Lint (ruff)
-python -m ruff check src tests examples
+python -m ruff check targets tests
 
 # Type check (mypy) — NEVER on targets/ or support/; only tests/ is type-checked
 MYPYPATH=targets python -m mypy tests
@@ -31,7 +31,7 @@ MYPYPATH=targets python -m mypy tests
 python -m pytest tests -q
 ```
 
-Omit `examples` if the project has no `examples/` directory. The run-all-checks script runs these in sequence; use the script’s `-c` option to run only code checks.
+The run-all-checks script runs these in sequence; use the script’s `-c` option to run only code checks.
 
 ### Markdown (PyMarkdown)
 
@@ -73,7 +73,7 @@ Set `VENV` or `VENV_PATH` to point to the virtual environment if it is not at `.
 
 ```markdown
 Check Progress:
-- [ ] Ruff check (src, tests, examples)
+- [ ] Ruff check (targets, tests)
 - [ ] Mypy (tests only; never targets/ or support/)
 - [ ] Pytest (tests)
 - [ ] PyMarkdown scan (docs/, .cursor/, README, CONTRIBUTING)
