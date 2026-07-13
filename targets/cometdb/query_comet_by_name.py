@@ -46,4 +46,7 @@ def query_comet_by_name(name, *, ambiguous=True, logger=None):
     logger and logger.info(f'No comet found matching "{name}"')
     return []
 
+
+__all__ = ['query_comet_by_name']
+
 ##########################################################################################

@@ -187,4 +187,7 @@ def mpc_query_by_name(
 
     return mpc_body_dict(names, elements)
 
+
+__all__ = ['mpc_query_by_name']
+
 ##########################################################################################

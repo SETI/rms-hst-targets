@@ -366,4 +366,10 @@ _UNDIAGNOSTIC_SHORT_WORDS = [
     'UV',
 ]
 
+
+__all__ = [
+    '_UNDIAGNOSTIC_SHORT_WORDS',
+    '_UNDIAGNOSTIC_TARGET_WORDS',
+]
+
 ##########################################################################################

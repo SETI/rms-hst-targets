@@ -64,4 +64,13 @@ def int_to_roman(num: int) -> str:
 
     return result
 
+
+__all__ = [
+    'ROMAN_PATTERN_99',
+    'ROMAN_PATTERN_999',
+    'int_to_roman',
+    'roman_to_int',
+    'validate_roman',
+]
+
 ##########################################################################################

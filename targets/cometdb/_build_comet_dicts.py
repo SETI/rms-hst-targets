@@ -584,4 +584,7 @@ def _copy_comet(comet: dict) -> dict:
 
     return new_comet
 
+
+__all__ = ['_build_comet_dicts']
+
 ##########################################################################################

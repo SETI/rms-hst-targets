@@ -114,4 +114,7 @@ def _build_centaur_dicts(
 
     return centaurs, by_lookup, by_ambiguous
 
+
+__all__ = ['_build_centaur_dicts']
+
 ##########################################################################################

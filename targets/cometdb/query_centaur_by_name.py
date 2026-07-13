@@ -33,4 +33,7 @@ def query_centaur_by_name(
     logger and logger.info(f'No centaur found matching "{name}"')
     return None
 
+
+__all__ = ['query_centaur_by_name']
+
 ##########################################################################################

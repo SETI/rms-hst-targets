@@ -268,4 +268,9 @@ def _same_minor_planet(dict1, dict2):
     return True
 
 
+__all__ = [
+    'identify_minor_planet',
+    'minor_planet_identifiers',
+]
+
 ##########################################################################################

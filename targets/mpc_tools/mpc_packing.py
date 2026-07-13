@@ -196,4 +196,15 @@ def _from_base62(string: str) -> int:
         result = result * 62 + _BASE62_VALS[char]
     return result
 
+
+__all__ = [
+    'MPC_EXTENDED_PATTERN',
+    'MPC_PACKED_PATTERN',
+    'MPC_UNPACKED_PATTERN',
+    'mpc_is_valid_packed',
+    'mpc_is_valid_unpacked',
+    'mpc_pack',
+    'mpc_unpack',
+]
+
 ##########################################################################################

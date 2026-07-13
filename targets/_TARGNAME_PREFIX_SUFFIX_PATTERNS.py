@@ -102,4 +102,11 @@ _TARGNAME_SUFFIX_PATTERNS_NO_TAIL = [
     r'20[0-3]\d-?[01]\d-?[0-3]\d',  # "-yyyymmdd" suffix
 ]
 
+
+__all__ = [
+    '_TARGNAME_PREFIX_PATTERNS',
+    '_TARGNAME_SUFFIX_PATTERNS',
+    '_TARGNAME_SUFFIX_PATTERNS_NO_TAIL',
+]
+
 ##########################################################################################

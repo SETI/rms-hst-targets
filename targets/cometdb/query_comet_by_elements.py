@@ -75,4 +75,7 @@ def query_comet_by_elements(
 
     return pairs
 
+
+__all__ = ['query_comet_by_elements']
+
 ##########################################################################################

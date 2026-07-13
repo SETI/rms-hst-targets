@@ -412,4 +412,7 @@ def _repair_string(string, sep=' ', logger=None):
     logger and logger.debug(f'Repaired: "{input_string}" -> {answers}')
     return answers
 
+
+__all__ = ['hst_repairs']
+
 ##########################################################################################

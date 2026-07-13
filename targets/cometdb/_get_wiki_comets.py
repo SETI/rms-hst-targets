@@ -372,4 +372,7 @@ def _get_wiki_interstellar_comets(
 
     return changed, comets
 
+
+__all__ = ['_get_wiki_comets']
+
 ##########################################################################################

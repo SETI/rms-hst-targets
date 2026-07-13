@@ -77,4 +77,7 @@ def _get_johnston_centaurs(
 
     return changed, centaurs
 
+
+__all__ = ['_get_johnston_centaurs']
+
 ##########################################################################################

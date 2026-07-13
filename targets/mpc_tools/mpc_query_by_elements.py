@@ -326,4 +326,10 @@ def element_resid(elements: dict, reference: dict) -> float:
     rms = np.sqrt(np.mean(np.array(errors)**2)) if count else 0.
     return (rms, count)
 
+
+__all__ = [
+    'element_resid',
+    'mpc_query_by_elements',
+]
+
 ##########################################################################################

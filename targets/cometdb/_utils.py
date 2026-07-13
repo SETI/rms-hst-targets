@@ -208,4 +208,18 @@ def centaur_dicts(
         _CENTAUR_DICTS = _read_pickle(_CENTAUR_BASENAME, logger=logger)
     return _CENTAUR_DICTS
 
+
+__all__ = [
+    '_CENTAUR_BASENAME',
+    '_COMET_BASENAME',
+    '_COMET_CACHE',
+    '_compare_content',
+    '_fetch',
+    '_read_content',
+    '_read_pickle',
+    '_write_pickle',
+    'centaur_dicts',
+    'comet_dicts',
+]
+
 ##########################################################################################

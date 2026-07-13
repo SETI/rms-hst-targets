@@ -266,4 +266,9 @@ def identify_comet(
     return (best_comet, best_rms, valid)
 
 
+__all__ = [
+    'comet_identifiers',
+    'identify_comet',
+]
+
 ##########################################################################################
