@@ -9,19 +9,24 @@ from typing import Any, cast
 
 import pytest
 from astropy.io import fits
-from categorize_minor_planet import minor_planet_ttype
-from identify_small_body import identify_small_body
 from identify_target import (
-    TargetIdentificationError,
     _collect_strings,
     _norm_date,
     _normalize_body,
     _parse_mt_lv,
     _resolve_std,
-    identify_target,
 )
 from mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 from SPT_TESTS import SPT_TESTS
+
+from targets import (
+    TargetIdentificationError,
+    identify_comet,
+    identify_minor_planet,
+    identify_small_body,
+    identify_target,
+    minor_planet_ttype,
+)
 
 _SPT = dict(SPT_TESTS)
 
@@ -389,6 +394,33 @@ def test_disallowed_minor_planet_name() -> None:
     body, _, valid = identify_small_body(['IO'], {})
     assert body is None
     assert not valid
+
+
+##########################################################################################
+# Input normalization
+##########################################################################################
+
+def test_identify_small_body_accepts_a_bare_string() -> None:
+    # A lone string is normalized to a single-element list, matching the list form.
+    assert identify_small_body('IO', {}) == identify_small_body(['IO'], {})
+
+
+@pytest.mark.parametrize('strings', [[], None])
+def test_identify_small_body_handles_missing_identifiers(strings: Any) -> None:
+    # Empty or None identifiers yield no body rather than raising.
+    assert identify_small_body(strings, {}) == (None, 0., False)
+
+
+@pytest.mark.parametrize('strings', ['', [], None])
+def test_identify_comet_handles_missing_identifiers(strings: Any) -> None:
+    # `elements` defaults to None and empty identifiers yield no comet.
+    assert identify_comet(strings) == (None, 0., False)
+
+
+@pytest.mark.parametrize('strings', ['', [], None])
+def test_identify_minor_planet_handles_missing_identifiers(strings: Any) -> None:
+    # `elements` defaults to None and empty identifiers yield no minor planet.
+    assert identify_minor_planet(strings) == (None, 0., False)
 
 
 ##########################################################################################

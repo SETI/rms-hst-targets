@@ -66,7 +66,7 @@ markers = []
 where = ["targets"]
 
 [tool.setuptools.package-data]
-"targets" = ["py.typed"]
+"targets" = ["py.typed", "*.pyi"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"

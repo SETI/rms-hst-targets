@@ -44,7 +44,7 @@ SPT_REPAIRS = {
     '6497_1'    : 'TNO_SURVEY',                     # "Kuiper belt field 1", blind search
     '6841_2'    : {'MT_LV1_1': 'TYPE=COMET,Q=.5320503,E=.8242432, I=4.24869,'
                                'O=89.15214,W=326.05'},  # header had Q=.05320503 (10x off)
-    '8800_*'    : 'SLEW_TEST',                      # "Slew while exposing", dummy elements
+    '8800_*'    : 'SLEW_TEST',                      # "Slew while exposing" dummy elements
     '9110_28'   : {'TARGNAME': '55565'},            # was "MINIXENA": (55565) Aya,
                                                     #   confirmed by sky position (1.7")
     '9678_1'    : {'TARGNAME': 'QUAOAR',            # was "OBJECTX": Quaoar before its
@@ -150,40 +150,6 @@ SPT_REPAIRS = {
     '15003'     : {'TARKEY1' : 'KBO',
                    'TARGNAME': '2014MU69'},         # FGS occ campaign
 }
-
-
-
-#     '10860_2'   : {'TARKEY1': 'ASTEROID',           # was "PLANET"
-#                    'TARKEY2': ''},                  # was "the 10th planet" SEE NOTES
-#
-#     '11644_49'  : {'MT_LV1_1': 'FILE='},            SHOULD BE OK
-#     '11644_89'  : {'MT_LV1_1': 'FILE='},            SHOULD BE OK
-#     '12537_ANY' : {'MT_LV1_1': 'STD=EARTH',         MAYBE HARD-WIRE EARTH to be ignored
-#                    'MT_LV2_1': 'STD=MOON'}, WHY IS THIS NEEDED? MT_LV2 should be included!
-#
-#     # These targets cannot be identified based on any info currently available
-#     '10545_19'  : 'UNKNOWN_TNO',    # "TARGNAME": "OBJ-KBO30726D"
-#     '10545_20'  : 'UNKNOWN_TNO',    # "TARGNAME": "OBJ-KBO40804A"
-#     '10545_21'  : 'UNKNOWN_TNO',    # "TARGNAME": "OBJ-KBO41003B"
-#     '10545_22'  : 'UNKNOWN_TNO',    # "TARGNAME": "OBJ-KBO40506A"
-#     '12535'     : 'UNKNOWN_TNO',    # "TARGNAME": "VNH0007/08/10"
-#     '12887_1'   : 'UNKNOWN_TNO',    # "TARGNAME": "VNH0034"
-#     '13311_1'   : 'UNKNOWN_TNO',    # "TARGNAME": "A31006AP", "TARKEY2": "NH-KBO"
-#     '13663_1'   : 'UNKNOWN_TNO',    # "TARGNAME": "KBO-G1", "TARKEY2": "NH-KBO"
-#     '13663_1'   : 'UNKNOWN_TNO',    # "TARGNAME": "KBO-G1", "TARKEY2": "NH-KBO"
-#     '16183_5'   : 'UNKNOWN_TNO',    # "TARGNAME": "P72X401", "TARKEY2": "KBO1"
-#     '16183_13'  : 'UNKNOWN_TNO',    # "TARGNAME": "P4856186", "TARKEY2": "KBO1"
-#     '16183_14'  : 'UNKNOWN_TNO',    # "TARGNAME": "B6600475", "TARKEY2": "KBO1"
-#
-#     # These are KBO surveys with no specified target
-#     '6497'      : 'TNO_SURVEY',
-#     '13633'     : 'TNO_SURVEY',
-#
-#     # This would otherwise fail because the body is no longer listed in the MPC
-#     '15344_30'  : [('2011 UH413', [], 'Trans-Neptunian Object',
-#                     ['This body was retracted in MPEC 2020-N22, July 7, 2020.'],
-#                     'trans-neptunian_object.2011_uh413')],
-
 
 __all__ = ['SPT_REPAIRS']
 

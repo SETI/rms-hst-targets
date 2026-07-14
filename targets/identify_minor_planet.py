@@ -6,92 +6,53 @@ import re
 
 from targets import mpc_tools
 
-_NUM = r'(?:[1-9]\d*)'
-_YEAR = r'(?:19\d\d|20\d\d)'
 
-_NAME = r"(?:[A-Z']{2,}(?:[- ]?[A-Z']{2,})*)"
-_DESIG = rf'(?:{_YEAR} [A-HJ-Y][A-HJ-Z]{_NUM}?)'
-
-# Confidence > 5 means this pattern most likely defines a minor planet.
-# If minor planet confidence exceeds comet confidence, comets will be checked second.
-_PATTERNS = [
-    (rf'({_DESIG})'                 , 7),
-    (rf'\(?({_NUM})\)? ({_NAME})'   , 9),
-    (rf'({_NUM}) \(({_NAME})\)'     , 9),
-    (rf'\(({_NUM})\) ({_DESIG})'    , 9),
-    (rf'\(({_NUM})\)'               , 8),
-    (rf'({_NUM})'                   , 1),
-    (rf'\(?({_NAME})\)?'            , 2),
-]
-
-_REGEXES = [(re.compile(pattern, re.I), conf) for pattern, conf in _PATTERNS]
-
-
-def minor_planet_identifiers(strings):
-    """Interpret one or more strings as minor planet identifiers.
-
-    Parameters:
-        strings (str or list[str]): One or more potential identifiers for a minor planet.
-
-    Returns:
-        tuple: `(formatted, unused, confidence)`:
-
-        * formatted (set[str]): The subset of input strings in the format of a possible
-          minor planet identifier.
-        * unused (list[str]): The list of input strings that are not in a recognized
-          format of minor planet identifier.
-        * confidence (int): A numeric value 0-9 indicating the level of confidence that
-          the strings represent a minor planet.
-    """
-
-    if isinstance(strings, str):
-        strings = [strings]
-
-    formatted = set()
-    unused = []
-    confidence = 0
-    for string in strings:
-        for regex, conf in _REGEXES:
-            match = regex.match(string)
-            if match:
-                formatted |= set(match.groups())
-                confidence = max(confidence, conf)
-                break
-        if not match:
-            unused.append(string)
-
-    return formatted, unused, confidence
-
-
-def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
+def identify_minor_planet(strings, elements=None, *, rms=0.1, confidence=0, logger=None):
     """Try to identify a minor planet based on a list of possible name strings and
     optional orbital elements.
 
     Parameters:
-        strings: One or more strings that potentially identify a minor planet.
-        elements: A dictionary of orbital elements keyed by element name; empty if
-            no orbital elements are available.
-        confidence: Numeric 0-9 confidence that the strings name a minor planet, as
-            returned by `minor_planet_identifiers`.
-        rms: Upper limit on the fractional root-mean-square element discrepancy for a
-            match to be accepted.
-        logger: An optional Logger for messages.
+        strings (str or list[str]): One or more strings that potentially identify a minor
+            planet.
+        elements (dict, optional): A dictionary of orbital elements keyed by element name,
+            as follows:
+
+            * "A": semimajor axis in AU.
+            * "Q": perihelion distance in AU.
+            * "I": inclination in degrees.
+            * "O": ascending node in degrees.
+            * "E": eccentricity.
+            * "W": argument of pericenter in degrees.
+
+            Any other items in the dictionary are ignored.
+        rms (float, optional): Upper limit on the root-mean-square fractional difference
+             in orbital elements that represents a match.
+        confidence (int, optional): A value 0-9 indicating the level of confidence that
+            this item is a minor planet. A value > 5 indicates that this is _probably_ a
+            minor planet; this affects how discrepancies are reported and logged.
+        logger (Logger, optional): Logger to use.
 
     Returns:
-        tuple: `(best_body, best_rms, valid)`:
+        tuple: `(body_dict, rms, valid)`:
 
-        best_body (dict or None): A dictionary describing the attributes of the best-match
-            minor planet; None if no body was recognized.
-        best_rms (float): The fractional root-mean-square discrepancy between the orbital
-            elements provided and the orbital elements of the body identified.
-        valid (bool): True if the identification is believed to be valid, based on the
-            string and the elements.
+        * `body_dict` (dict[str] or None): A dictionary containing the attributes of a
+          minor planet if one was identified; None otherwise.
+        * `rms` (float): The fractional root-mean-square residual of the orbital elements
+          if a body was identified; zero otherwise.
+        * `valid` (bool): True if a minor planet was matched and the RMS threshold was
+          met.
     """
 
+    if not strings:
+        strings = []
+    elif isinstance(strings, str):
+        strings = [strings]
+
+    elements = elements or {}
     has_elements = ('A' in elements or 'Q' in elements)
 
     # Query by strings
-    bodies, used, unused, _status = _identify_minor_planets_by_strings(strings)
+    bodies, used, unused, _status = _identify_minor_planet_by_strings(strings)
 
     # For an empty list of bodies, query by elements alone
     if not bodies:
@@ -175,13 +136,12 @@ def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
         logger and logger.info('Unused identifiers: ' + str(unused))
 
     if best_rms >= rms:
+        msg = f'Orbit residual {best_rms:.4f} exceeds threshold of {rms}'
         if confidence > 5:
-            logger and logger.warning(f'Orbit residual {best_rms:.4f} '
-                                      f'exceeds threshold of {rms}')
+            logger and logger.warning(msg)
             valid = True
         else:
-            logger and logger.error(f'Orbit residual {best_rms:.4f} '
-                                    f'exceeds threshold of {rms}')
+            logger and logger.error(msg)
             valid = False
     else:
         logger and logger.info(f'Orbit residual: {best_rms:.4f}')
@@ -190,7 +150,7 @@ def identify_minor_planet(strings, elements, *, confidence, rms, logger=None):
     return (best_body, best_rms, valid)
 
 
-def _identify_minor_planets_by_strings(strings):
+def _identify_minor_planet_by_strings(strings):
     """Identify one or more minor planets by a name or list of alternative names.
 
     Parameters:
@@ -207,7 +167,7 @@ def _identify_minor_planets_by_strings(strings):
     """
 
     # Separate the formatted and un-formatted strings
-    formatted, unused, _confidence = minor_planet_identifiers(strings)
+    formatted, unused, _confidence = _minor_planet_identifiers(strings)
 
     used = {}  # string -> mpc result as a dict
     mpc_dicts = []
@@ -268,9 +228,62 @@ def _same_minor_planet(dict1, dict2):
     return True
 
 
-__all__ = [
-    'identify_minor_planet',
-    'minor_planet_identifiers',
+_NUM   = r'(?:[1-9]\d*)'
+_YEAR  = r'(?:19\d\d|20\d\d)'
+_NAME  = r"(?:[A-Z']{2,}(?:[- ]?[A-Z']{2,})*)"
+_DESIG = rf'(?:{_YEAR} [A-HJ-Y][A-HJ-Z]{_NUM}?)'
+
+# Confidence > 5 means this pattern most likely defines a minor planet.
+# If minor planet confidence exceeds comet confidence, comets will be checked second.
+_PATTERNS = [
+    (rf'({_DESIG})'                 , 7),
+    (rf'\(?({_NUM})\)? ({_NAME})'   , 9),
+    (rf'({_NUM}) \(({_NAME})\)'     , 9),
+    (rf'\(({_NUM})\) ({_DESIG})'    , 9),
+    (rf'\(({_NUM})\)'               , 8),
+    (rf'({_NUM})'                   , 1),
+    (rf'\(?({_NAME})\)?'            , 2),
 ]
+
+_REGEXES = [(re.compile(pattern, re.I), conf) for pattern, conf in _PATTERNS]
+
+
+def _minor_planet_identifiers(strings):
+    """Interpret one or more strings as minor planet identifiers.
+
+    Parameters:
+        strings (str or list[str]): One or more potential identifiers for a minor planet.
+
+    Returns:
+        tuple: `(formatted, unused, confidence)`:
+
+        * formatted (set[str]): The subset of input strings in the format of a possible
+          minor planet identifier.
+        * unused (list[str]): The list of input strings that are not in a recognized
+          format of minor planet identifier.
+        * confidence (int): A numeric value 0-9 indicating the level of confidence that
+          the strings represent a minor planet.
+    """
+
+    if isinstance(strings, str):
+        strings = [strings]
+
+    formatted = set()
+    unused = []
+    confidence = 0
+    for string in strings:
+        for regex, conf in _REGEXES:
+            match = regex.match(string)
+            if match:
+                formatted |= set(match.groups())
+                confidence = max(confidence, conf)
+                break
+        if not match:
+            unused.append(string)
+
+    return formatted, unused, confidence
+
+
+__all__ = ['identify_minor_planet']
 
 ##########################################################################################

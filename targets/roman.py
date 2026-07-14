@@ -66,6 +66,7 @@ def int_to_roman(num: int) -> str:
 
 
 __all__ = [
+    'ROMAN_PATTERN',
     'ROMAN_PATTERN_99',
     'ROMAN_PATTERN_999',
     'int_to_roman',
