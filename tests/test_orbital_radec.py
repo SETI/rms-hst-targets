@@ -16,7 +16,7 @@ palpy = pytest.importorskip("palpy")            # skip if PAL wrapper absent
 
 # Imported after importorskip: orbital_radec imports palpy at load, so this must
 # follow the skip guard, not sit at the top of the file.
-from orbital_radec import asteroid_radec, comet_radec  # noqa: E402
+from targets.orbital_radec import asteroid_radec, comet_radec  # noqa: E402
 
 
 def _sep_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> float:

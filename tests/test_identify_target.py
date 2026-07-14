@@ -9,14 +9,6 @@ from typing import Any, cast
 
 import pytest
 from astropy.io import fits
-from identify_target import (
-    _collect_strings,
-    _norm_date,
-    _normalize_body,
-    _parse_mt_lv,
-    _resolve_std,
-)
-from mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 from SPT_TESTS import SPT_TESTS
 
 from targets import (
@@ -27,6 +19,14 @@ from targets import (
     identify_target,
     minor_planet_ttype,
 )
+from targets.identify_target import (
+    _collect_strings,
+    _norm_date,
+    _normalize_body,
+    _parse_mt_lv,
+    _resolve_std,
+)
+from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 
 _SPT = dict(SPT_TESTS)
 

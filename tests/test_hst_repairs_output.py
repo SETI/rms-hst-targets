@@ -13,7 +13,7 @@ Each baseline line is `repr(filename) --- (answers, types)`, exactly what
 After an *intentional* change to the repair tables, regenerate the baseline by running
 this file as a script from the repository root::
 
-    PYTHONPATH=.:targets python tests/test_hst_repairs_output.py
+    PYTHONPATH=. python tests/test_hst_repairs_output.py
 
 then review the diff before committing.
 """
@@ -21,8 +21,9 @@ then review the diff before committing.
 import pathlib
 from typing import Any
 
-from hst_repairs import hst_repairs
 from SPT_TESTS import SPT_TESTS
+
+from targets.hst_repairs import hst_repairs
 
 _BASELINE = pathlib.Path(__file__).parent / 'SPT_TESTS_OUTPUT.txt'
 

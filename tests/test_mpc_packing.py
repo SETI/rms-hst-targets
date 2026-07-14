@@ -2,7 +2,12 @@
 # hst_targets/tests/test_mpc_packing.py
 ##########################################################################################
 
-from mpc_tools.mpc_packing import mpc_is_valid_packed, mpc_is_valid_unpacked, mpc_pack, mpc_unpack
+from targets.mpc_tools.mpc_packing import (
+    mpc_is_valid_packed,
+    mpc_is_valid_unpacked,
+    mpc_pack,
+    mpc_unpack,
+)
 
 # Examples defined here:
 # https://minorplanetcenter.net/mpcops/documentation/provisional-designation-definition

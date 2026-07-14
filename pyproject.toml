@@ -53,7 +53,6 @@ Issues = "https://github.com/SETI/rms-hst-targets/issues"
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "targets",
   "."
 ]
 testpaths = ["tests"]
@@ -63,7 +62,8 @@ markers = []
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
-where = ["targets"]
+where = ["."]
+include = ["targets", "targets.*"]
 
 [tool.setuptools.package-data]
 "targets" = ["py.typed", "*.pyi"]
@@ -145,11 +145,11 @@ module = ["astropy.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-# The package modules import each other as "targets.*" while the tests import them
-# bare (pytest pythonpath = ["targets"]). Skip following the "targets.*" names so the
-# same file is never analyzed under two module names. orbital_radec is untyped and is
-# skipped under its bare name as well.
-module = ["targets", "targets.*", "orbital_radec"]
+# Both the package internals and the tests import everything as "targets.*". Those
+# modules are untyped and excluded from checking; skip following the imports so mypy
+# treats them as Any. The typed public surface lives in targets/__init__.pyi (for
+# external consumers via py.typed).
+module = ["targets", "targets.*"]
 follow_imports = "skip"
 
 [tool.ruff]

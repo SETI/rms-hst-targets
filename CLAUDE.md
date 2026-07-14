@@ -6,7 +6,7 @@ Identifies HST small-body moving targets (comets, asteroids/minor planets, stand
 
 ## Package layout
 
-The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `packages.find where = ["targets"]` and pytest `pythonpath = ["targets"]`, so modules import bare, e.g. `import identify_comet`, `from mpc_tools import mpc_packing`.
+The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `packages.find where = ["."]` / `include = ["targets", "targets.*"]` and pytest `pythonpath = ["."]`, so everything is imported under the package, e.g. `from targets import identify_comet`, `from targets.mpc_tools import mpc_packing`.
 
 - `targets/` — main package: identification logic (`identify_small_body.py`, `identify_comet.py`, `identify_minor_planet.py`, `standard_bodies.py`, `orbital_radec.py`), data modules (`_STANDARD_BODY_LIST.py`, `_HST_PROGRAM_OVERRIDES.py`, etc.), and subpackages `cometdb/` (comet/centaur DB builders & scrapers) and `mpc_tools/` (MPC packing/queries).
 - `tests/` — pytest tests. Also holds non-pytest fixtures/baselines named in caps (`SPT_TESTS.py`, `SPT_TESTS_OUTPUT.txt`) — these are not collected by pytest.
@@ -18,7 +18,7 @@ The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `pa
 - Install dev env: `pip install -e ".[dev]"` (work inside a venv at `./venv`; never system Python).
 - Run all tests: `python -m pytest -q -n auto tests` (xdist, coverage, `--strict-markers` come from pyproject `addopts`; source is `targets`; branch-coverage gate `fail_under = 90`).
 - Single test: `pytest tests/test_orbital_radec.py::test_name`.
-- Type-check: `MYPYPATH=targets python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `support/`; it only ever runs on `tests/`.** Don't run mypy against the package.
+- Type-check: `python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `support/`; it only ever runs on `tests/`.** Don't run mypy against the package.
 - Lint / format: `ruff check` and `ruff format`.
 
 **Do not use `scripts/run-all-checks.sh`, `.github/workflows/run-tests.yml`, or the Sphinx files in `docs/` (`conf.py`, `*.rst`, `Makefile`) as references** — they are stale project-template artifacts pointing at a nonexistent `src/` with literal `REPONAME` names. `pyproject.toml` is the source of truth for tooling. Real documentation is `README.md` and the Markdown files in `docs/` (`how-it-works.md`, `handling-identification-failures.md`, `data-and-caches.md`) — keep these in sync with behavior changes.
