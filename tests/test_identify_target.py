@@ -19,12 +19,12 @@ from targets import (
     identify_target,
     minor_planet_ttype,
 )
+from targets.identify_standard_body import _resolve_std
 from targets.identify_target import (
     _collect_strings,
     _norm_date,
     _normalize_body,
     _parse_mt_lv,
-    _resolve_std,
 )
 from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 
