@@ -19,13 +19,9 @@ from targets import (
     identify_target,
     minor_planet_ttype,
 )
+from targets.header_parsing import _collect_strings, _norm_date, _parse_mt_lv
 from targets.identify_standard_body import _resolve_std
-from targets.identify_target import (
-    _collect_strings,
-    _norm_date,
-    _normalize_body,
-    _parse_mt_lv,
-)
+from targets.identify_target import _normalize_body
 from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 
 _SPT = dict(SPT_TESTS)
@@ -458,8 +454,11 @@ def test_nicknamed_targets_resolved_by_override() -> None:
     bodies = identify_target(_header('9110/o6e945010_spt.fits'))    # "MINIXENA"
     assert bodies[0]['full_name'] == '55565 Aya'
 
+    # MT_LV1 is a FILE ephemeris, not a standard-body STD field, so Quaoar is identified
+    # through the small-body path in its numbered minor-planet form rather than as a
+    # named standard body.
     bodies = identify_target(_header('9678/j8i701011_spt.fits'))    # "OBJECTX"
-    assert bodies[0]['full_name'] == 'Quaoar'
+    assert bodies[0]['full_name'] == '50000 Quaoar'
     assert bodies[0]['ttype'] == 'T'
 
     bodies = identify_target(_header('16183/iedk15ifq_spt.fits'))   # "P959EB2C"

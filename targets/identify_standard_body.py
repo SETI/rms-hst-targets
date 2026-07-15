@@ -21,6 +21,8 @@ from logging import Logger
 
 from targets import mpc_tools
 from targets.errors import TargetIdentificationError
+from targets.header_parsing import _collect_strings, _parse_mt_lv
+from targets.hst_repairs import hst_repairs
 from targets.identify_small_body import identify_small_body
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
 
@@ -64,39 +66,40 @@ def _resolve_std(token: str, logger: Logger | None) -> tuple[dict | None, str, s
     return (None, token, '')
 
 
-def identify_standard_body(
-    kind1: str | None,
-    payload1: dict | str | None,
-    kind2: str | None,
-    payload2: dict | str | None,
-    answers: list[str],
-    logger: Logger | None
-) -> tuple[list[dict], list[dict], set[str]]:
-    """Identify the standard bodies (planets and satellites) named by a header.
+def identify_standard_body(header: dict, logger: Logger | None) -> list[dict] | None:
+    """Identify the standard bodies (planets and satellites) of an HST observation.
 
-    Two sources are consulted: the MT_LV* "STD" fields, where MT_LV2 names the body in
-    the field of view and MT_LV1 names the body HST tracked; and the repaired target
-    description strings, which may name additional standard bodies. An "STD" field that
-    names a minor planet or comet rather than a standard body is resolved through the
-    small-body identifiers.
+    An observation is treated as a standard-body observation only when its MT_LV1_*
+    keywords track a standard body, i.e. `_parse_mt_lv(header, 'MT_LV1')` is an "STD"
+    field. When it is not, this returns None without logging, and the caller is free to
+    try the small-body identifiers instead.
+
+    For a standard-body observation, two sources are consulted: the MT_LV* "STD" fields,
+    where MT_LV2 names the body in the field of view and MT_LV1 names the body HST
+    tracked; and the repaired target description strings (via `hst_repairs`), which may
+    name additional standard bodies. An "STD" field that names a minor planet or comet
+    rather than a standard body is resolved through the small-body identifiers.
 
     Parameters:
-        kind1: The MT_LV1 kind returned by `_parse_mt_lv`.
-        payload1: The MT_LV1 payload returned by `_parse_mt_lv`.
-        kind2: The MT_LV2 kind returned by `_parse_mt_lv`.
-        payload2: The MT_LV2 payload returned by `_parse_mt_lv`.
-        answers: The repaired identification strings from `hst_repairs`.
+        header: The SPT/SHF header as a dictionary.
         logger: An optional Logger for messages.
 
     Returns:
-        A tuple `(fov_bodies, tracked_bodies, consumed)`: the standard bodies in the
-        field of view, the body HST tracked (per MT_LV1), and the set of `answers`
-        strings consumed by a name match.
+        None if the header does not describe a standard-body observation. Otherwise a
+        non-empty list of body dictionaries, the field-of-view bodies first and the
+        tracked body last (before de-duplication and normalization by the caller).
 
     Raises:
         TargetIdentificationError: If an "STD" field names a target that cannot be
             resolved.
     """
+
+    kind1, payload1 = _parse_mt_lv(header, 'MT_LV1', logger=logger)
+    if kind1 != 'STD':
+        return None
+
+    kind2, payload2 = _parse_mt_lv(header, 'MT_LV2', logger=logger)
+    answers, _types = hst_repairs(_collect_strings(header), logger=logger)
 
     fov_bodies = []         # bodies identified by name; the subject of the observation
     tracked_bodies = []     # the body HST tracked, per MT_LV1
@@ -130,16 +133,14 @@ def identify_standard_body(
         target_list.append(body)
 
     # Standard bodies identified by name from the target description
-    consumed = set()
     for answer in answers:
         for part in answer.upper().split('-'):  # handle, e.g., "PANDORA-PROMETHEUS"
             body = STANDARD_BODY_LOOKUP.get(part)
             if body:
-                consumed.add(answer)
                 logger and logger.info(f'Standard body identified by name: {body["name"]} '
                                        f'(from "{part}")')
                 fov_bodies.append(body)
 
-    return fov_bodies, tracked_bodies, consumed
+    return fov_bodies + tracked_bodies
 
 ##########################################################################################
