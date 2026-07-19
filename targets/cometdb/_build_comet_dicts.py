@@ -75,7 +75,8 @@ def _build_comet_dicts(
           year is found.
         * 'key' (str): The unique dictionary key for this object.
         * `parent_key` (str): The key for the "parent" object if this comet is a fragment.
-        * `full_name (str): The comet's name as it will be adapted to the LID.
+        * `full_name` (str): The comet's name as it will be adapted to the LID, with
+          standard capitalization.
         * `aliases` (list[str]): Standard aliases for this comet, to appear in the context
           product.
         * `lookups` (list[str]): Unique aliases for this comet, serving as the keys of

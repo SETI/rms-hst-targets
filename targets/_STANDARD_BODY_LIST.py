@@ -69,8 +69,7 @@ _STANDARD_BODY_LIST = [
     ('Adrastea'   , 15,   515, 'S', 'Jupiter', []),
     ('Metis'      , 16,   516, 'S', 'Jupiter', []),
     ('Callirrhoe' , 17,   517, 'S', 'Jupiter', ['S/1999 J 1']),
-    ('Themisto'   , 18,   518, 'S', 'Jupiter', ['S/1975 J 1',
-                                                'S/2000 J 1']),
+    ('Themisto'   , 18,   518, 'S', 'Jupiter', ['S/1975 J 1', 'S/2000 J 1']),
     ('Magaclite'  , 19,   519, 'S', 'Jupiter', []),
     ('Taygete'    , 20,   520, 'S', 'Jupiter', ['S/2000 J 9' ]),
     ('Chaldene'   , 21,   521, 'S', 'Jupiter', ['S/2000 J 10']),
@@ -250,9 +249,30 @@ _STANDARD_BODY_LIST = [
     ('Makemake', 136472, 2136472, 'D', '', ['2005 FY9']),
     (''        ,      1,       0, 'S', 'Makemake', ['S/2015 $ 1']),
 
-    # Other minor planet satellites
+    # Rings (real and imagined)
+    ('Mars Rings'   , 0, 0, 'R', 'Mars'   , ['Mars Ring System']),
+    ('Jupiter Rings', 0, 0, 'R', 'Jupiter', ['Jupiter Ring System']),
+    ('Saturn Rings' , 0, 0, 'R', 'Saturn' , ['Saturn Ring System']),
+    ('Uranus Rings' , 0, 0, 'R', 'Uranus' , ['Uranus Ring System']),
+    ('Neptune Rings', 0, 0, 'R', 'Neptune', ['Neptune Ring System']),
+    ('Pluto Rings'  , 0, 0, 'R', 'Pluto'  , ['Pluto Ring System']),
+
+    # Io Torus
+    ('Io Torus', 0, 0, 't', 'Jupiter', []),
+
+    # Other minor planets with satellites
     ('Ida'     ,    243, 2000243, 'A', '', ['1910 CD', '1988 DB1']),
     ('Dactyl'  ,      1, 2431011, 'S', 'Ida', ['S/1993 $ 1']),
+
+    ('Patroclus',   617, 2000617, 'A', '', ['1906 VY', '1941 XC', '1962 NB']),
+    ('Menoetius',     1,       0, 'S', 'Patroclus', ['S/2001 $ 1']),
+
+    ('Eurybates',  3548, 2003548, 'A', '', ['1973 SO', '1954 CB', '1957 JX', '1978 EE5',
+                                            '1985 TZ']),
+    ('Queta',         1,       0, 'S', 'Eurybates', ['S/2018 $ 1']),
+
+    ('Didymos',   65803, 2065803, 'A', '', ['1996 GT']),
+    ('Dimorphos',     1, 120065803, 'S', 'Didymos', ['S/2003 $ 1']),
 
     ('Quaoar'  ,  50000, 2050000, 'T', '', ['2002 LM60']),
     ('Weywot'  ,      1,       0, 'S', 'Quaoar', ['S/2006 $ 1']),
@@ -265,17 +285,6 @@ _STANDARD_BODY_LIST = [
 
     ('Orcus'   ,  90482, 2090482, 'T', '', ['2004 DW']),
     ('Vanth'   ,      1,       0, 'S', 'Orcus', ['S/2005 $ 1']),
-
-    # Rings (real and imagined)
-    ('Mars Rings'   , 0, 0, 'R', 'Mars'   , []),
-    ('Jupiter Rings', 0, 0, 'R', 'Jupiter', []),
-    ('Saturn Rings' , 0, 0, 'R', 'Saturn' , []),
-    ('Uranus Rings' , 0, 0, 'R', 'Uranus' , []),
-    ('Neptune Rings', 0, 0, 'R', 'Neptune', []),
-    ('Pluto Rings'  , 0, 0, 'R', 'Pluto'  , []),
-
-    # Io Torus
-    ('Io Torus', 0, 0, 'Plasma Stream', 'Jupiter', []),
 ]
 
 __all__ = ['_STANDARD_BODY_LIST']

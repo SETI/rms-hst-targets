@@ -20,6 +20,7 @@ the splitting is by dashes. The underscores are replaced at the end of the proce
 """
 
 _TARGET_STRING_REPAIRS = [
+    (r'SOLAR SYSTEM',                           ''),
     (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (HYAKUTAKE)|[C]'),
     (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\D)([A-Z]1?)(-\W+|)',
                                                 r'SHOEMAKER_LEVY|\1\2|[C]'),
@@ -44,27 +45,6 @@ _TARGET_STRING_REPAIRS = [
     (r'GANY(FOOT)?',                            r'GANYMEDE|[S]'),
     (r'EUROFOOT',                               r'EUROPA|[S]'),
     (r'PL(UTO)?-CH(AR(ON)?)?',                  r'PLUTO|CHARON|[D]|[S]'),
-
-    # These fixes are too obscure and un-anticipatable. Instead, we can test standard body
-    # names by splitting at dashes.
-    # (r'(VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE)[- ]?([NSEWA-G]|AX|TEST)?\D*',
-    #                                           r'\1|[P]'),
-    # (r'(PLUTO)[- ]?([NSEWA-G]|AX|TEST)?\d*',  r'\1|[D]'),
-    # (r'JUP-?(FOC\d?|STIS|((LO|HI)RES\d?-)?ARC\d|NTB)',
-    #                                           r'JUPITER|[P]'),
-    # (r'MARS-2003',                            r'MARS|[P]'),
-    # (r'JUPITER-[7-9]\d-(INGRESS|EGRESS|PJ)',  r'JUPITER|[P]'),
-    # (r'IO[- ]PELE.*',                         r'IO|[S]'),
-    # (r'\d+ *IO',                              r'IO|[S]'),
-    # (r'(PANDORA)-(PROMETHEUS)',               r'\1|\2|[S]'),
-    # (r'(MAB)-(CUPID)',                        r'\1|\2|[S]'),
-    # (r'(CUPID)-(MAB)',                        r'\1|\2|[S]'),
-    # (r'(URANUS)-(CUPID)',                     r'\1|\2|[S]|[P]'),
-    # (r'(URANUS)-(PERDITA)',                   r'\1|\2|[S]|[P]'),
-    # (r'(MAB)-(PUCK)-(MIRANDA)',               r'\1|\2|\3|[S]'),
-    # (r'(ADRASTEA)-\d+',                       r'\1|[S]'),
-    # (r'(STYX)-(KERBEROS)',                    r'\1|\2|[D]|[S]'),
-    # (r'SATMAG',                               r'SATURN|[P]'),
 ]
 
 

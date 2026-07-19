@@ -11,15 +11,17 @@ Lower-level helpers (``mpc_tools``, ``roman``, ``remote_listdir``) remain import
 their own modules.
 """
 
-from targets.categorize_minor_planet import minor_planet_ttype  # noqa: I001
-from targets.cometdb import (centaur_dicts, comet_dicts, query_centaur_by_name,
-                             query_comet_by_elements, query_comet_by_name, repair_comet)
+from targets.categorize_minor_planet import categorize_minor_planet  # noqa: I001
+from targets.cometdb import (centaur_dict, centaur_lookup, comet_dict, comet_lookup,
+                             query_centaur_by_name, query_comet_by_elements,
+                             query_comet_by_name, repair_comet)
+from targets.comet_identifiers import comet_identifiers
 from targets.hst_repairs import hst_repairs
-from targets.identify_comet import identify_comet
-from targets.identify_minor_planet import identify_minor_planet
-from targets.identify_small_body import identify_small_body
-from targets.identify_target import TargetIdentificationError, identify_target
+from targets.identify_standard_body import identify_standard_body
+from targets.identify_target import identify_target
+from targets.minor_planet_identifiers import minor_planet_identifiers
 from targets.targettype import TargetType
+from targets._utils import TargetIdentificationFailure
 
 try:
     from targets.orbital_radec import RaDec, asteroid_radec, comet_radec, rotate_elements_to_j2000
@@ -29,16 +31,18 @@ else:
     _HAS_ORBITAL_RADEC = True
 
 __all__ = [
-    'TargetIdentificationError',
+    'TargetIdentificationFailure',
     'TargetType',
-    'centaur_dicts',
-    'comet_dicts',
+    'categorize_minor_planet',
+    'centaur_dict',
+    'centaur_lookup',
+    'comet_dict',
+    'comet_lookup',
+    'comet_identifiers',
     'hst_repairs',
-    'identify_comet',
-    'identify_minor_planet',
-    'identify_small_body',
+    'identify_standard_body',
     'identify_target',
-    'minor_planet_ttype',
+    'minor_planet_identifiers',
     'query_centaur_by_name',
     'query_comet_by_elements',
     'query_comet_by_name',

@@ -14,26 +14,34 @@ the comet database or the Minor Planet Center for the nearest orbital elements.
 
 To use::
 
-    from targets.identify_target import identify_target, TargetIdentificationError
+    from targets.identify_target import identify_target, TargetIdentificationFailure
 
 """
 
 import math
-import re
 from datetime import datetime, timedelta
 from logging import Logger
 
-from targets import cometdb, mpc_tools
-from targets._HST_PROGRAM_OVERRIDES import SPT_REPAIRS
-from targets.categorize_minor_planet import minor_planet_ttype
-from targets.errors import TargetIdentificationError
-from targets.header_parsing import _collect_strings, _parse_mt_lv
-from targets.hst_repairs import hst_repairs
-from targets.identify_small_body import identify_small_body
-from targets.identify_standard_body import identify_standard_body
-from targets.targettype import TargetType
+from targets                         import cometdb, mpc_tools
+from targets._utils                  import (_collect_strings, _headers_by_visit,
+                                             _parse_mt_lv, _unique_targets,
+                                             categorize_minor_planet,
+                                             TargetIdentificationFailure)
+from targets._HST_PROGRAM_OVERRIDES  import _HST_PROGRAM_OVERRIDES
+from targets.hst_repairs             import hst_repairs
+from targets.identify_standard_body  import identify_standard_body
+from targets.targettype              import TargetType
 
-__all__ = ['TargetIdentificationError', 'identify_target']
+__all__ = ['identify_target']
+
+
+from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
+from targets.comet_identifiers import comet_identifiers
+from targets.minor_planet_identifiers import minor_planet_identifiers
+
+_DISALLOWED_UC = {name.upper() for name in _DISALLOWED_MINOR_PLANET_NAMES}
+
+_MINOR_PLANET_TTYPES = set(TargetType.MCODES + TargetType.MINOR_PLANET)
 
 
 # A minor planet identified by name is confirmed if its propagated sky position falls
@@ -64,55 +72,13 @@ _SELF_CONSISTENCY_MAX = 60.         # arcsec, before distance scaling
 # identification. Larger discrepancies mean the name resolved to the wrong body.
 _REVISED_ORBIT_RMS = 1.0
 
-# TARGNAME words indicating that RA_TARG/DEC_TARG is not the position of the body
-_OFFSET_TARGNAME_WORDS = ('OFFSET', 'BACKGROUND', 'SLEW', 'DUMMY')
-
-# TARGNAMEs with no sky target: internal calibration exposures (lamps, darks, ...) and
-# generic placeholders. Checked after the SPT_REPAIRS overrides, which replace some
-# placeholder TARGNAMEs (e.g. "ANY") with real target names.
-_NON_TARGET_TARGNAMES = {'ANY', 'BIAS', 'CCDFLAT', 'DARK', 'DEUTERIUM', 'INTFLAT',
-                         'KSPOTS', 'NONE', 'TALED', 'TUNGSTEN', 'UVFLAT', 'VISFLAT',
-                         'WAVE', 'WAVEHITM'}
-
 _MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-
-
-##########################################################################################
-# Header parsing
-##########################################################################################
-
-def _apply_overrides(header: dict, logger: Logger | None) -> tuple[dict, str | None]:
-    """Apply any per-program repairs from _HST_PROGRAM_OVERRIDES to a copy of the header.
-
-    Parameters:
-        header: The SPT/SHF header as a dictionary.
-        logger: An optional Logger for messages.
-
-    Returns:
-        A tuple `(header, sentinel)`, where `header` is a copy of the input header with
-        any keyword overrides applied, and `sentinel` is the override string (e.g.,
-        "TNO_SURVEY") for programs known to have no identifiable target, or None.
-    """
-
-    header = dict(header)
-    targ_id = str(header.get('TARG_ID', ''))
-    keys = [targ_id, targ_id.partition('_')[0] + '_*']
-    for key in keys:
-        if key in SPT_REPAIRS:
-            repair = SPT_REPAIRS[key]
-            logger and logger.info(f'Program override for TARG_ID "{key}": {repair!r}')
-            if isinstance(repair, str):
-                return (header, repair)
-            header.update(repair)
-            return (header, None)
-
-    return (header, None)
-
 
 ##########################################################################################
 # Date handling
 ##########################################################################################
+
 
 def _hst_time(text: str) -> datetime:
     """Parse an HST "YYYY.DDD:hh:mm:ss" (day-of-year) time into a datetime."""
@@ -184,9 +150,9 @@ def _elements_to_j2000(elements: dict, logger: Logger | None) -> dict:
     return rotate_elements_to_j2000(elements, equinox=elements['EQUINOX'])
 
 
-def _body_radec_offset(
+def radec_offset(
     body: dict,
-    obs_dt: datetime,
+    obs_time: datetime,
     ra_targ: float,
     dec_targ: float,
     logger: Logger | None
@@ -198,7 +164,7 @@ def _body_radec_offset(
         body: A dictionary of orbital elements including "A", "E", "I", "O", "W", "M",
             and "EPOCH": either a minor planet dictionary carrying its catalog elements
             or the parsed MT_LV1 elements of the header itself.
-        obs_dt: The observation midpoint.
+        obs_time: The observation midpoint.
         ra_targ: The header RA_TARG in degrees.
         dec_targ: The header DEC_TARG in degrees.
         logger: An optional Logger for messages.
@@ -221,7 +187,7 @@ def _body_radec_offset(
         logger and logger.warning('palpy unavailable; sky position check skipped')
         return None
 
-    obs = _dt_to_str(obs_dt)
+    obs = _dt_to_str(obs_time)
     try:
         # Propagate with major-planet perturbations so a stale catalog epoch is not
         # itself the source of the offset; fall back to two-body if the perturbation
@@ -241,7 +207,7 @@ def _body_radec_offset(
         return None
 
     offset = _angsep_arcsec(ra_targ, dec_targ, result.ra, result.dec)
-    gap = abs((obs_dt - _epoch_dt(body['EPOCH'])).days) / 365.25
+    gap = abs((obs_time - _epoch_dt(body['EPOCH'])).days) / 365.25
     return (offset, gap, result.delta)
 
 
@@ -258,69 +224,9 @@ def _position_tolerance(base: float, gap: float, delta: float) -> float:
     return tolerance * max(1., 1. / delta)
 
 
-def _name_supported(body: dict, answers: list[str]) -> bool:
-    """True if any of the recognized name strings refers to this body.
-
-    Individual words of a body's names also count, so that, e.g., "KUSHIDA" supports
-    147P/Kushida-Muramatsu; short words are ignored to avoid accidental matches.
-    """
-
-    names = {str(body.get(key, '')).upper()
-             for key in ('mnum', 'name', 'desig', 'full_name')}
-    names |= {str(alias).upper() for alias in body.get('alt_desigs', [])}
-    names |= {str(alias).upper() for alias in body.get('aliases', [])}
-    names |= {str(alias).upper() for alias in body.get('lookups', [])}
-    for name in list(names):
-        names |= {word for word in re.split(r'[^A-Z0-9]+', name)
-                  if len(word) >= 4 and not word.isdigit()}
-    names -= {''}
-    return bool({answer.upper() for answer in answers} & names)
-
-
-def _rescue_comet_by_elements(
+def minor_planet_by_radec(
     elements: dict,
-    answers: list[str],
-    comet_rms: float,
-    logger: Logger | None
-) -> tuple[dict, float] | None:
-    """Search the comet database for a comet that matches both the orbital elements and
-    one of the recognized name strings.
-
-    This handles observations whose name strings resolved to the wrong comet (e.g., an
-    old designation shared by two comets), when the orbital elements point clearly at
-    another comet carrying one of the same names.
-
-    Parameters:
-        elements: The J2000 orbital elements from the header.
-        answers: The repaired identification strings.
-        comet_rms: Upper limit on the fractional RMS element discrepancy.
-        logger: An optional Logger for messages.
-
-    Returns:
-        A tuple `(comet, rms)`, or None if no comet matches both tests.
-    """
-
-    results = cometdb.query_comet_by_elements(elements, count=5, fragments=True,
-                                              logger=logger)
-    if not results:
-        return None
-
-    comet, rms = results[0]
-    if rms > comet_rms:
-        return None
-    if len(results) > 1 and rms > results[1][1] / 2.:
-        return None
-    if not _name_supported(comet, answers):
-        return None
-
-    logger and logger.info(f'Comet {comet["full_name"]} matches both the orbital '
-                           'elements and the name strings')
-    return (comet, rms)
-
-
-def _identify_asteroid_by_position(
-    elements: dict,
-    obs_dt: datetime | None,
+    obs_time: datetime | None,
     ra_targ: float | None,
     dec_targ: float | None,
     mp_rms: float,
@@ -331,7 +237,7 @@ def _identify_asteroid_by_position(
 
     Parameters:
         elements: The J2000 orbital elements from the header.
-        obs_dt: The observation midpoint; None if unavailable.
+        obs_time: The observation midpoint; None if unavailable.
         ra_targ: The header RA_TARG in degrees; None if unavailable.
         dec_targ: The header DEC_TARG in degrees; None if unavailable.
         mp_rms: Upper limit on the fractional RMS element discrepancy for a candidate to
@@ -343,13 +249,13 @@ def _identify_asteroid_by_position(
         believably close to the target position.
     """
 
-    if obs_dt is None or ra_targ is None or dec_targ is None:
+    if obs_time is None or ra_targ is None or dec_targ is None:
         logger and logger.info('Position-based identification unavailable; observation '
                                'time or target position missing')
         return None
 
     # A position search is meaningless unless RA_TARG tracks the header ephemeris
-    self_info = _body_radec_offset(elements, obs_dt, ra_targ, dec_targ, logger)
+    self_info = radec_offset(elements, obs_time, ra_targ, dec_targ, logger)
     if self_info is not None:
         self_offset, _, self_delta = self_info
         if self_offset > _position_tolerance(_SELF_CONSISTENCY_MAX, 0., self_delta):
@@ -370,7 +276,7 @@ def _identify_asteroid_by_position(
     for body, rms in results:
         if rms > mp_rms:
             continue
-        info = _body_radec_offset(body, obs_dt, ra_targ, dec_targ, logger)
+        info = radec_offset(body, obs_time, ra_targ, dec_targ, logger)
         if info is None:
             continue
         offset, gap, delta = info
@@ -385,10 +291,10 @@ def _identify_asteroid_by_position(
     candidates.sort(key=lambda c: c[0])
     offset, gap, delta, body, rms = candidates[0]
 
-    tolerance = _position_tolerance(_FALLBACK_RADEC_TOLERANCE, gap, delta)
-    if offset > tolerance:
+    tol = _position_tolerance(_FALLBACK_RADEC_TOLERANCE, gap, delta)
+    if offset > tol:
         logger and logger.info(f'Nearest candidate {body["full_name"]} is {offset:.1f}" '
-                               f'from RA_TARG/DEC_TARG, beyond tolerance {tolerance:.1f}"')
+                               f'from RA_TARG/DEC_TARG, beyond tolerance {tol:.1f}"')
         return None
     if len(candidates) > 1 and offset > candidates[1][0] / 2.:
         logger and logger.info('Position test is ambiguous; the two nearest candidates '
@@ -401,161 +307,30 @@ def _identify_asteroid_by_position(
     return (body, rms)
 
 
-def _confirm_minor_planet(
-    body: dict,
-    rms: float,
-    elements: dict,
-    obs_dt: datetime,
-    ra_targ: float,
-    dec_targ: float, *,
-    radec_tolerance: float,
-    mp_rms: float,
-    targname: str,
-    logger: Logger | None
-) -> tuple[dict, float]:
-    """Confirm a minor planet identified by name against the header target position.
-
-    The check runs only when RA_TARG/DEC_TARG tracks the header's own ephemeris (i.e.,
-    the pointing is at the body). When the identified body's catalog orbit then misses
-    the target position, the failure is resolved in order of preference: a different
-    body matching both the header elements and the position replaces the candidate; a
-    candidate whose catalog orbit still broadly matches the header elements is accepted
-    on the assumption that its orbit was revised after the observation; otherwise the
-    identification is rejected.
-
-    Parameters:
-        body: The minor planet identified by name.
-        rms: The fractional RMS discrepancy between `elements` and the body's catalog
-            elements.
-        elements: The J2000 orbital elements from the header.
-        obs_dt: The observation midpoint.
-        ra_targ: The header RA_TARG in degrees.
-        dec_targ: The header DEC_TARG in degrees.
-        radec_tolerance: Base tolerance in arcsec on the sky-position offset.
-        mp_rms: Upper limit on the element discrepancy for replacement candidates.
-        targname: The header TARGNAME, for messages.
-        logger: An optional Logger for messages.
-
-    Returns:
-        A tuple `(body, rms)`: the confirmed body, or its replacement.
-
-    Raises:
-        TargetIdentificationError: If the body misses the target position and no
-            resolution applies.
-    """
-
-    # The check requires RA_TARG to track the header's own ephemeris
-    self_info = _body_radec_offset(elements, obs_dt, ra_targ, dec_targ, logger)
-    if self_info is not None:
-        self_offset, _, self_delta = self_info
-        if self_offset > _position_tolerance(_SELF_CONSISTENCY_MAX, 0., self_delta):
-            logger and logger.info(f'RA_TARG/DEC_TARG is {self_offset:.1f}" from the '
-                                   'header ephemeris; position check skipped')
-            return (body, rms)
-
-    info = _body_radec_offset(body, obs_dt, ra_targ, dec_targ, logger)
-    if info is None:
-        return (body, rms)
-
-    offset, gap, delta = info
-    tolerance = _position_tolerance(radec_tolerance, gap, delta)
-    if offset <= tolerance:
-        logger and logger.info(f'Sky position confirmed: {offset:.1f}" from '
-                               'RA_TARG/DEC_TARG at ' + _dt_to_str(obs_dt))
-        return (body, rms)
-
-    # The name may have resolved to the wrong body; a body matching both the header
-    # elements and the sky position supersedes it (e.g., a mislabeled TARGNAME)
-    result = _identify_asteroid_by_position(elements, obs_dt, ra_targ, dec_targ,
-                                            mp_rms, logger)
-    if result:
-        logger and logger.warning(f'"{body["full_name"]}" is {offset:.1f}" from '
-                                  f'RA_TARG/DEC_TARG; replaced by '
-                                  f'{result[0]["full_name"]}, which matches both the '
-                                  'header elements and the sky position')
-        return result
-
-    # The same body under a revised orbit: the header elements still match broadly, and
-    # small element changes produce large along-track drifts over many years
-    if rms <= _REVISED_ORBIT_RMS:
-        logger and logger.warning(f'"{body["full_name"]}" is {offset:.1f}" from '
-                                  f'RA_TARG/DEC_TARG at {_dt_to_str(obs_dt)}, but its '
-                                  f'catalog orbit still matches the header elements '
-                                  f'(rms={rms:.4f}); accepting on the assumption that '
-                                  'the orbit was revised after the observation')
-        return (body, rms)
-
-    message = (f'Minor planet "{body["full_name"]}" is {offset:.1f}" from '
-               f'RA_TARG/DEC_TARG at {_dt_to_str(obs_dt)}, beyond the tolerance of '
-               f'{tolerance:.1f}"; TARGNAME="{targname}"')
-    logger and logger.error(message)
-    raise TargetIdentificationError(message)
-
-
-##########################################################################################
-# Output normalization
-##########################################################################################
-
-def _normalize_body(body: dict, hints: str, logger: Logger | None) -> dict:
-    """Return a copy of a body dictionary with the keys required for a PDS4 Target
-    context product guaranteed to be present.
-
-    Parameters:
-        body: A standard body, comet, Centaur, or minor planet dictionary.
-        hints: TargetType letter codes derived from the header's target description,
-            used to categorize minor planets when nothing better is available.
-        logger: An optional Logger for messages.
-
-    Returns:
-        A copy of `body` guaranteed to contain "name", "full_name", "ttype" (a specific
-        TargetType code, never "M"), "ttype_name", "naif_id" (or None), "aliases",
-        "parent_key", and "lid_suffix".
-    """
-
-    body = dict(body)
-
-    if body.get('ttype') == TargetType.MINOR_PLANET:
-        body['ttype'] = minor_planet_ttype(body, hints=hints, logger=logger)
-
-    body.setdefault('name', '')
-    if not body.get('full_name'):
-        body['full_name'] = body['name'] or body.get('desig', '')
-    body.setdefault('naif_id', None)
-    if 'aliases' not in body:
-        aliases = [body.get('desig', ''), *body.get('alt_desigs', [])]
-        body['aliases'] = [a for a in aliases if a]
-    body.setdefault('parent_key', '')
-
-    body['ttype_name'] = TargetType.NAME[body['ttype']]
-    suffix = body['full_name'].lower().replace('/', '_').replace(' ', '_')
-    suffix = re.sub(r'[^a-z0-9_.-]', '', suffix)
-    body['lid_suffix'] = body['ttype_name'] + '.' + suffix
-
-    return body
-
-
-def _body_key(body: dict) -> str:
-    """A key identifying a body for de-duplication.
-
-    The minor planet number is preferred because the same body can be described by both
-    a standard body dictionary and an MPC dictionary under different names (e.g.,
-    "Haumea" and "136108 Haumea").
-    """
-
-    if body.get('mnum'):
-        return str(body['mnum'])
-    return str(body.get('full_name') or body.get('name') or body.get('desig', '')).upper()
-
-
 ##########################################################################################
 # identify_target()
 ##########################################################################################
 
+
+def _is_mp(ttypes):
+    return bool(_MINOR_PLANET_TTYPES & set(ttypes))
+
+
+def _is_comet(ttypes):
+    return TargetType.COMET in ttypes
+
+
+def _has_orbital_elements(elements):
+    """True if a parsed MT_LV1 dictionary carries usable orbital elements (as opposed to
+    an "STD =", "FILE =", or empty ephemeris field)."""
+    return 'E' in elements and ('A' in elements or 'Q' in elements)
+
+
 def identify_target(
-    header: dict, *,
+    headers: list[dict], *,
     comet_rms: float = 0.1,
     mp_rms: float = 0.08,
-    radec_tolerance: float = 120.,
+    radec_delta: float = 120.,
     logger: Logger | None = None
 ) -> list[dict]:
     """Identify the target bodies of an HST observation from its SPT/SHF header.
@@ -583,7 +358,7 @@ def identify_target(
             the header orbital elements and those of an identified comet.
         mp_rms: Upper limit on the fractional root-mean-square discrepancy between the
             header orbital elements and those of an identified minor planet.
-        radec_tolerance: Base tolerance in arcsec on the offset between the propagated
+        radec_delta: Base tolerance in arcsec on the offset between the propagated
             sky position of an identified minor planet and RA_TARG/DEC_TARG. The
             tolerance is scaled up when the catalog epoch is far from the observation
             and when the body is much closer to the Earth than 1 AU.
@@ -602,145 +377,185 @@ def identify_target(
         anti-solar pointings and slew tests).
 
     Raises:
-        TargetIdentificationError: If no target can be identified, or if a target
+        TargetIdentificationFailure: If no target can be identified, or if a target
             identified by name is incompatible with the orbital elements or target
             position in the header.
     """
 
-    if not isinstance(header, dict):
-        header = dict(header.items())       # accept an astropy.io.fits.Header
+    header_lists = _headers_by_visit(headers)
+    if len(header_lists) > 1:
+        raise ValueError('Multiple visits among headers provided')
 
-    header, sentinel = _apply_overrides(header, logger)
-    if sentinel in ('TNO_SURVEY', 'UNDESIGNATED_TNO'):
-        prefix = 'Survey' if sentinel == 'TNO_SURVEY' else 'Unknown'
-        program = str(header.get('TARG_ID', '')).partition('_')[0]
-        body = _normalize_body({'name': f'{prefix} HST-{int(program):05d}',
-                                'desig': '',
-                                'ttype': TargetType.TRANS_NEPTUNIAN_OBJECT},
-                               '', logger)
-        logger and logger.info(f'Placeholder target for a program flagged '
-                               f'"{sentinel}": {body["full_name"]}')
-        return [body]
-    if sentinel:
-        logger and logger.info(f'No identifiable target: program is flagged '
-                               f'"{sentinel}"')
-        return []
+    unique_headers = _unique_targets(headers)
 
-    # A placeholder or internal-calibration TARGNAME identifies nothing by itself, but
-    # the other keywords may still identify a body; only if they do not is the absence
-    # of a target expected rather than an error
-    targname = str(header.get('TARGNAME', ''))
-    non_target = targname.upper() in _NON_TARGET_TARGNAMES
+    # Apply repairs
+    repaired_headers = []
+    unrepaired_headers = []
+    for header in unique_headers:
+        targ_id = str(header.get('TARG_ID', ''))
+        keys = [targ_id, targ_id.partition('_')[0] + '_*']
+        repair = None
+        for key in keys:
+            if key in _HST_PROGRAM_OVERRIDES:
+                repair = _HST_PROGRAM_OVERRIDES[key]
+                logger and logger.info(f'Target repair applied: {repair}')
+                header = dict(header)
+                header.update(repair)
 
-    logger and logger.info(f'Identifying targets for TARGNAME "{targname}"')
+        if repair is None:
+            unrepaired_headers.append(header)
+        else:
+            repaired_headers.append(header)
 
-    # A standard-body observation -- MT_LV1 tracks a planet or satellite -- is identified
-    # entirely from the header. Only when it is not one do we look for a small body.
-    bodies = identify_standard_body(header, logger)
-    types = ''
-    if bodies is None:
-        strings = _collect_strings(header)
-        kind1, payload1 = _parse_mt_lv(header, 'MT_LV1', logger=logger)
-        kind2, _ = _parse_mt_lv(header, 'MT_LV2', logger=logger)
+    # Check for special overrides
+    for header in repaired_headers:
+        if 'reject' in header:
+            message = 'Not a planetary observation; do not re-archive'
+            logger and logger.error(message)
+            raise TargetIdentificationFailure(message)
 
-        # When the pointing is offset from the body, RA_TARG/DEC_TARG is not the body's
-        # position and cannot be used for confirmation
-        offset_pointing = (kind2 == 'OFFSET'
-                           or any(word in targname.upper()
-                                  for word in _OFFSET_TARGNAME_WORDS))
+        if 'dict' in header:
+            return [header['dict']]
 
-        obs_dt = _obs_midpoint(header)
-        ra_targ = header.get('RA_TARG')
-        dec_targ = header.get('DEC_TARG')
+    headers = repaired_headers + unrepaired_headers
 
-        answers, types = hst_repairs(strings, logger=logger)
+    # A standard-body observation is identified entirely from the header
+    bodies = identify_standard_body(headers, logger=logger)
+    if bodies is not None:
+        return bodies
 
-        # Small-body identification from the orbital elements and the original strings
-        # (identify_small_body repairs them itself; repaired strings must not be repaired
-        # twice).
-        elements = payload1 if kind1 in ('COMET', 'ASTEROID') else {}
-        match_elements = _elements_to_j2000(elements, logger) if elements else {}
+    # Handle each unique header
+    cdict_lookup = {}       # name -> (body dict, mt_lv1 elements)
+    mdict_lookup = {}
+    unique_elements = []
+    ttype_lookup = {}       # filename -> ttype string
+    for header in headers:
+        logger and logger.blankline()
+        logger and logger.info(f'{header["FILENAME"]}...')
 
-        small_body = None
-        if answers or elements:
-            small_body, rms, _ = identify_small_body(strings, match_elements,
-                                                     comet_rms=comet_rms, mp_rms=mp_rms,
-                                                     logger=logger)
+        strings = _collect_strings(header, std=True)
+        strings, ttypes = hst_repairs(strings, logger=logger)
+        ttype_lookup[header['FILENAME']] = ttypes
 
-            # Confirm a named comet by its orbital elements alone. When the name resolved
-            # to the wrong comet (rms too high) or to no comet at all, see whether another
-            # comet matches both the elements and the names before giving up.
-            if kind1 == 'COMET' and (small_body is None or rms > comet_rms):
-                rescued = _rescue_comet_by_elements(match_elements, answers, comet_rms,
-                                                    logger)
-                if rescued:
-                    small_body, rms = rescued
-                elif small_body:
-                    message = (f'Comet "{small_body["full_name"]}" is incompatible with '
-                               'the header orbital elements: residual '
-                               f'rms={rms:.4f} > {comet_rms}; TARGNAME="{targname}"')
-                    logger and logger.error(message)
-                    raise TargetIdentificationError(message)
+        # Decide on comet and minor planet tests
+        ctest = _is_comet(ttypes)
+        mtest = _is_mp(ttypes)
+        if not ctest and not mtest:
+            ctest = True
+            mtest = True
 
-            # Confirm a named minor planet by its propagated sky position
-            if small_body and kind1 == 'ASTEROID':
-                if offset_pointing:
-                    logger and logger.info('Sky position check skipped; RA_TARG/DEC_TARG '
-                                           'is offset from the body')
-                elif obs_dt is None or ra_targ is None or dec_targ is None:
-                    logger and logger.info('Sky position check skipped; observation time '
-                                           'or target position missing')
-                else:
-                    small_body, rms = _confirm_minor_planet(
-                        small_body, rms, match_elements, obs_dt, float(ra_targ),
-                        float(dec_targ), radec_tolerance=radec_tolerance, mp_rms=mp_rms,
-                        targname=targname, logger=logger)
+        # Test for comet if selected
+        cdicts = {}
+        if ctest:
+            cdicts, _, _, _ = comet_identifiers(strings, logger=logger)
 
-        # When a body could not be identified by name or by elements alone, search the
-        # MPC for nearby orbits and select by sky position. This applies to TYPE=COMET
-        # headers too: TNOs and Centaurs are often expressed as comet elements, and
-        # dual-designated comets are in the MPC database as well.
-        if small_body is None and kind1 in ('ASTEROID', 'COMET') and not offset_pointing:
-            result = _identify_asteroid_by_position(
-                match_elements, obs_dt,
-                None if ra_targ is None else float(ra_targ),
-                None if dec_targ is None else float(dec_targ),
-                mp_rms, logger)
-            if result:
-                small_body, rms = result
+        # Test for minor planet if selected
+        mdicts = {}
+        if mtest:
+            mdicts, _, _, _ = minor_planet_identifiers(strings, logger=logger)
 
-        bodies = [small_body] if small_body else []
+        # On no minor planet results, test comets anyway
+        if mtest and not mdicts and not ctest:
+            cdicts, _, _, _ = comet_identifiers(strings, logger=logger)
 
-    # De-duplicate and normalize; the field-of-view bodies come first and the tracked
-    # body last
-    unique = []
-    seen = set()
-    for body in bodies:
-        key = _body_key(body)
-        if key and key in seen:
-            continue
-        seen.add(key)
-        unique.append(body)
+        # On no comet results, test minor planets anyway
+        if ctest and not cdicts and not mtest:
+            mdicts, _, _, _ = minor_planet_identifiers(strings, logger=logger)
 
-    if not unique:
-        if non_target:
-            logger and logger.info(f'No identifiable target: TARGNAME "{targname}" is '
-                                   'an internal calibration exposure or a generic '
-                                   'placeholder')
-            return []
-        message = f'No target identified for TARGNAME "{targname}"'
-        if 'TARG_ID' in header:
-            message += f' (TARG_ID "{header["TARG_ID"]}")'
-        logger and logger.error(message)
-        raise TargetIdentificationError(message)
+        # Save every identified body along with elements for further validation
+        elements = _parse_mt_lv(header, 'MT_LV1', logger=logger)
+        for cdict in cdicts:
+            cdict_lookup[cdict['full_name']] = (cdict, elements)
+        for mdict in mdicts:
+            categorize_minor_planet(mdict, ttypes)
+            mdict_lookup[mdict['full_name']] = (mdict, elements)
+
+        if _has_orbital_elements(elements) and elements not in unique_elements:
+            unique_elements.append(elements)
+
+    # Validate by elements and/or RA/dec
+    obs_time = _obs_midpoint(header)
+    ra_targ = header.get('RA_TARG')
+    dec_targ = header.get('DEC_TARG')
+    radec_testable = obs_time is not None and ra_targ is not None and dec_targ is not None
 
     results = []
-    for body in unique:
-        body = _normalize_body(body, types, logger)
-        results.append(body)
-        logger and logger.info(f'Target identified: {body["full_name"]} '
-                               f'({body["ttype_name"]})')
+    for key, (cdict, elements) in cdict_lookup.items():
+        rms, _ = mpc_tools.element_resid(elements, cdict)
+        if rms > comet_rms:
+            logger and logger.info(f'Comet {key} rejected; '
+                                   f'element RMS {rms:.03} > {comet_rms}')
+        else:
+            logger and logger.info(f'Comet {key} confirmed; '
+                                   f'element RMS {rms:.03} <= {comet_rms}')
+            results.append(cdict)
+            unique_elements = [e for e in unique_elements if e != elements]
+
+    for key, (mdict, elements) in mdict_lookup.items():
+        rms, _ = mpc_tools.element_resid(elements, mdict)
+
+        # The element test is quick and easy and does not produce false positives
+        if rms <= mp_rms:
+            logger and logger.info(f'Minor planet {key} confirmed; '
+                                   f'element RMS {rms:.03} <= {mp_rms}')
+            results.append(mdict)
+            unique_elements = [e for e in unique_elements if e != elements]
+
+        # Otherwise, try the full orbital element test
+        elif radec_testable:
+            info = radec_offset(mdict, obs_time, ra_targ, dec_targ, logger=logger)
+            offset = info[0] if info is not None else float('inf')
+            if offset <= radec_delta:
+                logger and logger.info(f'Minor planet {key} confirmed; RA/dec offset '
+                                       f'{offset:.02} <= {radec_delta} arcsec')
+                results.append(mdict)
+                unique_elements = [e for e in unique_elements if e != elements]
+            else:
+                logger and logger.info(f'Minor planet {key} rejected; RA/dec offset '
+                                       f'{offset:.02} > {radec_delta} arcsec')
+        else:
+            logger and logger.info(f'Minor planet {key} rejected; '
+                                   f'element RMS {rms:.03} > {mp_rms}')
+            logger and logger.info('RA/dec testing is unavailable')
+
+    # Try a global search for any remaining elements
+    indices = []
+    for k, elements in enumerate(unique_elements):
+        result = cometdb.query_comet_by_elements(elements, logger=logger)
+        if result and result[1] <= comet_rms:
+            cdict, rms = result
+            logger and logger.info(f'Comet {cdict["full_name"]} identified by elements; '
+                                   f'{rms:.03} <= {comet_rms}')
+            results.append(cdict)
+            indices.append(k)
+    for k in indices[::-1]:
+        unique_elements.pop(k)
+
+    indices = []
+    for k, elements in enumerate(unique_elements):
+        result = minor_planet_by_radec(elements, obs_time, ra_targ, dec_targ,
+                                       mp_rms, logger=logger)
+        if result is not None:
+            mdict, _ = result
+            logger and logger.info(f'Minor planet {mdict["full_name"]} identified by '
+                                   'RA/dec')
+            results.append(mdict)
+            indices.append(k)
+    for k in indices[::-1]:
+        unique_elements.pop(k)
+
+    # Report any unidentified targets
+    for elements in unique_elements:
+        # Reverse lookup the header from which these elements were obtained
+        for header in headers:
+            test_elements = _parse_mt_lv(header, 'MT_LV1')
+            if test_elements == elements:
+                message = (f'Target could not be determined: file = {header["FILENAME"]}; '
+                           f'TARGNAME={header.get("TARGNAME")}')
+                logger and logger.error(message)
+                raise TargetIdentificationFailure(message)
 
     return results
+
 
 ##########################################################################################

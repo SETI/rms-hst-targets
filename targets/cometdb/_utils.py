@@ -192,21 +192,51 @@ def _write_pickle(
 _COMET_DICTS = None
 _CENTAUR_DICTS = None
 
-def comet_dicts(
-    logger: Logger | None = None
-) -> tuple[dict[str, dict], dict[str, dict], dict[str, list[dict]]] | None:
+
+def _comet_dicts():
+    """Comet dict by primary key, dict by any key; list of dicts by ambiguous key."""
     global _COMET_DICTS
     if not _COMET_DICTS:
-        _COMET_DICTS = _read_pickle(_COMET_BASENAME, logger=logger)
+        _COMET_DICTS = _read_pickle(_COMET_BASENAME)
     return _COMET_DICTS
 
-def centaur_dicts(
-    logger: Logger | None = None
-) -> tuple[dict[str, dict], dict[str, dict], dict[str, list[dict]]] | None:
+
+def comet_dict():
+    """Comet dictionary based on primary key."""
+    return _comet_dicts()[0]
+
+
+def comet_lookup():
+    """Comet dictionary based on any key including upper case."""
+    return _comet_dicts()[1]
+
+
+def comet_ambiguous_lookup():
+    """List of comet dictionaries based on any ambiguous key including upper case."""
+    return _comet_dicts()[1]
+
+
+def _centaur_dicts():
+    """Centaur dict by primary key, dict by any key; list of dicts by ambiguous key."""
     global _CENTAUR_DICTS
     if not _CENTAUR_DICTS:
-        _CENTAUR_DICTS = _read_pickle(_CENTAUR_BASENAME, logger=logger)
+        _CENTAUR_DICTS = _read_pickle(_CENTAUR_BASENAME)
     return _CENTAUR_DICTS
+
+
+def centaur_dict():
+    """Centaur dictionary based on primary key."""
+    return _centaur_dicts()[0]
+
+
+def centaur_lookup():
+    """Centaur dictionary based on any key including upper case."""
+    return _centaur_dicts()[1]
+
+
+def centaur_ambiguous_lookup():
+    """List of Centaur dictionaries based on any ambiguous key including upper case."""
+    return _centaur_dicts()[1]
 
 
 __all__ = [
@@ -218,8 +248,12 @@ __all__ = [
     '_read_content',
     '_read_pickle',
     '_write_pickle',
-    'centaur_dicts',
-    'comet_dicts',
+    'centaur_ambiguous_lookup',
+    'centaur_dict',
+    'centaur_lookup',
+    'comet_ambiguous_lookup',
+    'comet_dict',
+    'comet_lookup',
 ]
 
 ##########################################################################################

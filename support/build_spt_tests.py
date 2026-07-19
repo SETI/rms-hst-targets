@@ -2,7 +2,8 @@
 ##########################################################################################
 # support/build_spt_tests.py
 ##########################################################################################
-"""Build a Python module of unique HST target descriptions from the SPT cache.
+"""Build a Python module of unique HST target descriptions from the SPT cache, organized
+by visit.
 
 This reads every FITS file in ``caches/SPT_CACHE`` (the ``_spt.fits``/``_shm.fits``/
 ``_shf.fits`` support files retrieved by ``retrieve_mast_moving_target_spts.py``) and
@@ -11,14 +12,30 @@ extracts the key target-description keywords from each primary header:
     PSTRTIME, PSTPTIME, TARG_ID, TAR_TYPE, TARGTYPE, TARDESC*, TARGCAT, TARKEY*,
     MT_LV*, TARGNAME, RA_TARG, DEC_TARG, PROPOSID
 
-It writes a single Python file in the same form as ``tests/SPT_TESTS.py``: a list
-``SPT_TESTS`` of ``("<proposal_id>/<filename>", {<keyword>: <value>, ...})`` tuples.
-Only keywords that are actually present in a header are emitted. Unlike the hand-built
-``tests/SPT_TESTS.py``, MTFLAG, RA_REF, and DEC_REF are not included.
+Because `identify_target` now works one HST visit at a time, the output is organized by
+visit rather than as a flat list. A visit is the first six characters of the rootname
+(the file's base name), which encodes the program and visit and is unique across HST. The
+output module defines a single dictionary ``SPT_TESTS`` mapping each visit string to a
+list of per-file header dictionaries::
 
-Duplicate entries are removed. Two files are considered duplicates when they share an
-identical set of values for TARDESC*, TARGTYPE, TARGCAT, TARKEY*, MT_LV*, and TARGNAME;
-the first one encountered (in sorted proposal-id, then filename order) is kept.
+    SPT_TESTS = {
+        "y0zz03": [
+            {"FILENAME": "y0zz0301t_shf.fits", "PSTRTIME": ..., ...},
+            ...
+        ],
+        ...
+    }
+
+Each header dictionary begins with FILENAME (the base name, which `identify_target` uses
+to group headers by visit) and then the keywords above, in the order listed, omitting any
+keyword absent from the header.
+
+Within a single visit, only files with a distinct *target description* are kept: two files
+collapse to one when they share an identical set of values for the keywords matching
+``targets._utils._KEYWORD_PREFIX_REGEX`` (TARGNAME, TARDESC*, TARKEY*, and MT_LV*), which
+is exactly the subset `identify_target` uses to decide target uniqueness. The first file
+encountered (in sorted base-name order) is kept. Duplicates are removed only within a
+visit, so the same target description reappears once per visit that contains it.
 
 Type::
 
@@ -29,6 +46,7 @@ for more information.
 
 import argparse
 import pathlib
+import re
 import sys
 
 from astropy.io import fits
@@ -41,6 +59,10 @@ _MIDDLE_KEYS = ('TARGCAT',)
 
 # Fixed keywords emitted after the TARKEY*/MT_LV* groups, in this order.
 _TRAILING_KEYS = ('TARGNAME', 'RA_TARG', 'DEC_TARG', 'PROPOSID')
+
+# The keywords that define a target's identity, matching targets._utils._KEYWORD_PREFIX_
+# REGEX. Two files within a visit are duplicates when these values all agree.
+_KEYWORD_PREFIX_REGEX = re.compile(r'(TARGNAME|TARDESC|TARKEY|MT_LV)')
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 _DEFAULT_CACHE = _REPO_ROOT / 'caches' / 'SPT_CACHE'
@@ -69,15 +91,10 @@ def _extract(header):
 
 
 def _signature(items):
-    """A hashable duplicate-detection key: the values of TARDESC*, TARGTYPE, TARGCAT,
-    TARKEY*, MT_LV*, and TARGNAME."""
+    """A hashable per-visit duplicate-detection key: the values of every keyword matching
+    ``_KEYWORD_PREFIX_REGEX`` (TARGNAME, TARDESC*, TARKEY*, MT_LV*), in header order."""
 
-    values = dict(items)
-    tardesc_vals = tuple(v for k, v in items if k.startswith('TARDESC'))
-    tarkey_vals = tuple(v for k, v in items if k.startswith('TARKEY'))
-    mt_lv_vals = tuple(v for k, v in items if k.startswith('MT_LV'))
-    return (tardesc_vals, values.get('TARGTYPE'), values.get('TARGCAT'),
-            tarkey_vals, mt_lv_vals, values.get('TARGNAME'))
+    return tuple((k, v) for k, v in items if _KEYWORD_PREFIX_REGEX.match(k))
 
 
 def _format_value(value):
@@ -102,7 +119,7 @@ def _fits_files(cache):
 
 
 def build_spt_tests(cache, output, limit=0):
-    """Read the cache, drop duplicates, and write the SPT_TESTS module.
+    """Read the cache, drop within-visit duplicates, and write the SPT_TESTS module.
 
     Parameters:
         cache (pathlib.Path): Directory of per-proposal subdirectories of FITS files.
@@ -116,10 +133,13 @@ def build_spt_tests(cache, output, limit=0):
     total = len(files)
     print(f'Reading {total} FITS headers from {cache}', flush=True)
 
-    seen = set()
-    entries = []
+    # visit -> list of (filename, items); visit -> set of signatures already kept
+    visits = {}
+    visit_order = []
+    seen = {}
     read = 0
     unreadable = 0
+    duplicates = 0
     for i, (proposal_id, path) in enumerate(files):
         try:
             header = fits.getheader(path, 0)
@@ -129,40 +149,55 @@ def build_spt_tests(cache, output, limit=0):
             continue
         read += 1
 
+        visit = path.name[:6]
         items = _extract(header)
         signature = _signature(items)
-        if signature in seen:
-            continue
-        seen.add(signature)
 
-        key = f'{proposal_id}/{path.name}'
-        entries.append((key, items))
+        if visit not in visits:
+            visits[visit] = []
+            visit_order.append(visit)
+            seen[visit] = set()
+
+        if signature in seen[visit]:
+            duplicates += 1
+            continue
+        seen[visit].add(signature)
+
+        visits[visit].append((path.name, items))
 
         if (i + 1) % 5000 == 0 or (i + 1) == total:
-            print(f'  {i + 1:6d} / {total:6d}   unique so far: {len(entries)}',
-                  flush=True)
+            print(f'  {i + 1:6d} / {total:6d}   visits: {len(visit_order)}   '
+                  f'entries: {sum(len(v) for v in visits.values())}', flush=True)
 
-    lines = ['SPT_TESTS = [']
-    for key, items in entries:
-        lines.append(f'    ("{key}", {{')
-        for name, value in items:
-            lines.append(f'        "{name}": {_format_value(value)},')
-        lines.append('    }),')
-    lines.append(']')
+    entry_count = sum(len(v) for v in visits.values())
+
+    lines = ['SPT_TESTS = {']
+    for visit in visit_order:
+        lines.append(f'    "{visit}": [')
+        for filename, items in visits[visit]:
+            lines.append('        {')
+            lines.append(f'            "FILENAME": {_format_value(filename)},')
+            for name, value in items:
+                lines.append(f'            "{name}": {_format_value(value)},')
+            lines.append('        },')
+        lines.append('    ],')
+    lines.append('}')
     lines.append('')
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text('\n'.join(lines))
 
     print(f'\nRead {read} files ({unreadable} unreadable), '
-          f'{read - len(entries)} duplicates dropped.', flush=True)
-    print(f'Wrote {len(entries)} unique entries -> {output}', flush=True)
+          f'{duplicates} within-visit duplicates dropped.', flush=True)
+    print(f'Wrote {len(visit_order)} visits, {entry_count} entries -> {output}',
+          flush=True)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description='Build a Python module of unique HST target descriptions from the '
-                    'FITS files in the SPT cache, in the form of tests/SPT_TESTS.py.')
+                    'FITS files in the SPT cache, organized by visit, in the form of '
+                    'tests/SPT_TESTS.py.')
     parser.add_argument('--cache', type=pathlib.Path, default=_DEFAULT_CACHE,
                         help='directory of the SPT cache (default: %(default)s)')
     parser.add_argument('--output', '-o', type=pathlib.Path, default=_DEFAULT_OUTPUT,

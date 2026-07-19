@@ -1,17 +1,15 @@
 ##########################################################################################
-# mpc_tools/mpc_query_by_elements.py
+# targets/mpc_tools/mpc_query_by_elements.py
 ##########################################################################################
 
 import math
 import re
-from logging import Logger
 
 import numpy as np
 import requests
 
+from ._utils import _MPC_BY_PROPERTIES
 from .mpc_query_by_name import mpc_query_by_name
-
-_MPC_BY_PROPERTIES = 'https://www.minorplanetcenter.net/db_search/show_by_properties?'
 
 _OBJECT_COUNT_RE = re.compile(rb'(\d+) objects match search criteria.')
 _OBJECT_NAME_RE = re.compile(rb'\(?<a href="(.*?)">(.*?)</a>\)? *')
@@ -19,18 +17,12 @@ _OBJECT_NAME_RE = re.compile(rb'\(?<a href="(.*?)">(.*?)</a>\)? *')
 DPR = 180. / math.pi
 
 
-def mpc_query_by_elements(
-    elements: dict,
-    delta: float = 0.04, *,
-    count: int = 1,
-    bodies: list[dict] | None = None,
-    logger: Logger | None = None
-) -> tuple[str, float] | list[tuple[str, float]]:
+def mpc_query_by_elements(elements, delta=0.04, *, count=1, bodies=None, logger=None):
     """Identify a body in the MPC database based on orbital elements.
 
     Parameters:
-        elements: A dictionary containing any or all orbital elements keyed by element
-            name, as follows:
+        elements (dict): A dictionary containing any or all orbital elements keyed by
+            element name, as follows:
 
             * "A": semimajor axis in AU.
             * "Q": perihelion distance in AU.
@@ -39,19 +31,24 @@ def mpc_query_by_elements(
             * "E": eccentricity.
             * "W": argument of pericenter in degrees.
 
-        delta: Upper limit on the discrepancy in each orbital element or element pair.
-            This is a fractional uncertainty for `A` and `Q` but an absolute uncertainty
-            in the other elements (when `I`, `O`, and `W` are given in radians).
-        count: The maximum number of items to return. If 1, a single tuple (`body`, `rms`)
-            is returned; otherwise, a list of `count` tuples is returned.
-        bodies: List of body dictionaries to check; if the list is empty, every known
-            minor planet is checked.
-        logger: Optional Logger or PdsLogger for messages.
+        delta (float): Upper limit on the discrepancy in each orbital element or element
+            pair. This is a fractional uncertainty for `A` and `Q` but an absolute
+            uncertainty in the other elements (when `I`, `O`, and `W` are given in
+            radians).
+        count (int, optional): The maximum number of items to return. If 1, a single tuple
+            (`body`, `rms`) is returned; otherwise, a list of `count` such tuples is
+            returned.
+        bodies (list[dict], optional): List of body dictionaries to check; if the list is
+            empty, every known minor planet is checked.
+        logger (PdsLogger, optional): PdsLogger for messages.
 
     Returns:
-        A tuple (`body`, `rms`) (if `count` == 1) or a list thereof. Here, `body` is the
-        dictionary of body parameters and `rms` is the root-mean-square fractional
-        discrepancy between the given `elements` and those in the database.
+        tuple or list[tuple]: A tuple (`body`, `rms`) if `count` == 1; otherwise a list
+        of up to `count` of these tuples.
+
+            * `body` (dict): Dictionary of body parameters.
+            * `rms` (float): The root-mean-square fractional discrepancy between the given
+              `elements` and those in the database.
 
     Raises:
         requests.RequestException: If the query to the MPC "show_by_properties" tool
@@ -123,15 +120,12 @@ def mpc_query_by_elements(
     return [(mpc_query_by_name(key), rms) for rms, key in resids[:count]]
 
 
-def _mpc_element_query_url(
-    elements: dict,
-    delta: float
-) -> str:
+def _mpc_element_query_url(elements, delta):
     """Construct the URL for a query to the MPC database.
 
     Parameters:
-        elements: A dictionary containing any or all orbital elements keyed by element
-            name, as follows:
+        elements (dict): A dictionary containing any or all orbital elements keyed by
+            element name, as follows:
 
             * "A": semimajor axis in AU.
             * "Q": perihelion distance in AU.
@@ -140,12 +134,13 @@ def _mpc_element_query_url(
             * "E": eccentricity.
             * "W": argument of pericenter in degrees.
 
-        delta: Upper limit on the discrepancy in each orbital element or element pair.
-            This is a fractional uncertainty for `A` and `Q` but an absolute uncertainty
-            in the other elements (when `I`, `O`, and `W` are given in radians).
+        delta (float): Upper limit on the discrepancy in each orbital element or element
+            pair. This is a fractional uncertainty for `A` and `Q` but an absolute
+            uncertainty in the other elements (when `I`, `O`, and `W` are given in
+            radians).
 
     Returns:
-        The URL to pass to the MPC's "show_by_properties" tool.
+        str: The URL to pass to the MPC's "show_by_properties" tool.
     """
 
     parts = []
@@ -207,15 +202,15 @@ def _mpc_element_query_url(
     return _MPC_BY_PROPERTIES + '&'.join(parts)
 
 
-def _read_mpc_element_table(url: str) -> dict[str, dict]:
+def _read_mpc_element_table(url):
     """Query the MPC and return the table contents.
 
     Parameters:
-        url: The MPC url string.
+        url (str): The MPC url string.
 
     Returns:
-        A dictionary keyed by MPC body name, returning a dictionary of orbital elements
-        "A", "Q", "I", "O", "E", and "W".
+        dict[str, dict]: A dictionary keyed by MPC body name, returning a dictionary of
+        orbital elements "A", "Q", "I", "O", "E", and "W".
 
     Raises:
         requests.RequestException: If the query fails.
@@ -257,21 +252,17 @@ def _read_mpc_element_table(url: str) -> dict[str, dict]:
     return mpc_table
 
 
-def _polar_extrema(
-    radius: float,
-    longitude: float,
-    delta: float
-) -> tuple:
+def _polar_extrema(radius, longitude, delta):
     """Extremes of radius and longitude given polar coordinates and an uncertainty.
 
     Parameters:
-        radius: Polar radius value.
-        longitude: Longitude in radians.
-        delta: Uncertainty in `radius` and `longitude`.
+        radius (float): Polar radius value.
+        longitude (float): Longitude in radians.
+        delta (float): Uncertainty in `radius` and `longitude`.
 
     Returns:
-        (minimum radius, maximum radius, minimum longitude, maximum longitude). Longitudes
-        are in radians.
+        tuple: `(minimum radius, maximum radius, minimum longitude, maximum longitude)`.
+        Longitudes are in radians.
     """
 
     if delta > radius:
@@ -281,17 +272,17 @@ def _polar_extrema(
     return (radius - delta, radius + delta, longitude - dlon, longitude + dlon)
 
 
-def element_resid(elements: dict, reference: dict) -> float:
+def element_resid(elements, reference):
     """Compare two dictionaries of orbital elements and return the RMS residual.
 
     Parameters:
-        elements: The dictionary of orbital elements for which a match is sought.
-        reference: A dictionary of orbital elements for a known body.
+        elements (dict): The dictionary of orbital elements for which a match is sought.
+        reference (dict): A dictionary of orbital elements for a known body.
 
     Returns:
-        (`rms`, `count`), where `rms` is the root-mean-square residual and `count` is the
-        number of elements compared. If no orbital elements were available, (0., 0) is
-        returned.
+        tuple: `(rms, count)`, where `rms` is the root-mean-square residual and `count`
+        is the number of elements compared. If no orbital elements are available, (0., 0)
+        is returned.
     """
 
     errors = []

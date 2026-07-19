@@ -267,6 +267,7 @@ _UNDIAGNOSTIC_TARGET_WORDS = [
     r'SITES?',
     r'SKY',
     r'SLEWS?',
+    r'SOLAR( SYSTEM)?',
     r'STARES?',
     r'STEPS?',
     r'STRAT(OSPHERE|IC|)',

@@ -2,7 +2,7 @@
 # targets/cometdb/query_comet_by_name.py
 ##########################################################################################
 
-from ._utils import comet_dicts
+from ._utils import _comet_dicts
 
 
 def query_comet_by_name(name, *, ambiguous=True, logger=None):
@@ -10,8 +10,9 @@ def query_comet_by_name(name, *, ambiguous=True, logger=None):
 
     Parameters:
         name (str): The name or designation of a comet.
-        ambiguous (bool): True to return a list of matches when `name` is ambiguous.
-        logger (Logger): Optional Logger for messages.
+        ambiguous (bool, optional): True to return a list of matches when `name` is
+            ambiguous.
+        logger (PdsLogger, optional): Logger for messages.
 
     Returns:
         dict or list[dict]: A comet dictionary or a list of comet dictionaries if multiple
@@ -19,7 +20,7 @@ def query_comet_by_name(name, *, ambiguous=True, logger=None):
     """
 
     key = name.upper()
-    _, by_lookup, by_ambiguous = comet_dicts()
+    _, by_lookup, by_ambiguous = _comet_dicts()
 
     comet = None
     if key in by_lookup:

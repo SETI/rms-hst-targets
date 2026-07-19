@@ -28,32 +28,32 @@ class TargetType:
 
     # Lookup table
     NAME = {
-        'A': 'asteroid',
-        'a': 'astrophysical',
-        'F': 'calibration_field',
-        'c': 'calibrator',
-        'H': 'centaur',
-        'C': 'comet',
-        'd': 'dust',
-        'D': 'dwarf_planet',
-        'E': 'equipment',
-        'L': 'laboratory_analog',
-        'm': 'magnetic_field',
-        'P': 'planet',
-        'N': 'planetary_nebula',
-        'p': 'planetary_system',
-        't': 'plasma_cloud',
-        'W': 'plasma_stream',
-        'R': 'ring',
-        'S': 'satellite',
-        '*': 'star',
-        'T': 'trans-neptunian_object',
+        'A': 'Asteroid',
+        'a': 'Astrophysical',
+        'F': 'Calibration Field',
+        'c': 'Calibrator',
+        'H': 'Centaur',
+        'C': 'Comet',
+        'd': 'Dust',
+        'D': 'Dwarf Planet',
+        'E': 'Equipment',
+        'L': 'Laboratory Analog',
+        'm': 'Magnetic Field',
+        'P': 'Planet',
+        'N': 'Planetary Nebula',
+        'p': 'Planetary System',
+        't': 'Plasma Cloud',
+        'W': 'Plasma Stream',
+        'R': 'Ring',
+        'S': 'Satellite',
+        '*': 'Star',
+        'T': 'Trans-Neptunian Object',
     }
 
-    # An extra
+    # Extras
     MINOR_PLANET = 'M'
     MCODES = 'AHDT'
-
+    TORUS = PLASMA_CLOUD
 
 __all__ = ['TargetType']
 

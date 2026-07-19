@@ -1,146 +1,222 @@
 ##########################################################################################
 # identify_standard_body.py
 ##########################################################################################
-"""Identify the standard bodies (planets and satellites) named by an HST header.
-
-A "standard body" is a planet or satellite carried in `STANDARD_BODY_LOOKUP`, as opposed
-to a comet or minor planet. `identify_standard_body` recognizes such bodies from two
-sources: the MT_LV* "STD" fields, where MT_LV2 names the body in the field of view and
-MT_LV1 names the body HST tracked; and the repaired target description strings, which may
-name additional standard bodies. An "STD" field that instead names a minor planet or
-comet is resolved through the small-body identifiers.
-
-To use::
-
-    from targets.identify_standard_body import identify_standard_body
-
+"""Identify the standard bodies (including rings, systems, Io torus) named by an HST
+header.
 """
 
 import re
-from logging import Logger
 
-from targets import mpc_tools
-from targets.errors import TargetIdentificationError
-from targets.header_parsing import _collect_strings, _parse_mt_lv
-from targets.hst_repairs import hst_repairs
-from targets.identify_small_body import identify_small_body
+from targets._utils          import (_collect_strings, _complete_body, _parse_mt_lv,
+                                     _unique_targets)
+from targets.hst_repairs     import hst_repairs
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
+from targets.targettype      import TargetType
 
-__all__ = ['identify_standard_body']
+_STD_REGEX = re.compile(r'STD *= *([^,]+)')
+_TARDESCR_REGEX = re.compile(r'SOLAR SYSTEM;(?:PLANET|SATELLITE|FEATURE|OFFSET) (\w+)')
 
-_STD_NUMBER_NAME = re.compile(r'\(?([1-9]\d*)\)?(?: *\((.+)\)| +(.+))?')
-
-
-def _resolve_std(token: str, logger: Logger | None) -> tuple[dict | None, str, str]:
-    """Resolve the value of an MT_LV* "STD" field.
-
-    Parameters:
-        token: The value of the "STD" field, e.g., "JUPITER", "2060", or "1 (CERES)".
-        logger: An optional Logger for messages.
-
-    Returns:
-        A tuple `(body, name, number)`. If the token names a standard body, `body` is
-        its dictionary and the strings are empty. Otherwise `body` is None, `name` is
-        the small-body name or number to look up instead, and `number` is the minor
-        planet number if the token supplied one.
-    """
-
-    token = ' '.join(str(token).split()).upper()
-    if token in STANDARD_BODY_LOOKUP:
-        return (STANDARD_BODY_LOOKUP[token], '', '')
-
-    # "N", "N (NAME)", or "(N) NAME" identifies a minor planet by number. The name alone
-    # can match a standard body that shares it (e.g., "9 (METIS)" is the asteroid, not
-    # the satellite of Jupiter), so a standard body is accepted only if its own minor
-    # planet number agrees.
-    match = _STD_NUMBER_NAME.fullmatch(token)
-    if match:
-        number = match.group(1)
-        name = match.group(2) or match.group(3) or ''
-        if name and name in STANDARD_BODY_LOOKUP:
-            body = STANDARD_BODY_LOOKUP[name]
-            if str(body.get('mnum', '')) == number:
-                return (body, '', '')
-        return (None, name or number, number)
-
-    return (None, token, '')
+_PLANET_RADII = {
+    'MARS'   :  3500.,
+    'JUPITER': 73000.,
+    'SATURN' : 62000.,
+    'URANUS' : 26000.,
+    'NEPTUNE': 26000.,
+}
 
 
-def identify_standard_body(header: dict, logger: Logger | None) -> list[dict] | None:
-    """Identify the standard bodies (planets and satellites) of an HST observation.
-
-    An observation is treated as a standard-body observation only when its MT_LV1_*
-    keywords track a standard body, i.e. `_parse_mt_lv(header, 'MT_LV1')` is an "STD"
-    field. When it is not, this returns None without logging, and the caller is free to
-    try the small-body identifiers instead.
-
-    For a standard-body observation, two sources are consulted: the MT_LV* "STD" fields,
-    where MT_LV2 names the body in the field of view and MT_LV1 names the body HST
-    tracked; and the repaired target description strings (via `hst_repairs`), which may
-    name additional standard bodies. An "STD" field that names a minor planet or comet
-    rather than a standard body is resolved through the small-body identifiers.
+def _identify_standard_names(header, *, logger=None):
+    """Identify the standard bodies (bodies, rings, systems, Io torus) of an HST
+    observation.
 
     Parameters:
-        header: The SPT/SHF header as a dictionary.
-        logger: An optional Logger for messages.
+        headers (FITS header | dict): The SPT/SHF header for a single file.
+        logger (Logger, optional): A Logger for messages.
 
     Returns:
-        None if the header does not describe a standard-body observation. Otherwise a
-        non-empty list of body dictionaries, the field-of-view bodies first and the
-        tracked body last (before de-duplication and normalization by the caller).
-
-    Raises:
-        TargetIdentificationError: If an "STD" field names a target that cannot be
-            resolved.
+        list[str]: The body names identified.
     """
 
-    kind1, payload1 = _parse_mt_lv(header, 'MT_LV1', logger=logger)
-    if kind1 != 'STD':
+    # Find the last STD value
+    stdval = ''
+    for key in ('MT_LV1_1', 'MT_LV2_1'):
+        if key in header:
+            match = _STD_REGEX.match(header[key])
+            if match:
+                stdval = match.group(1).upper()
+            elif header[key] in STANDARD_BODY_LOOKUP:
+                stdval = header[key].upper()        # e.g., "TETHYS" without "STD="
+            else:
+                break
+
+    # An STD field is missing for some older programs, TARDESCR is unambiguous
+    if not stdval:
+        tardescr = header.get('TARDESCR', '') + header.get('TARDESC2', '')
+        match = _TARDESCR_REGEX.match(tardescr)
+        if match:
+            name = match.group(1).upper()
+            if name in STANDARD_BODY_LOOKUP:
+                stdval = name
+
+    # If this is not a standard standard value, return None
+    if not stdval:
+        return []
+    if stdval not in STANDARD_BODY_LOOKUP:
+        return []
+
+    # Log value found
+    logger and logger.blankline()
+    logger and logger.info(f'{header["FILENAME"]}: STD={stdval}')
+
+    # Search for additional strings
+    strings = _collect_strings(header, std=False)
+    strings, ttypes = hst_repairs(strings, logger=logger)
+    strings = [s.upper() for s in strings]
+
+    # Look for TYPE=TORUS, interpret as planet, ring, or torus
+    mt_lv2 = header.get('MT_LV2_1', '').replace(' ', '')
+    if mt_lv2.startswith('TYPE=TORUS'):
+        torus = _parse_mt_lv(header, 'MT_LV2', logger=logger)
+        planet_radius = _PLANET_RADII.get(stdval, 0)
+
+        if stdval == 'JUPITER' and TargetType.PLASMA_CLOUD in ttypes and 'IO' in strings:
+            stdval = 'IO TORUS'
+        elif (TargetType.RING in ttypes and TargetType.PLASMA_CLOUD not in ttypes
+              and torus.get('POLE_LAT', 90) == 90
+              and torus.get('LAT', 0) == 0
+              and torus.get('LONG', 90) in {90, 270}
+              and planet_radius < torus['RAD'] < 10.*planet_radius):
+            test = stdval + ' RINGS'
+            if test in STANDARD_BODY_LOOKUP:
+                stdval = test
+
+    # Augment the list of targets based on other strings
+    names = [stdval]
+    unused = []
+    for string in strings:
+        if string in STANDARD_BODY_LOOKUP:
+            if string not in names:
+                names.append(string)
+        else:
+            for substring in string.split():
+                if substring in STANDARD_BODY_LOOKUP:
+                    if substring not in names:
+                        names.append(substring)
+                elif '-' in substring:
+                    subparts = []
+                    for part in substring.split('-'):
+                        if part in STANDARD_BODY_LOOKUP:
+                            if part not in names:
+                                names.append(part)
+                        else:
+                            subparts.append(part)
+                    if subparts:
+                        unused.append('-'.join(subparts))
+                else:
+                    unused.append(substring)
+
+    # Add the "system" target
+    if len(names) > 1:
+        # parent_key is the parent's full_name; resolve it to the parent body so the
+        # "<parent> SYSTEM" name is built from the parent's plain name.
+        child_count = {}
+        for name in names:
+            parent_key = STANDARD_BODY_LOOKUP[name].get('parent_key', '')
+            if parent_key:
+                if parent_key in child_count:
+                    child_count[parent_key] += 1
+                else:
+                    child_count[parent_key] = 1
+
+        for parent_key in child_count:
+            parent = STANDARD_BODY_LOOKUP.get(parent_key)
+            if parent and parent['name'].upper() in names:
+                child_count[parent_key] += 1    # so "IO" + "JUPITER" -> "JUPITER SYSTEM"
+
+        for parent_key, count in child_count.items():
+            if count > 1:
+                parent = STANDARD_BODY_LOOKUP.get(parent_key)
+                if parent is None:
+                    continue
+                key = parent['name'].upper() + ' SYSTEM'
+                if key in STANDARD_BODY_LOOKUP and key not in names:
+                    names.append(key)
+                    break
+
+    # Log the result
+    logger and logger.info(f'Standard targets: {names}')
+    if unused:
+        logger and logger.info(f'Unused strings: {unused}')
+
+    return names
+
+
+def identify_standard_body(headers, *, logger=None):
+    """Identify the standard bodies (bodies, rings, systems, Io torus) of an HST visit.
+
+    Parameters:
+        headers (list[FITS header | dict]): All the SPT/SHF headers for a single visit.
+        logger (Logger, optional): A Logger for messages.
+
+    Returns:
+        list[str]: The body names identified.
+    """
+
+    unique_headers = _unique_targets(headers)
+
+    # An order-preserving list (not a set) so the merged result is deterministic; the
+    # order follows the visit's files, which is stable across runs.
+    name_tuples = []
+    filenames_unused = []
+    for header in unique_headers:
+        names = _identify_standard_names(header, logger=logger)
+        if not names:
+            filenames_unused.append(header['FILENAME'])
+        else:
+            name_tuple = tuple(names)
+            if name_tuple not in name_tuples:
+                name_tuples.append(name_tuple)
+
+    if not name_tuples:
         return None
 
-    kind2, payload2 = _parse_mt_lv(header, 'MT_LV2', logger=logger)
-    answers, _types = hst_repairs(_collect_strings(header), logger=logger)
+    logger and logger.blankline()
+    for filename in filenames_unused:
+        logger and logger.info(f'{filename}: No STD body')
 
-    fov_bodies = []         # bodies identified by name; the subject of the observation
-    tracked_bodies = []     # the body HST tracked, per MT_LV1
+    if len(name_tuples) == 1:
+        merged_names = list(name_tuples[0])
+        wording = 'Targets'
+    else:
+        # Different answers from within a single visit
+        # Try to retain order of unique names
+        length = max(len(t) for t in name_tuples)
+        merged_names = []
+        for k in range(length):
+            for name_tuple in name_tuples:
+                name = name_tuple[min(k, len(name_tuple)-1)]
+                if name not in merged_names:
+                    merged_names.append(name)
+        wording = 'Merged targets'
 
-    # Standard bodies named by the MT_LV* "STD" fields. MT_LV2 names the body in the
-    # field of view; MT_LV1 names the body HST tracked.
-    for kind, payload, level, target_list in [
-            (kind2, payload2, 'MT_LV2', fov_bodies),
-            (kind1, payload1, 'MT_LV1', tracked_bodies)]:
-        if kind != 'STD':
-            continue
-        body, small_name, number = _resolve_std(payload, logger)
-        if body is None:
-            # The STD field names a minor planet or comet; identify it by name
-            body, _, valid = identify_small_body([small_name], {}, logger=logger)
-            if not valid:
-                body = None
-        if body is None and number and number != small_name:
-            # The name did not resolve (e.g., it is reserved for a satellite), but the
-            # minor planet number is authoritative
-            try:
-                body = mpc_tools.mpc_query_by_name(number, logger=logger)
-            except RuntimeError:
-                body = None
-        if body is None:
-            message = f'Unresolved standard target "STD={payload}" in {level}'
-            logger and logger.error(message)
-            raise TargetIdentificationError(message)
-        logger and logger.info(f'{level} standard target: '
-                               + (body.get('full_name') or body['name']))
-        target_list.append(body)
+    used_count = len(unique_headers) - len(filenames_unused)
+    full_count = len(headers)
+    logger and logger.info(f'{wording} from {used_count}/{full_count} files: '
+                           f'{merged_names}')
 
-    # Standard bodies identified by name from the target description
-    for answer in answers:
-        for part in answer.upper().split('-'):  # handle, e.g., "PANDORA-PROMETHEUS"
-            body = STANDARD_BODY_LOOKUP.get(part)
-            if body:
-                logger and logger.info(f'Standard body identified by name: {body["name"]} '
-                                       f'(from "{part}")')
-                fov_bodies.append(body)
+    # Different lookup keys can resolve to the same body (e.g., "SATURN" and the
+    # abbreviation "SAT"), so deduplicate by body while preserving order.
+    bodies = []
+    seen = set()
+    for n in merged_names:
+        body = STANDARD_BODY_LOOKUP[n]
+        if body['name'] not in seen:
+            seen.add(body['name'])
+            bodies.append(_complete_body(body))
 
-    return fov_bodies + tracked_bodies
+    return bodies
+
+
+__all__ = ['identify_standard_body']
 
 ##########################################################################################

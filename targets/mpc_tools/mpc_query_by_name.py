@@ -2,53 +2,25 @@
 # mpc_tools/mpc_query_by_name.py
 ##########################################################################################
 
-import os
-import pathlib
-from logging import Logger
-
 import bs4
 import requests
 
-from .mpc_body_dict import mpc_body_dict
-
-try:
-    _MPC_CACHE = pathlib.Path(os.path.dirname(__file__)).parent.parent / 'caches/MPC_CACHE'
-except NameError:
-    _MPC_CACHE = pathlib.Path('./MPC_CACHE')
-
-_MPC_BY_NAME = 'https://minorplanetcenter.net/db_search/show_object?object_id='
-_MPC_BY_PROPERTIES = 'https://www.minorplanetcenter.net/db_search/show_by_properties?'
-_MPC_CACHING = True
-
-_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-           'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+# noqa: I0001
+from ._utils import (_mpc_body_dict, _mpc_date_to_str, _MPC_BY_NAME, _MPC_CACHE,
+                     _MPC_CACHING)
 
 
-def _mpc_date_to_str(text: str) -> str:
-    """Convert an MPC date of the form "YYYY-MM-DD.ddddd" to "DD-MON-YYYY:hh:mm:ss"."""
-
-    year, month, day = text.strip().split('-')
-    dd = int(float(day))
-    secs = min(round((float(day) - dd) * 86400.), 86399)
-    hh, remainder = divmod(secs, 3600)
-    mm, ss = divmod(remainder, 60)
-    return (f'{dd:02d}-{_MONTHS[int(month) - 1]}-{int(year):04d}:'
-            f'{hh:02d}:{mm:02d}:{ss:02d}')
-
-
-def mpc_query_by_name(
-    name: str, *,
-    logger: Logger | None = None
-) -> dict | None:
+def mpc_query_by_name(name, *, logger=None):
     """Get aliases and orbital elements for a body in the MPC database.
 
     Parameters:
-        name: The name of the body as used by the MPC.
-        logger: An optional Logger for messages.
+        name (str): The name of the body as used by the MPC.
+        logger (PdsLogger, optional): A Logger for messages.
 
     Returns:
-        A dictionary of body parameters as returned by `mpc_body_dict`, including the
-        body's aliases and its orbital elements keyed by element name, as follows:
+        dict or None: A dictionary of body parameters, including the body's aliases and
+        its orbital elements. If the name is not found in the MPC database, a warning
+        message is logged and None is returned. Orbital elements are keyed as follows:
 
         * "A": semimajor axis in AU.
         * "Q": perihelion distance in AU.
@@ -57,8 +29,8 @@ def mpc_query_by_name(
         * "E": eccentricity.
         * "W": argument of pericenter in degrees.
         * "M": mean anomaly at EPOCH in degrees, if available.
-        * "EPOCH": epoch of the elements as "DD-MON-YYYY:hh:mm:ss", if available.
         * "T": time of perihelion passage as "DD-MON-YYYY:hh:mm:ss", if available.
+        * "EPOCH": epoch of the elements as "DD-MON-YYYY:hh:mm:ss", if available.
 
         If the name is not found, a warning is issued to the `logger` and None is
         returned.
@@ -96,7 +68,7 @@ def mpc_query_by_name(
 
     # You might get a list of "Vaguely similar sounding possible matches"
     if not html or b'Vaguely similar sounding' in html:
-        logger and logger.warn(f'No MPC info found for "{name}"')
+        logger and logger.warning(f'No MPC info found for "{name}"')
         return None
 
     soup = bs4.BeautifulSoup(html, 'html.parser')
@@ -150,7 +122,7 @@ def mpc_query_by_name(
                       ('O', 'ascending node (°)'),
                       ('E', 'eccentricity'),
                       ('W', 'argument of perihelion (°)'),
-                     ]:
+                      ('M', 'mean anomaly (°)')]:
         cell = soup.find('td', string=text)
         if not cell:
             continue
@@ -161,9 +133,9 @@ def mpc_query_by_name(
             pass
 
     if not elements:
-        logger and logger.warn(f'MPC has no orbital elements for "{name}"')
+        logger and logger.warning(f'MPC has no orbital elements for "{name}"')
     elif len(elements) < 5:
-        logger and logger.warn(f'Orbital element parsing error for "{name}"')
+        logger and logger.warning(f'Orbital element parsing error for "{name}"')
 
     # Mean anomaly, plus the element epoch and perihelion time as date strings; these
     # support sky-position calculations via orbital_radec.
@@ -174,9 +146,8 @@ def mpc_query_by_name(
         except ValueError:  # pragma: no cover - malformed cell
             pass
 
-    for key, text in [('EPOCH', 'epoch'),
-                      ('T', 'perihelion date'),
-                     ]:
+    for key, text in [('T', 'perihelion date'),     # e.g., 2027-07-13.44931
+                      ('EPOCH', 'epoch')]:          # e.g., 2025-11-21.0
         cell = soup.find('td', string=text)
         if not cell:
             continue
@@ -185,7 +156,7 @@ def mpc_query_by_name(
         except ValueError:  # pragma: no cover - malformed cell
             pass
 
-    return mpc_body_dict(names, elements)
+    return _mpc_body_dict(names, elements)
 
 
 __all__ = ['mpc_query_by_name']

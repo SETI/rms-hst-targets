@@ -18,12 +18,14 @@ and the Io torus.
 Each dictionary value is a dictionary with these items:
 
 * "name": Standard name with preferred capitalization.
+* "full_name": Standard name including minor planet number if any.
 * "ttype": A TargetType letter indication the target type: "P" for planet, "S" for
   satellite, "D" for dwarf planet, "p" for planetary system, "R" for ring, or "t" for
   plasma cloud.
-* "parent_key": Key for the parent body, if any. This identifies the central body for all
-  satellites, the "system" for the planets with multiple satellites, and is blank for
-  other bodies.
+* "parent_key": The full_name of the parent body, if any. This identifies the central body
+  for all satellites (e.g. "134340 Pluto" for Charon), the "system" for the planets with
+  multiple satellites, and is blank for other bodies.
+* "satnum" (int): The satellite number if assigned.
 * "aliases": A list of standard aliases for this body, using standard capitalization.
   Each of these is always a key in the STANDARD_BODY_LOOKUP.
 * "naif_id": The NAIF body ID, if any.
@@ -39,7 +41,8 @@ To use::
 """
 
 from targets._STANDARD_BODY_LIST import _STANDARD_BODY_LIST
-from targets.roman import int_to_roman
+from targets.roman               import int_to_roman
+from targets.targettype          import TargetType as TT
 
 _NAME     = 0
 _NUMBER   = 1
@@ -75,6 +78,7 @@ def _replace_dollars():
         if changed:
             _STANDARD_BODY_LIST[k] = info[:_ALIASES] + (new_aliases,) + info[_ALT_KEYS:]
 
+
 # Execute at import
 _replace_dollars()
 
@@ -91,16 +95,29 @@ def _unique_keys(keys):
 _BY_NAME = {info[0]: info for info in _STANDARD_BODY_LIST}
 
 
+def _full_name(info):
+    """The full_name of a standard body from its list tuple: "N Name" for a numbered minor
+    planet, otherwise the plain name."""
+
+    if info[_TTYPE] in TT.MCODES and info[_NUMBER]:
+        return f'{info[_NUMBER]} {info[_NAME]}'
+    return info[_NAME]
+
+
 def _to_dict(info):
     """Convert one tuple in _STANDARD_BODY_LIST to a dictionary."""
 
-    parent_key = info[_PNAME]
-    body = {'name': info[_NAME], 'ttype': info[_TTYPE], 'parent_key': parent_key}
+    # parent_key is the parent's full_name (e.g. Charon's parent_key is "134340 Pluto");
+    # parent_name is the parent's plain name, used to build moon lookup variations below.
+    parent_name = info[_PNAME]
+    parent_key = _full_name(_BY_NAME[parent_name]) if parent_name else ''
+    body = {'name': info[_NAME], 'ttype': info[_TTYPE], 'parent_key': parent_key,}
 
     aliases = info[_ALIASES]
     if info[_NUMBER]:
-        if info[_TTYPE] == 'S':
+        if info[_TTYPE] == TT.SATELLITE:
             aliases.append(info[_PNAME] + ' ' + int_to_roman(info[_NUMBER]))
+            body['satnum'] = info[_NUMBER]
         else:
             body['mnum'] = info[_NUMBER]
     body['aliases'] = _unique_keys(aliases)
@@ -112,10 +129,11 @@ def _to_dict(info):
     if len(info) > _ALT_KEYS:
         lookups += info[_ALT_KEYS]
 
-    if info[_TTYPE] == 'S' and info[_NUMBER] and _BY_NAME[parent_key][_TTYPE] == 'P':
-        # Extra variations for moons of a planet
-        extras = [parent_key[0] + ' ' + int_to_roman(info[_NUMBER]),
-                  parent_key[0] + str(info[_NUMBER])]
+    # Add extra variations for moons of a planet
+    if (info[_TTYPE] == TT.SATELLITE and info[_NUMBER]
+            and _BY_NAME[parent_name][_TTYPE] == TT.PLANET):
+        extras = [parent_name[0] + ' ' + int_to_roman(info[_NUMBER]),
+                  parent_name[0] + str(info[_NUMBER])]
         for lookup in lookups:
             if lookup.startswith('S/') and lookup[6] == ' ' and lookup[8] == ' ':
                 year = lookup[2:6]
@@ -125,16 +143,36 @@ def _to_dict(info):
                     for p2 in (' ', ''):
                         for p3 in (' ', ''):
                             extras.append(p1 + year + p2 + letter + p3 + num)
-                    extras.append(p1 + year + ' ' + parent_key + ' ' + num)
+                    extras.append(p1 + year + ' ' + parent_name + ' ' + num)
         lookups += extras
 
     # Add three-letter abbreviations of the planets
-    if info[_TTYPE] == 'P':
+    if info[_TTYPE] == TT.PLANET:
         lookups.append(info[_NAME][:3].upper())
 
-    body['lookups'] = _unique_keys(lookups)
-    body['ambiguous'] = []
+    # full_name plus extra variations for minor planets
+    if info[_TTYPE] in TT.MCODES:
+        mnum = body['mnum']
+        name = body['name']
+        full_name = f'{mnum} {name}'
+        body['full_name'] = full_name
+        # The plain name is the body's first alias; the "(N) Name" form follows. The
+        # full_name itself is never an alias.
+        body['aliases'] = [name, f'({mnum}) {name}'] + body['aliases']
+        lookups.append(f'{mnum} ({name})')
+        # A bare 1-3 digit number is not added as a lookup key: in a target string such a
+        # value is almost always a field/pointing index, not a designation, and among the
+        # standard bodies only 1 Ceres has a number that small, so a bare key like "1"
+        # would spuriously match Ceres. A body identified by number this small still
+        # resolves through its "N (Name)" form or its name.
+        if len(str(mnum)) >= 4:
+            lookups += [f'{mnum}', f'({mnum})']
+    else:
+        body['full_name'] = body['name']
 
+    # The full_name is always the first lookup key.
+    body['lookups'] = _unique_keys([body['full_name']] + lookups)
+    body['ambiguous'] = []
     return body
 
 

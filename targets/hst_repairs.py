@@ -118,6 +118,9 @@ _TARGET_TRANSFORM_PATTERNS = [
     #('SAT',                                                r'SATURN|[P]'), or satellite!
     ('URA',                                                 r'URANUS|[P]'),
     ('NEP',                                                 r'NEPTUNE|[P]'),
+
+    # Planetary systems
+    (r'(MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO)[ -]?SYSTEM',  r'\1 SYSTEM|[p]'),
 ]
 
 for _pattern, _template in _TARGET_TRANSFORM_PATTERNS:
@@ -216,7 +219,7 @@ def hst_repairs(strings: str | list[str],
     # Misc. string cleanup...
 
     # Split at commas, equal, period
-    for char in (',', '=', '.', '(', ')', '"'):
+    for char in (',', '=', '.', '(', ')', '"', ';'):
         cleaned = []
         for string in strings:
             cleaned += string.split(char)
@@ -229,11 +232,12 @@ def hst_repairs(strings: str | list[str],
 
     logger and logger.info(f'Repairing: {strings}')
 
-    answers = _repair_list(strings, sep=' ', logger=logger)
+    messages = []   # used to avoid repeats of identical repair messages
+    answers = _repair_list(strings, sep=' ', logger=logger, messages=messages)
     answers2 = []
     for answer in answers:
         answers2 += answer.split('|')
-    answers = _repair_list(answers2, sep='-', logger=logger)
+    answers = _repair_list(answers2, sep='-', logger=logger, messages=messages)
 
     # Vertical bar marks separators
     answers2 = []
@@ -268,7 +272,7 @@ def hst_repairs(strings: str | list[str],
     return answers, types
 
 
-def _repair_list(strings, sep=' ', logger=None):
+def _repair_list(strings, sep, logger, messages):
     """Return a list of repaired strings based on a list of string inputs.
 
     Separator `sep` can be " " or "-".
@@ -276,14 +280,14 @@ def _repair_list(strings, sep=' ', logger=None):
 
     answers = []
     for string in strings:
-        answers += _repair_string(string, sep=sep, logger=logger)
+        answers += _repair_string(string, sep=sep, logger=logger, messages=messages)
     return answers
 
 
 LOW_LEVEL = 2  # Show lowest-level DEBUG messages only for LEVEL=2
 
 
-def _repair_string(string, sep=' ', logger=None):
+def _repair_string(string, sep, logger, messages):
     """Return a list of repaired strings based on a single string input.
 
     Separator `sep` can be " " or "-".
@@ -409,7 +413,13 @@ def _repair_string(string, sep=' ', logger=None):
 
     # Remove anything extraneous
     answers = [a for a in answers if a and a != BAR]
-    logger and logger.debug(f'Repaired: "{input_string}" -> {answers}')
+    if len(answers) > 1 or len(answers) == 0 or answers[0] != input_string:
+        message = f'Repaired: "{input_string}" -> {answers}'
+        message_uc = message.upper()
+        if message_uc not in messages:
+            logger and logger.debug(message)
+            messages.append(message_uc)
+
     return answers
 
 
