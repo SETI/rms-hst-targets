@@ -373,13 +373,15 @@ def identify_target(
         also carry their orbital elements. Blind TNO surveys yield a single placeholder
         body named "Survey HST-nnnnn", and TNOs that never received an MPC designation
         one named "Unknown HST-nnnnn", where nnnnn is the five-digit HST program ID.
-        The list is empty only for programs known to have no identifiable target (e.g.,
-        anti-solar pointings and slew tests).
+        The returned list always contains at least one body; when no target can be
+        identified, TargetIdentificationFailure is raised rather than an empty list
+        returned.
 
     Raises:
-        TargetIdentificationFailure: If no target can be identified, or if a target
-            identified by name is incompatible with the orbital elements or target
-            position in the header.
+        TargetIdentificationFailure: If no target can be identified (including programs
+            with no identifiable target, such as anti-solar pointings and slew tests), or
+            if a target identified by name is incompatible with the orbital elements or
+            target position in the header.
     """
 
     header_lists = _headers_by_visit(headers)
@@ -451,8 +453,9 @@ def identify_target(
 
         # Test for minor planet if selected
         mdicts = {}
+        single = False
         if mtest:
-            mdicts, _, _, _ = minor_planet_identifiers(strings, logger=logger)
+            mdicts, _, _, single = minor_planet_identifiers(strings, logger=logger)
 
         # On no minor planet results, test comets anyway
         if mtest and not mdicts and not ctest:
@@ -460,7 +463,7 @@ def identify_target(
 
         # On no comet results, test minor planets anyway
         if ctest and not cdicts and not mtest:
-            mdicts, _, _, _ = minor_planet_identifiers(strings, logger=logger)
+            mdicts, _, _, single = minor_planet_identifiers(strings, logger=logger)
 
         # Save every identified body along with elements for further validation
         elements = _parse_mt_lv(header, 'MT_LV1', logger=logger)
@@ -468,7 +471,9 @@ def identify_target(
             cdict_lookup[cdict['full_name']] = (cdict, elements)
         for mdict in mdicts:
             categorize_minor_planet(mdict, ttypes)
-            mdict_lookup[mdict['full_name']] = (mdict, elements)
+            full_name = mdict['full_name']
+            prev_single = mdict_lookup[full_name][2] if full_name in mdict_lookup else False
+            mdict_lookup[full_name] = (mdict, elements, single or prev_single)
 
         if _has_orbital_elements(elements) and elements not in unique_elements:
             unique_elements.append(elements)
@@ -491,7 +496,8 @@ def identify_target(
             results.append(cdict)
             unique_elements = [e for e in unique_elements if e != elements]
 
-    for key, (mdict, elements) in mdict_lookup.items():
+    deferred_singles = []       # (key, mdict, elements, mismatch) awaiting a last-resort
+    for key, (mdict, elements, single) in mdict_lookup.items():
         rms, _ = mpc_tools.element_resid(elements, mdict)
 
         # The element test is quick and easy and does not produce false positives
@@ -500,23 +506,35 @@ def identify_target(
                                    f'element RMS {rms:.03} <= {mp_rms}')
             results.append(mdict)
             unique_elements = [e for e in unique_elements if e != elements]
+            continue
 
-        # Otherwise, try the full orbital element test
-        elif radec_testable:
+        # Otherwise, try the sky-position test
+        offset = None
+        if radec_testable:
             info = radec_offset(mdict, obs_time, ra_targ, dec_targ, logger=logger)
-            offset = info[0] if info is not None else float('inf')
-            if offset <= radec_delta:
+            offset = info[0] if info is not None else None
+            if offset is not None and offset <= radec_delta:
                 logger and logger.info(f'Minor planet {key} confirmed; RA/dec offset '
-                                       f'{offset:.02} <= {radec_delta} arcsec')
+                                       f'{offset:.1f} <= {radec_delta} arcsec')
                 results.append(mdict)
                 unique_elements = [e for e in unique_elements if e != elements]
-            else:
-                logger and logger.info(f'Minor planet {key} rejected; RA/dec offset '
-                                       f'{offset:.02} > {radec_delta} arcsec')
+                continue
+
+        # Both the element and sky-position tests failed. If the name unambiguously
+        # identifies this body, hold it as a last resort (resolved below, only if nothing
+        # else can account for the header orbit); otherwise the name match is not
+        # trustworthy, so reject it now.
+        if single:
+            mismatch = (f'RA/dec offset {offset:.1f} arcsec' if offset is not None
+                        else f'element RMS {rms:.03}')
+            deferred_singles.append((key, mdict, elements, mismatch))
+        elif offset is not None:
+            logger and logger.info(f'Minor planet {key} rejected; RA/dec offset '
+                                   f'{offset:.1f} > {radec_delta} arcsec')
         else:
             logger and logger.info(f'Minor planet {key} rejected; '
-                                   f'element RMS {rms:.03} > {mp_rms}')
-            logger and logger.info('RA/dec testing is unavailable')
+                                   f'element RMS {rms:.03} > {mp_rms}; '
+                                   'RA/dec testing unavailable')
 
     # Try a global search for any remaining elements
     indices = []
@@ -544,6 +562,18 @@ def identify_target(
     for k in indices[::-1]:
         unique_elements.pop(k)
 
+    # Last resort: rescue an unambiguously-named body whose header orbit nothing else
+    # could account for. If the header elements were claimed above (by a comet or another
+    # minor planet), the off-elements name match is a coincidence (e.g. an asteroid that
+    # shares its discoverer's name with the comet actually observed) and stays rejected.
+    for key, mdict, elements, mismatch in deferred_singles:
+        if elements in unique_elements:
+            logger and logger.warning(
+                f'Minor planet {key} identified by name, but its orbital elements do not '
+                f'match the catalog ({mismatch}); accepting the unambiguous name')
+            results.append(mdict)
+            unique_elements = [e for e in unique_elements if e != elements]
+
     # Report any unidentified targets
     for elements in unique_elements:
         # Reverse lookup the header from which these elements were obtained
@@ -554,6 +584,15 @@ def identify_target(
                            f'TARGNAME={header.get("TARGNAME")}')
                 logger and logger.error(message)
                 raise TargetIdentificationFailure(message)
+
+    # An empty result means no target could be identified; that is a failure, never a
+    # valid return value.
+    if not results:
+        header = headers[0]
+        message = (f'No target could be identified: file = {header["FILENAME"]}; '
+                   f'TARGNAME={header.get("TARGNAME")}')
+        logger and logger.error(message)
+        raise TargetIdentificationFailure(message)
 
     return results
 
