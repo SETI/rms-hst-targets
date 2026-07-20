@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IAU Minor Planet Center</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/mpc.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/table-sorter.css">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+
+  <link media="all" rel="stylesheet" href="/css/all.css">
+
+  <link rel="icon" type="image/png" href="/iau/figs/MPClogo16.png">
+  <meta name="description" content="We are the official body that deals with
+      astrometric observations and orbits of minor planets (asteroids) and comets.">
+
+  <meta name="keywords" content="astrometry, observations, orbits,
+      minor planets, asteroids, comets, near earth objects, 
+      potentially hazardous asteroids">
+
+  <script type="text/javascript" src="/js/jquery-latest.js"></script>
+<!--  <script type="text/javascript" src="/js/jquery.main.js"></script> -->
+<!--  <script type="text/javascript" src="/js/jquery.metadata.js"></script> -->
+  <script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript" src="/js/webtrends.js"></script>
+  <script type="text/javascript" src="/js/track_pdfs.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+
+</head>
+  
+<body>
+  <!-- wrapper -->
+  <div id="wrapper">
+    <div class="w1">
+      <!-- header -->
+      <header id="header">
+        <div class="holder">
+          <!-- logo -->
+          <h1 class="logo"><a href="/">The International Astronomical Union Minor Planet Center</a></h1>
+          <div class="area">
+            <!-- top-nav -->
+            <nav class="top-nav">
+              <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+		<li><a href="/mpcops/contact/">Contact</a></li>
+                <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+              </ul>
+            </nav>
+            <!-- search-form -->
+            <div class="form-holder">
+              <!-- This commented code opens a new page for the search. -->
+              <!--<form class="search-form" method="get" action="https://www.google.com/search" target="_blank">-->
+              <form class="search-form" method="get" action="https://www.google.com/search">
+                <fieldset>
+                  <!--<label for="search">Search</label>-->
+                  <input type="hidden" name="sitesearch" value="minorplanetcenter.net">
+                  <input type="text" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" id="search" name="q" value="Search MPC">
+                </fieldset>
+              </form>
+            </div>
+            <div class="social-bar">
+<!--              <a href="https://twitter.com/MinorPlanetCtr"><span class="social twitter">L</span></a> -->
+<!--              <a href="https://www.facebook.com/MinorPlanetCenter"><span class="social facebook">F</span></a> -->
+<!--              <a href="https://www.youtube.com/channel/UCtALMOQHuBxh5XMsYNiDhMg"><span class="social youtube">X</span></a> -->
+<!--              <a href="/iau/rss/mpc_feeds.html"><span class="social rss">R</span></a> -->
+            </div>
+          </div>
+        </div>
+        <nav class="nav-holder">
+          <!-- main navigation -->
+          <ul id="nav">
+            <li>
+              <a href="/iau/mpc.html"><span>OBSERVERS</span></a>
+              <ul>
+                <li><a href="/iau/MPEph/MPEph.html">Ephemeris Service</a></li>
+                <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
+                <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
+                <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>				
+                <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
+                  <ul>
+                    <li><a href="/iau/MPCORB.html">MPCORB</a></li>
+                    <li><a href="/iau/ECS/MPCAT/MPCAT.html">MPCAT</a></li>
+                    <li><a href="/iau/ECS/MPCUPDATE/MPCUPDATE.html">MPCUPDATE</a></li>
+                    <li><a href="/iau/Ephemerides/SoftwareEls.html">Orbital Elements for Software</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/services/MPCServices.html">Publications Overview</a></li>
+                <li><a href="/iau/ECS/MPCArchive/MPCArchive_TBL.html">Publications Archive</a></li>              
+                <li><a href="/iau/NEO/TheNEOPage.html" class="nested">NEO Services</a>
+                  <ul>
+                    <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
+                    <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
+                    <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
+                    <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
+                    <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
+                    <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                    <li><a href="/mpcops/neocp/neocp_plots/">NEOCP Plots</a></li>		    
+                    <li><a href="/iau/recovery/recovery.html">NEO Recovery</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="" class="nested">Observations</a>
+                  <ul>
+                    <li><a href="/wamo/">WAMO</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/mpcops/orbits/" class="nested">Orbits</a>
+                  <ul>
+                    <li><a href="https://data.minorplanetcenter.net/comparison/index.html">Orbit Comparison Tool</a></li>
+                    <li><a href="/mpcops/orbits/no-orbits-astrometry/">Request for archival astrometry</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
+                  <ul>
+                    <li><a href="/whatsup">Observing Target List</a></li>
+                    <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
+                    <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
+                    <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
+<!-- THIS PAGE IS NO LONGER SUPPORTED   <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li> -->
+                    <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                    <li><a href="/iau/delays/neocp_delay.html">Processing Times</a></li>		    
+                  </ul>
+                </li>
+		
+		<li><a href="/" class="nested">Identifications</a>
+		  <ul>
+		    <li><a href="/mpcops/documentation/identifications/">Documentation</a></li>		    
+		    <li><a href="/mpcops/documentation/identifications/submission-format/">Submission Format</a></li>
+                    <li><a href="/mpcops/submissions/identifications/">Submit</a></li>
+		  </ul>
+		</li>
+
+                <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
+                <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
+                <li><a href="/iau/MPC_Documentation.html" class="nested">Documentation</a>
+                  <ul>
+                    <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
+                    <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
+                    <li><a href="/mpcops/documentation/artificial-satellites/">Artificial Satellites</a></li>
+                    <li><a href="/submit_action_code">Submit Action Code</a></li>		    
+                    <li><a href="/mpcops/documentation/">Other</a></li>		    
+                    <!-- <li><a href="/iau/WhatsNew.html">What's New</a></li> -->
+                  </ul>                
+                </li>
+                <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
+                  <ul>
+                    <li><a href="/iau/lists/MPLists.html">Minor Planets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/t_atens.html">Atens</a></li>
+                        <li><a href="/iau/lists/t_apollos.html">Apollos</a></li>
+                        <li><a href="/iau/lists/t_amors.html">Amors</a></li>
+                        <li><a href="/iau/lists/t_centaurs.html">Centaurs and Scattered Disk Objects</a></li>
+                        <li><a href="/iau/lists/t_tnos.html">Transneptunian Objects</a></li>
+                        <li><a href="/iau/lists/t_others.html">Other Unusual Objects</a></li>
+                        <li><a href="/iau/lists/t_dangerous.html">Potentially Hazardous Asteroids</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/CometLists.html">Comets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/LastCometObs.html">Date of Last Observation</a></li>
+                        <li><a href="/iau/lists/LastYear.html">Designations from the Past Year</a></li>
+                        <li><a href="http://www.icq.eps.harvard.edu/CometMags.html">Comet Magnitude Estimates</a></li>
+                        <li><a href="/iau/lists/ClosestComets.html">Closest Approaches</a></li>
+                        <li><a href="/iau/lists/PeriodicCodes.html">Periodic Comets</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/ObsCodesF.html">Observatory Codes</a></li>		    
+                    <li><a href="/iau/Animations/Animations.html">Animations</a></li>
+                  </ul>                
+                </li>
+                <!--<li><a href="/summary">Summary</a></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
+                <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+                <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
+              </ul>
+            </li>
+            <li><a href="/data"><span>DATA</span></a></li>
+	    
+            <li><a href="/"><span>NEW</span></a>
+	      <ul>
+		<li><a href="/mpcops/new/developments/">Developments</a></li>
+<!--		<li><a href="/mpcops/new/releases/">New Releases</a></li> -->
+		<li><a href="/mpcops/new/existing-upgrades/">Existing Upgrades</a></li>
+		<li><a href="/mpcops/new/newsletters/">Newsletters</a></li>
+	      </ul>
+	    </li>
+	    
+            <li><a href="/iau/MPCStatus.html"><span style="color:Green">STATUS</a></li>
+
+	    <li><a href="/mpcops/documentation/"><span>DOCUMENTATION</span></a>
+
+            <li><a href="/"><span>EXTERNAL</span></a>
+	      <ul id="external">
+	      	<li><a href="https://mpcmug.astro.umd.edu/" target="_blank">MPC User Group (MUG)</a></li>
+		<li><a href="http://iawn.net/" target="_blank">IAWN</a></li>
+		<li><a href="https://sbnmpc.astro.umd.edu/" target="_blank">SBN Annex</a></li>
+		<li><a href="https://www.wgsbn-iau.org/" target="_blank">WGSBN</a></li>
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+	      </ul>
+	    </li>
+	    
+          </ul>
+        </nav>
+      </header>
+
+   <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#nav li ');
+            function getDirectTextContent(element) {
+                let directTextContent = '';
+                element.childNodes.forEach(node => {
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEW') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                        directTextContent += node.textContent.trim();
+                    }
+                });
+                return directTextContent;
+            }
+
+            listItems.forEach(function (li) {
+                const directText = getDirectTextContent(li);
+                const textLength = directText.length;  
+
+                // Log the length of each item to the console
+                //console.log(`Text: "${li.textContent.trim()}", Length: ${textLength}`);
+
+                // Apply class based on length
+                if (textLength <= 5) {
+                    li.classList.add('short-word');
+                } else if (textLength <= 10) {
+                    li.classList.add('medium-word');
+                } else {
+                    li.classList.add('long-word');
+                }
+            });
+        });
+    </script>
+
+      <!-- main -->
+      <div id="main">
+
+  <h3>159 objects match search criteria. </h3>
+  <br/>
+  <table class="tablesorter">
+   <thead>
+    <tr>
+      <th>object</th>
+      <th style="width:40px">ω<br>(°)</th>
+      <th style="width:40px"><strong>☊</strong><br>(°)</th>
+      <th style="width:40px"><strong>i</strong><br>(°)</th>
+      <th style="width:30px"><strong>e</strong><br>&nbsp;</th>
+      <th style="width:50px"><strong>q</strong><br>(AU)</th>
+      <th style="width:50px"><strong>a</strong><br>(AU)</th>
+      <th style="width:40px"><strong>M</strong><br>(°)</th>
+      <th style="width:60px"><strong>n</strong><br>(°/day)</th>
+      <th style="width:50px"><strong>Q</strong><br>(AU)</th>
+      <th style="width:50px"><strong>P</strong><br>(yrs)</th>
+      <th style="width:55px"><strong>H</strong><br>(mag)</th>
+    </tr>
+   </thead>
+
+   <tbody>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SD404">2014 SD404</a></td>
+       <td class="rj">251.2</td>
+       <td class="rj">96.6</td>
+       <td class="rj">22.9</td>
+       <td class="rj">0.20</td>
+       <td class="rj">29.21</td>
+       <td class="rj">36.58</td>
+       <td class="rj">37.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.95</td>
+       <td class="rj">221</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+FG504">2015 FG504</a></td>
+       <td class="rj">290.1</td>
+       <td class="rj">80.8</td>
+       <td class="rj">20.0</td>
+       <td class="rj">0.11</td>
+       <td class="rj">33.29</td>
+       <td class="rj">37.28</td>
+       <td class="rj">223.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.27</td>
+       <td class="rj">228</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=533507">533507</a>) </td>
+       <td class="rj">316.0</td>
+       <td class="rj">87.9</td>
+       <td class="rj">24.5</td>
+       <td class="rj">0.02</td>
+       <td class="rj">36.91</td>
+       <td class="rj">37.72</td>
+       <td class="rj">199.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">38.53</td>
+       <td class="rj">232</td>
+       <td class="rj">6.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SU55">2016 SU55</a></td>
+       <td class="rj">181.8</td>
+       <td class="rj">61.5</td>
+       <td class="rj">27.7</td>
+       <td class="rj">0.03</td>
+       <td class="rj">37.10</td>
+       <td class="rj">38.17</td>
+       <td class="rj">157.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">39.24</td>
+       <td class="rj">236</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KN166">2015 KN166</a></td>
+       <td class="rj">69.7</td>
+       <td class="rj">72.5</td>
+       <td class="rj">23.6</td>
+       <td class="rj">0.29</td>
+       <td class="rj">27.04</td>
+       <td class="rj">38.19</td>
+       <td class="rj">60.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.33</td>
+       <td class="rj">236</td>
+       <td class="rj">8.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XY47">2014 XY47</a></td>
+       <td class="rj">44.8</td>
+       <td class="rj">83.0</td>
+       <td class="rj">26.2</td>
+       <td class="rj">0.07</td>
+       <td class="rj">35.43</td>
+       <td class="rj">38.24</td>
+       <td class="rj">259.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.05</td>
+       <td class="rj">236</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KQ166">2015 KQ166</a></td>
+       <td class="rj">230.7</td>
+       <td class="rj">75.4</td>
+       <td class="rj">23.7</td>
+       <td class="rj">0.28</td>
+       <td class="rj">27.43</td>
+       <td class="rj">38.24</td>
+       <td class="rj">318.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.04</td>
+       <td class="rj">236</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2002+VD95">2002 VD95</a></td>
+       <td class="rj">232.3</td>
+       <td class="rj">62.7</td>
+       <td class="rj">22.5</td>
+       <td class="rj">0.10</td>
+       <td class="rj">34.42</td>
+       <td class="rj">38.35</td>
+       <td class="rj">145.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.29</td>
+       <td class="rj">238</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+QT11">2015 QT11</a></td>
+       <td class="rj">15.4</td>
+       <td class="rj">72.3</td>
+       <td class="rj">26.6</td>
+       <td class="rj">0.05</td>
+       <td class="rj">36.56</td>
+       <td class="rj">38.45</td>
+       <td class="rj">308.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">40.33</td>
+       <td class="rj">238</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2004+LV32">2004 LV32</a></td>
+       <td class="rj">90.0</td>
+       <td class="rj">94.4</td>
+       <td class="rj">18.8</td>
+       <td class="rj">0.05</td>
+       <td class="rj">36.67</td>
+       <td class="rj">38.79</td>
+       <td class="rj">78.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">40.91</td>
+       <td class="rj">242</td>
+       <td class="rj">8.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+YH92">2014 YH92</a></td>
+       <td class="rj">11.9</td>
+       <td class="rj">79.1</td>
+       <td class="rj">30.0</td>
+       <td class="rj">0.07</td>
+       <td class="rj">36.11</td>
+       <td class="rj">38.88</td>
+       <td class="rj">303.6</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.65</td>
+       <td class="rj">242</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+YA92">2014 YA92</a></td>
+       <td class="rj">53.5</td>
+       <td class="rj">79.2</td>
+       <td class="rj">34.3</td>
+       <td class="rj">0.02</td>
+       <td class="rj">37.92</td>
+       <td class="rj">38.89</td>
+       <td class="rj">265.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">39.85</td>
+       <td class="rj">242</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+RQ86">2014 RQ86</a></td>
+       <td class="rj">13.9</td>
+       <td class="rj">67.2</td>
+       <td class="rj">31.2</td>
+       <td class="rj">0.01</td>
+       <td class="rj">38.64</td>
+       <td class="rj">38.93</td>
+       <td class="rj">239.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">39.22</td>
+       <td class="rj">243</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+PZ330">2015 PZ330</a></td>
+       <td class="rj">19.9</td>
+       <td class="rj">97.2</td>
+       <td class="rj">28.3</td>
+       <td class="rj">0.04</td>
+       <td class="rj">37.63</td>
+       <td class="rj">39.03</td>
+       <td class="rj">189.6</td>
+       <td class="rj">0.004</td>
+       <td class="rj">40.44</td>
+       <td class="rj">244</td>
+       <td class="rj">6.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+LV89">2016 LV89</a></td>
+       <td class="rj">117.8</td>
+       <td class="rj">63.6</td>
+       <td class="rj">26.0</td>
+       <td class="rj">0.10</td>
+       <td class="rj">35.34</td>
+       <td class="rj">39.09</td>
+       <td class="rj">65.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.84</td>
+       <td class="rj">244</td>
+       <td class="rj">8.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WC602">2014 WC602</a></td>
+       <td class="rj">306.2</td>
+       <td class="rj">89.5</td>
+       <td class="rj">29.3</td>
+       <td class="rj">0.12</td>
+       <td class="rj">34.34</td>
+       <td class="rj">39.10</td>
+       <td class="rj">336.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.86</td>
+       <td class="rj">244</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=543435">543435</a>) </td>
+       <td class="rj">130.8</td>
+       <td class="rj">67.3</td>
+       <td class="rj">20.2</td>
+       <td class="rj">0.26</td>
+       <td class="rj">29.10</td>
+       <td class="rj">39.11</td>
+       <td class="rj">26.6</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.11</td>
+       <td class="rj">245</td>
+       <td class="rj">7.0</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=688052">688052</a>) </td>
+       <td class="rj">160.8</td>
+       <td class="rj">74.0</td>
+       <td class="rj">20.7</td>
+       <td class="rj">0.25</td>
+       <td class="rj">29.35</td>
+       <td class="rj">39.18</td>
+       <td class="rj">1.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.00</td>
+       <td class="rj">245</td>
+       <td class="rj">7.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+EF366">2016 EF366</a></td>
+       <td class="rj">71.0</td>
+       <td class="rj">59.5</td>
+       <td class="rj">18.3</td>
+       <td class="rj">0.18</td>
+       <td class="rj">32.13</td>
+       <td class="rj">39.19</td>
+       <td class="rj">68.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">46.24</td>
+       <td class="rj">245</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=821768">821768</a>) </td>
+       <td class="rj">111.6</td>
+       <td class="rj">69.5</td>
+       <td class="rj">27.6</td>
+       <td class="rj">0.28</td>
+       <td class="rj">28.39</td>
+       <td class="rj">39.20</td>
+       <td class="rj">46.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.01</td>
+       <td class="rj">245</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2021+LK54">2021 LK54</a></td>
+       <td class="rj">130.2</td>
+       <td class="rj">101.1</td>
+       <td class="rj">23.4</td>
+       <td class="rj">0.22</td>
+       <td class="rj">30.78</td>
+       <td class="rj">39.25</td>
+       <td class="rj">11.0</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.72</td>
+       <td class="rj">246</td>
+       <td class="rj">9.0</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=470308">470308</a>) </td>
+       <td class="rj">1.5</td>
+       <td class="rj">64.6</td>
+       <td class="rj">18.2</td>
+       <td class="rj">0.03</td>
+       <td class="rj">37.97</td>
+       <td class="rj">39.26</td>
+       <td class="rj">193.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">40.55</td>
+       <td class="rj">246</td>
+       <td class="rj">4.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SJ404">2014 SJ404</a></td>
+       <td class="rj">309.0</td>
+       <td class="rj">102.2</td>
+       <td class="rj">23.6</td>
+       <td class="rj">0.23</td>
+       <td class="rj">30.08</td>
+       <td class="rj">39.30</td>
+       <td class="rj">353.6</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.53</td>
+       <td class="rj">246</td>
+       <td class="rj">8.6</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=28978">28978</a>) Ixion</td>
+       <td class="rj">300.6</td>
+       <td class="rj">71.1</td>
+       <td class="rj">19.7</td>
+       <td class="rj">0.24</td>
+       <td class="rj">29.76</td>
+       <td class="rj">39.35</td>
+       <td class="rj">295.0</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.93</td>
+       <td class="rj">247</td>
+       <td class="rj">3.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=456826">456826</a>) </td>
+       <td class="rj">312.3</td>
+       <td class="rj">96.3</td>
+       <td class="rj">28.6</td>
+       <td class="rj">0.28</td>
+       <td class="rj">28.42</td>
+       <td class="rj">39.36</td>
+       <td class="rj">22.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.31</td>
+       <td class="rj">247</td>
+       <td class="rj">7.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+YR72">2014 YR72</a></td>
+       <td class="rj">125.5</td>
+       <td class="rj">88.9</td>
+       <td class="rj">26.8</td>
+       <td class="rj">0.14</td>
+       <td class="rj">33.99</td>
+       <td class="rj">39.50</td>
+       <td class="rj">159.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.01</td>
+       <td class="rj">248</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XT54">2014 XT54</a></td>
+       <td class="rj">134.4</td>
+       <td class="rj">62.0</td>
+       <td class="rj">37.8</td>
+       <td class="rj">0.19</td>
+       <td class="rj">31.90</td>
+       <td class="rj">39.54</td>
+       <td class="rj">157.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.17</td>
+       <td class="rj">249</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2002+GU32">2002 GU32</a></td>
+       <td class="rj">166.3</td>
+       <td class="rj">56.9</td>
+       <td class="rj">21.9</td>
+       <td class="rj">0.08</td>
+       <td class="rj">36.27</td>
+       <td class="rj">39.54</td>
+       <td class="rj">0.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.81</td>
+       <td class="rj">249</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2000+GM147">2000 GM147</a></td>
+       <td class="rj">173.8</td>
+       <td class="rj">96.1</td>
+       <td class="rj">18.1</td>
+       <td class="rj">0.19</td>
+       <td class="rj">32.00</td>
+       <td class="rj">39.58</td>
+       <td class="rj">293.0</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.17</td>
+       <td class="rj">249</td>
+       <td class="rj">7.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KW173">2015 KW173</a></td>
+       <td class="rj">112.8</td>
+       <td class="rj">73.7</td>
+       <td class="rj">19.5</td>
+       <td class="rj">0.20</td>
+       <td class="rj">31.71</td>
+       <td class="rj">39.58</td>
+       <td class="rj">41.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.45</td>
+       <td class="rj">249</td>
+       <td class="rj">9.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WC536">2014 WC536</a></td>
+       <td class="rj">260.9</td>
+       <td class="rj">88.5</td>
+       <td class="rj">22.4</td>
+       <td class="rj">0.20</td>
+       <td class="rj">31.77</td>
+       <td class="rj">39.59</td>
+       <td class="rj">51.6</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.41</td>
+       <td class="rj">249</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=500884">500884</a>) </td>
+       <td class="rj">186.9</td>
+       <td class="rj">83.1</td>
+       <td class="rj">20.0</td>
+       <td class="rj">0.26</td>
+       <td class="rj">29.30</td>
+       <td class="rj">39.59</td>
+       <td class="rj">355.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.88</td>
+       <td class="rj">249</td>
+       <td class="rj">9.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+WW35">2019 WW35</a></td>
+       <td class="rj">328.4</td>
+       <td class="rj">77.7</td>
+       <td class="rj">25.0</td>
+       <td class="rj">0.16</td>
+       <td class="rj">33.29</td>
+       <td class="rj">39.60</td>
+       <td class="rj">357.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.92</td>
+       <td class="rj">249</td>
+       <td class="rj">8.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2006+WS195">2006 WS195</a></td>
+       <td class="rj">233.4</td>
+       <td class="rj">62.6</td>
+       <td class="rj">32.7</td>
+       <td class="rj">0.24</td>
+       <td class="rj">30.26</td>
+       <td class="rj">39.61</td>
+       <td class="rj">88.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.96</td>
+       <td class="rj">249</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KQ173">2015 KQ173</a></td>
+       <td class="rj">235.7</td>
+       <td class="rj">63.7</td>
+       <td class="rj">38.5</td>
+       <td class="rj">0.26</td>
+       <td class="rj">29.22</td>
+       <td class="rj">39.61</td>
+       <td class="rj">328.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.00</td>
+       <td class="rj">249</td>
+       <td class="rj">8.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SL56">2016 SL56</a></td>
+       <td class="rj">221.8</td>
+       <td class="rj">60.0</td>
+       <td class="rj">25.7</td>
+       <td class="rj">0.15</td>
+       <td class="rj">33.82</td>
+       <td class="rj">39.61</td>
+       <td class="rj">103.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.41</td>
+       <td class="rj">249</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WE510">2014 WE510</a></td>
+       <td class="rj">320.0</td>
+       <td class="rj">99.0</td>
+       <td class="rj">27.1</td>
+       <td class="rj">0.32</td>
+       <td class="rj">27.04</td>
+       <td class="rj">39.61</td>
+       <td class="rj">12.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">52.19</td>
+       <td class="rj">249</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+TY171">2013 TY171</a></td>
+       <td class="rj">248.9</td>
+       <td class="rj">58.9</td>
+       <td class="rj">24.9</td>
+       <td class="rj">0.24</td>
+       <td class="rj">30.01</td>
+       <td class="rj">39.62</td>
+       <td class="rj">63.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.22</td>
+       <td class="rj">249</td>
+       <td class="rj">7.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QM441">2014 QM441</a></td>
+       <td class="rj">312.4</td>
+       <td class="rj">96.0</td>
+       <td class="rj">18.3</td>
+       <td class="rj">0.28</td>
+       <td class="rj">28.52</td>
+       <td class="rj">39.63</td>
+       <td class="rj">2.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.74</td>
+       <td class="rj">249</td>
+       <td class="rj">8.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QZ510">2014 QZ510</a></td>
+       <td class="rj">264.7</td>
+       <td class="rj">71.9</td>
+       <td class="rj">23.7</td>
+       <td class="rj">0.24</td>
+       <td class="rj">30.06</td>
+       <td class="rj">39.63</td>
+       <td class="rj">39.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.20</td>
+       <td class="rj">249</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=491767">491767</a>) </td>
+       <td class="rj">314.0</td>
+       <td class="rj">65.5</td>
+       <td class="rj">30.1</td>
+       <td class="rj">0.08</td>
+       <td class="rj">36.42</td>
+       <td class="rj">39.67</td>
+       <td class="rj">23.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.93</td>
+       <td class="rj">250</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+JB65">2013 JB65</a></td>
+       <td class="rj">166.9</td>
+       <td class="rj">72.5</td>
+       <td class="rj">24.8</td>
+       <td class="rj">0.20</td>
+       <td class="rj">31.97</td>
+       <td class="rj">39.76</td>
+       <td class="rj">6.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.54</td>
+       <td class="rj">251</td>
+       <td class="rj">8.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2001+VN71">2001 VN71</a></td>
+       <td class="rj">2.0</td>
+       <td class="rj">70.4</td>
+       <td class="rj">18.6</td>
+       <td class="rj">0.25</td>
+       <td class="rj">29.75</td>
+       <td class="rj">39.76</td>
+       <td class="rj">24.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.77</td>
+       <td class="rj">251</td>
+       <td class="rj">8.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+AB309">2015 AB309</a></td>
+       <td class="rj">29.7</td>
+       <td class="rj">56.6</td>
+       <td class="rj">24.1</td>
+       <td class="rj">0.24</td>
+       <td class="rj">30.47</td>
+       <td class="rj">40.07</td>
+       <td class="rj">0.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">49.67</td>
+       <td class="rj">254</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+PA101">2016 PA101</a></td>
+       <td class="rj">351.2</td>
+       <td class="rj">91.3</td>
+       <td class="rj">20.5</td>
+       <td class="rj">0.09</td>
+       <td class="rj">36.75</td>
+       <td class="rj">40.23</td>
+       <td class="rj">317.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.71</td>
+       <td class="rj">255</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=505412">505412</a>) </td>
+       <td class="rj">318.7</td>
+       <td class="rj">83.2</td>
+       <td class="rj">20.6</td>
+       <td class="rj">0.04</td>
+       <td class="rj">38.67</td>
+       <td class="rj">40.24</td>
+       <td class="rj">3.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.80</td>
+       <td class="rj">255</td>
+       <td class="rj">6.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+LM89">2016 LM89</a></td>
+       <td class="rj">285.9</td>
+       <td class="rj">100.0</td>
+       <td class="rj">38.1</td>
+       <td class="rj">0.11</td>
+       <td class="rj">35.92</td>
+       <td class="rj">40.29</td>
+       <td class="rj">225.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.66</td>
+       <td class="rj">256</td>
+       <td class="rj">8.5</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=427614">427614</a>) </td>
+       <td class="rj">60.3</td>
+       <td class="rj">99.9</td>
+       <td class="rj">23.9</td>
+       <td class="rj">0.05</td>
+       <td class="rj">38.32</td>
+       <td class="rj">40.37</td>
+       <td class="rj">262.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.41</td>
+       <td class="rj">256</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=688708">688708</a>) </td>
+       <td class="rj">18.2</td>
+       <td class="rj">83.6</td>
+       <td class="rj">21.1</td>
+       <td class="rj">0.12</td>
+       <td class="rj">35.52</td>
+       <td class="rj">40.40</td>
+       <td class="rj">31.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.29</td>
+       <td class="rj">257</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+TT85">2014 TT85</a></td>
+       <td class="rj">264.2</td>
+       <td class="rj">98.1</td>
+       <td class="rj">17.9</td>
+       <td class="rj">0.08</td>
+       <td class="rj">37.35</td>
+       <td class="rj">40.41</td>
+       <td class="rj">36.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.47</td>
+       <td class="rj">257</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+RY345">2015 RY345</a></td>
+       <td class="rj">81.2</td>
+       <td class="rj">90.9</td>
+       <td class="rj">35.4</td>
+       <td class="rj">0.06</td>
+       <td class="rj">38.17</td>
+       <td class="rj">40.43</td>
+       <td class="rj">208.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.69</td>
+       <td class="rj">257</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+TF86">2014 TF86</a></td>
+       <td class="rj">104.6</td>
+       <td class="rj">65.2</td>
+       <td class="rj">32.1</td>
+       <td class="rj">0.08</td>
+       <td class="rj">37.31</td>
+       <td class="rj">40.43</td>
+       <td class="rj">158.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.55</td>
+       <td class="rj">257</td>
+       <td class="rj">6.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KO175">2015 KO175</a></td>
+       <td class="rj">59.3</td>
+       <td class="rj">68.9</td>
+       <td class="rj">31.0</td>
+       <td class="rj">0.08</td>
+       <td class="rj">37.13</td>
+       <td class="rj">40.48</td>
+       <td class="rj">102.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.84</td>
+       <td class="rj">258</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+JU64">2013 JU64</a></td>
+       <td class="rj">169.2</td>
+       <td class="rj">74.8</td>
+       <td class="rj">26.5</td>
+       <td class="rj">0.08</td>
+       <td class="rj">37.36</td>
+       <td class="rj">40.49</td>
+       <td class="rj">1.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.61</td>
+       <td class="rj">258</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+TL227">2013 TL227</a></td>
+       <td class="rj">312.0</td>
+       <td class="rj">95.5</td>
+       <td class="rj">22.9</td>
+       <td class="rj">0.07</td>
+       <td class="rj">37.54</td>
+       <td class="rj">40.49</td>
+       <td class="rj">0.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.44</td>
+       <td class="rj">258</td>
+       <td class="rj">8.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=834655">834655</a>) </td>
+       <td class="rj">355.9</td>
+       <td class="rj">65.3</td>
+       <td class="rj">27.9</td>
+       <td class="rj">0.06</td>
+       <td class="rj">38.03</td>
+       <td class="rj">40.55</td>
+       <td class="rj">322.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.08</td>
+       <td class="rj">258</td>
+       <td class="rj">5.8</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=532095">532095</a>) </td>
+       <td class="rj">156.7</td>
+       <td class="rj">86.2</td>
+       <td class="rj">21.4</td>
+       <td class="rj">0.06</td>
+       <td class="rj">38.27</td>
+       <td class="rj">40.65</td>
+       <td class="rj">355.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.04</td>
+       <td class="rj">259</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=500886">500886</a>) </td>
+       <td class="rj">322.0</td>
+       <td class="rj">79.9</td>
+       <td class="rj">19.6</td>
+       <td class="rj">0.01</td>
+       <td class="rj">40.21</td>
+       <td class="rj">40.71</td>
+       <td class="rj">205.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.20</td>
+       <td class="rj">260</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+QX33">2015 QX33</a></td>
+       <td class="rj">240.6</td>
+       <td class="rj">96.1</td>
+       <td class="rj">25.3</td>
+       <td class="rj">0.09</td>
+       <td class="rj">36.90</td>
+       <td class="rj">40.72</td>
+       <td class="rj">47.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.53</td>
+       <td class="rj">260</td>
+       <td class="rj">7.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2003+YM179">2003 YM179</a></td>
+       <td class="rj">281.7</td>
+       <td class="rj">73.0</td>
+       <td class="rj">23.5</td>
+       <td class="rj">0.06</td>
+       <td class="rj">38.37</td>
+       <td class="rj">40.76</td>
+       <td class="rj">95.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.16</td>
+       <td class="rj">260</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=554099">554099</a>) </td>
+       <td class="rj">126.0</td>
+       <td class="rj">66.8</td>
+       <td class="rj">18.9</td>
+       <td class="rj">0.25</td>
+       <td class="rj">30.80</td>
+       <td class="rj">40.85</td>
+       <td class="rj">30.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.90</td>
+       <td class="rj">261</td>
+       <td class="rj">6.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+QP95">2013 QP95</a></td>
+       <td class="rj">17.7</td>
+       <td class="rj">71.4</td>
+       <td class="rj">25.4</td>
+       <td class="rj">0.18</td>
+       <td class="rj">33.79</td>
+       <td class="rj">40.96</td>
+       <td class="rj">329.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.13</td>
+       <td class="rj">262</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2025+MZ351">2025 MZ351</a></td>
+       <td class="rj">211.3</td>
+       <td class="rj">91.5</td>
+       <td class="rj">19.4</td>
+       <td class="rj">0.11</td>
+       <td class="rj">36.46</td>
+       <td class="rj">41.02</td>
+       <td class="rj">316.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.59</td>
+       <td class="rj">263</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WL602">2014 WL602</a></td>
+       <td class="rj">16.1</td>
+       <td class="rj">99.8</td>
+       <td class="rj">23.0</td>
+       <td class="rj">0.02</td>
+       <td class="rj">40.34</td>
+       <td class="rj">41.04</td>
+       <td class="rj">271.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">41.74</td>
+       <td class="rj">263</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+TH159">2013 TH159</a></td>
+       <td class="rj">236.7</td>
+       <td class="rj">62.5</td>
+       <td class="rj">33.5</td>
+       <td class="rj">0.08</td>
+       <td class="rj">37.69</td>
+       <td class="rj">41.05</td>
+       <td class="rj">96.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.42</td>
+       <td class="rj">263</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=834635">834635</a>) </td>
+       <td class="rj">37.8</td>
+       <td class="rj">68.6</td>
+       <td class="rj">19.8</td>
+       <td class="rj">0.09</td>
+       <td class="rj">37.52</td>
+       <td class="rj">41.07</td>
+       <td class="rj">288.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.62</td>
+       <td class="rj">263</td>
+       <td class="rj">5.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2011+EZ90">2011 EZ90</a></td>
+       <td class="rj">70.8</td>
+       <td class="rj">86.8</td>
+       <td class="rj">27.4</td>
+       <td class="rj">0.07</td>
+       <td class="rj">38.20</td>
+       <td class="rj">41.10</td>
+       <td class="rj">15.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.99</td>
+       <td class="rj">263</td>
+       <td class="rj">6.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+SQ247">2019 SQ247</a></td>
+       <td class="rj">205.1</td>
+       <td class="rj">59.9</td>
+       <td class="rj">31.5</td>
+       <td class="rj">0.18</td>
+       <td class="rj">33.99</td>
+       <td class="rj">41.48</td>
+       <td class="rj">109.0</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.97</td>
+       <td class="rj">267</td>
+       <td class="rj">8.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+LJ90">2016 LJ90</a></td>
+       <td class="rj">165.5</td>
+       <td class="rj">80.7</td>
+       <td class="rj">24.8</td>
+       <td class="rj">0.02</td>
+       <td class="rj">40.50</td>
+       <td class="rj">41.49</td>
+       <td class="rj">7.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">42.49</td>
+       <td class="rj">267</td>
+       <td class="rj">9.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QB527">2014 QB527</a></td>
+       <td class="rj">299.2</td>
+       <td class="rj">91.2</td>
+       <td class="rj">19.7</td>
+       <td class="rj">0.05</td>
+       <td class="rj">39.44</td>
+       <td class="rj">41.50</td>
+       <td class="rj">25.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.57</td>
+       <td class="rj">267</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QE442">2014 QE442</a></td>
+       <td class="rj">264.4</td>
+       <td class="rj">77.8</td>
+       <td class="rj">26.3</td>
+       <td class="rj">0.04</td>
+       <td class="rj">39.74</td>
+       <td class="rj">41.54</td>
+       <td class="rj">63.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.33</td>
+       <td class="rj">268</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+UM173">2019 UM173</a></td>
+       <td class="rj">83.8</td>
+       <td class="rj">64.2</td>
+       <td class="rj">30.6</td>
+       <td class="rj">0.15</td>
+       <td class="rj">35.26</td>
+       <td class="rj">41.61</td>
+       <td class="rj">261.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.97</td>
+       <td class="rj">268</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=525729">525729</a>) </td>
+       <td class="rj">273.0</td>
+       <td class="rj">66.3</td>
+       <td class="rj">20.1</td>
+       <td class="rj">0.10</td>
+       <td class="rj">37.67</td>
+       <td class="rj">41.69</td>
+       <td class="rj">66.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.72</td>
+       <td class="rj">269</td>
+       <td class="rj">6.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=666823">666823</a>) </td>
+       <td class="rj">33.6</td>
+       <td class="rj">86.7</td>
+       <td class="rj">30.9</td>
+       <td class="rj">0.15</td>
+       <td class="rj">35.51</td>
+       <td class="rj">41.74</td>
+       <td class="rj">335.3</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.97</td>
+       <td class="rj">270</td>
+       <td class="rj">5.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=613857">613857</a>) </td>
+       <td class="rj">27.9</td>
+       <td class="rj">72.6</td>
+       <td class="rj">22.2</td>
+       <td class="rj">0.14</td>
+       <td class="rj">36.14</td>
+       <td class="rj">41.88</td>
+       <td class="rj">323.1</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.62</td>
+       <td class="rj">271</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WG602">2014 WG602</a></td>
+       <td class="rj">222.0</td>
+       <td class="rj">85.0</td>
+       <td class="rj">24.4</td>
+       <td class="rj">0.07</td>
+       <td class="rj">38.99</td>
+       <td class="rj">41.89</td>
+       <td class="rj">65.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.79</td>
+       <td class="rj">271</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SL404">2014 SL404</a></td>
+       <td class="rj">145.9</td>
+       <td class="rj">97.4</td>
+       <td class="rj">26.0</td>
+       <td class="rj">0.07</td>
+       <td class="rj">39.03</td>
+       <td class="rj">41.94</td>
+       <td class="rj">132.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.85</td>
+       <td class="rj">272</td>
+       <td class="rj">7.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+FJ561">2015 FJ561</a></td>
+       <td class="rj">175.4</td>
+       <td class="rj">87.7</td>
+       <td class="rj">17.9</td>
+       <td class="rj">0.30</td>
+       <td class="rj">29.24</td>
+       <td class="rj">41.98</td>
+       <td class="rj">347.7</td>
+       <td class="rj">0.004</td>
+       <td class="rj">54.73</td>
+       <td class="rj">272</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+PL312">2015 PL312</a></td>
+       <td class="rj">2.9</td>
+       <td class="rj">71.7</td>
+       <td class="rj">26.1</td>
+       <td class="rj">0.14</td>
+       <td class="rj">36.31</td>
+       <td class="rj">41.99</td>
+       <td class="rj">337.2</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.68</td>
+       <td class="rj">272</td>
+       <td class="rj">8.3</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=495613">495613</a>) </td>
+       <td class="rj">224.3</td>
+       <td class="rj">58.6</td>
+       <td class="rj">36.1</td>
+       <td class="rj">0.12</td>
+       <td class="rj">36.80</td>
+       <td class="rj">42.03</td>
+       <td class="rj">305.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.26</td>
+       <td class="rj">273</td>
+       <td class="rj">5.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+JD13">2015 JD13</a></td>
+       <td class="rj">82.8</td>
+       <td class="rj">57.1</td>
+       <td class="rj">29.0</td>
+       <td class="rj">0.07</td>
+       <td class="rj">39.16</td>
+       <td class="rj">42.04</td>
+       <td class="rj">77.4</td>
+       <td class="rj">0.004</td>
+       <td class="rj">44.92</td>
+       <td class="rj">273</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+TW115">2014 TW115</a></td>
+       <td class="rj">209.7</td>
+       <td class="rj">97.0</td>
+       <td class="rj">22.6</td>
+       <td class="rj">0.08</td>
+       <td class="rj">38.97</td>
+       <td class="rj">42.14</td>
+       <td class="rj">77.0</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.31</td>
+       <td class="rj">274</td>
+       <td class="rj">7.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2012+TF359">2012 TF359</a></td>
+       <td class="rj">98.2</td>
+       <td class="rj">94.1</td>
+       <td class="rj">24.7</td>
+       <td class="rj">0.07</td>
+       <td class="rj">39.40</td>
+       <td class="rj">42.34</td>
+       <td class="rj">232.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">45.28</td>
+       <td class="rj">275</td>
+       <td class="rj">6.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+UW173">2019 UW173</a></td>
+       <td class="rj">259.5</td>
+       <td class="rj">83.4</td>
+       <td class="rj">21.2</td>
+       <td class="rj">0.15</td>
+       <td class="rj">36.33</td>
+       <td class="rj">42.58</td>
+       <td class="rj">42.5</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.83</td>
+       <td class="rj">278</td>
+       <td class="rj">9.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WM509">2014 WM509</a></td>
+       <td class="rj">319.9</td>
+       <td class="rj">89.1</td>
+       <td class="rj">24.1</td>
+       <td class="rj">0.13</td>
+       <td class="rj">37.24</td>
+       <td class="rj">42.62</td>
+       <td class="rj">7.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">48.00</td>
+       <td class="rj">278</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+VJ181">2015 VJ181</a></td>
+       <td class="rj">313.5</td>
+       <td class="rj">80.3</td>
+       <td class="rj">37.3</td>
+       <td class="rj">0.18</td>
+       <td class="rj">34.90</td>
+       <td class="rj">42.75</td>
+       <td class="rj">358.8</td>
+       <td class="rj">0.004</td>
+       <td class="rj">50.60</td>
+       <td class="rj">279</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2000+YD2">2000 YD2</a></td>
+       <td class="rj">349.7</td>
+       <td class="rj">65.3</td>
+       <td class="rj">21.5</td>
+       <td class="rj">0.10</td>
+       <td class="rj">38.50</td>
+       <td class="rj">42.94</td>
+       <td class="rj">359.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">47.37</td>
+       <td class="rj">281</td>
+       <td class="rj">7.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+UF277">2014 UF277</a></td>
+       <td class="rj">57.6</td>
+       <td class="rj">76.5</td>
+       <td class="rj">37.1</td>
+       <td class="rj">0.02</td>
+       <td class="rj">41.98</td>
+       <td class="rj">42.95</td>
+       <td class="rj">226.9</td>
+       <td class="rj">0.004</td>
+       <td class="rj">43.93</td>
+       <td class="rj">282</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KJ175">2015 KJ175</a></td>
+       <td class="rj">5.6</td>
+       <td class="rj">61.7</td>
+       <td class="rj">39.4</td>
+       <td class="rj">0.11</td>
+       <td class="rj">38.16</td>
+       <td class="rj">43.01</td>
+       <td class="rj">163.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">47.85</td>
+       <td class="rj">282</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=543454">543454</a>) </td>
+       <td class="rj">83.3</td>
+       <td class="rj">57.1</td>
+       <td class="rj">27.9</td>
+       <td class="rj">0.16</td>
+       <td class="rj">36.28</td>
+       <td class="rj">43.08</td>
+       <td class="rj">75.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.87</td>
+       <td class="rj">283</td>
+       <td class="rj">4.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+PT99">2019 PT99</a></td>
+       <td class="rj">30.6</td>
+       <td class="rj">86.0</td>
+       <td class="rj">18.6</td>
+       <td class="rj">0.02</td>
+       <td class="rj">42.49</td>
+       <td class="rj">43.14</td>
+       <td class="rj">188.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">43.80</td>
+       <td class="rj">283</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2003+UZ292">2003 UZ292</a></td>
+       <td class="rj">347.2</td>
+       <td class="rj">61.6</td>
+       <td class="rj">22.2</td>
+       <td class="rj">0.14</td>
+       <td class="rj">37.24</td>
+       <td class="rj">43.15</td>
+       <td class="rj">0.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.06</td>
+       <td class="rj">283</td>
+       <td class="rj">7.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=523758">523758</a>) </td>
+       <td class="rj">92.7</td>
+       <td class="rj">100.2</td>
+       <td class="rj">20.9</td>
+       <td class="rj">0.14</td>
+       <td class="rj">37.01</td>
+       <td class="rj">43.18</td>
+       <td class="rj">319.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.34</td>
+       <td class="rj">284</td>
+       <td class="rj">5.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SQ350">2014 SQ350</a></td>
+       <td class="rj">217.0</td>
+       <td class="rj">66.4</td>
+       <td class="rj">29.7</td>
+       <td class="rj">0.10</td>
+       <td class="rj">38.81</td>
+       <td class="rj">43.33</td>
+       <td class="rj">110.6</td>
+       <td class="rj">0.003</td>
+       <td class="rj">47.84</td>
+       <td class="rj">285</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2025+MJ387">2025 MJ387</a></td>
+       <td class="rj">184.6</td>
+       <td class="rj">72.2</td>
+       <td class="rj">30.5</td>
+       <td class="rj">0.12</td>
+       <td class="rj">38.13</td>
+       <td class="rj">43.33</td>
+       <td class="rj">348.2</td>
+       <td class="rj">0.003</td>
+       <td class="rj">48.54</td>
+       <td class="rj">285</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=145453">145453</a>) </td>
+       <td class="rj">281.8</td>
+       <td class="rj">85.9</td>
+       <td class="rj">28.4</td>
+       <td class="rj">0.14</td>
+       <td class="rj">37.39</td>
+       <td class="rj">43.52</td>
+       <td class="rj">53.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.65</td>
+       <td class="rj">287</td>
+       <td class="rj">4.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XW47">2014 XW47</a></td>
+       <td class="rj">180.1</td>
+       <td class="rj">83.6</td>
+       <td class="rj">27.9</td>
+       <td class="rj">0.29</td>
+       <td class="rj">31.20</td>
+       <td class="rj">43.82</td>
+       <td class="rj">83.2</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.44</td>
+       <td class="rj">290</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SJ58">2016 SJ58</a></td>
+       <td class="rj">345.4</td>
+       <td class="rj">81.3</td>
+       <td class="rj">20.6</td>
+       <td class="rj">0.28</td>
+       <td class="rj">31.65</td>
+       <td class="rj">43.95</td>
+       <td class="rj">354.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.25</td>
+       <td class="rj">291</td>
+       <td class="rj">9.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SL403">2014 SL403</a></td>
+       <td class="rj">197.7</td>
+       <td class="rj">61.1</td>
+       <td class="rj">35.4</td>
+       <td class="rj">0.15</td>
+       <td class="rj">37.55</td>
+       <td class="rj">43.99</td>
+       <td class="rj">68.9</td>
+       <td class="rj">0.003</td>
+       <td class="rj">50.44</td>
+       <td class="rj">292</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SA374">2014 SA374</a></td>
+       <td class="rj">202.0</td>
+       <td class="rj">72.4</td>
+       <td class="rj">35.7</td>
+       <td class="rj">0.12</td>
+       <td class="rj">38.81</td>
+       <td class="rj">44.03</td>
+       <td class="rj">97.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.26</td>
+       <td class="rj">292</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+QB34">2015 QB34</a></td>
+       <td class="rj">340.4</td>
+       <td class="rj">84.1</td>
+       <td class="rj">19.0</td>
+       <td class="rj">0.27</td>
+       <td class="rj">32.05</td>
+       <td class="rj">44.10</td>
+       <td class="rj">339.9</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.14</td>
+       <td class="rj">293</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QU562">2014 QU562</a></td>
+       <td class="rj">333.0</td>
+       <td class="rj">69.5</td>
+       <td class="rj">26.0</td>
+       <td class="rj">0.25</td>
+       <td class="rj">33.13</td>
+       <td class="rj">44.10</td>
+       <td class="rj">358.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">55.07</td>
+       <td class="rj">293</td>
+       <td class="rj">8.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=558224">558224</a>) </td>
+       <td class="rj">75.9</td>
+       <td class="rj">84.4</td>
+       <td class="rj">18.4</td>
+       <td class="rj">0.16</td>
+       <td class="rj">37.31</td>
+       <td class="rj">44.23</td>
+       <td class="rj">348.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">51.16</td>
+       <td class="rj">294</td>
+       <td class="rj">6.5</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=523757">523757</a>) </td>
+       <td class="rj">323.6</td>
+       <td class="rj">76.3</td>
+       <td class="rj">18.1</td>
+       <td class="rj">0.18</td>
+       <td class="rj">36.39</td>
+       <td class="rj">44.40</td>
+       <td class="rj">74.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.41</td>
+       <td class="rj">296</td>
+       <td class="rj">5.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+UY159">2019 UY159</a></td>
+       <td class="rj">291.4</td>
+       <td class="rj">80.5</td>
+       <td class="rj">22.0</td>
+       <td class="rj">0.15</td>
+       <td class="rj">37.64</td>
+       <td class="rj">44.42</td>
+       <td class="rj">17.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">51.20</td>
+       <td class="rj">296</td>
+       <td class="rj">9.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2007+FP51">2007 FP51</a></td>
+       <td class="rj">55.3</td>
+       <td class="rj">72.0</td>
+       <td class="rj">25.6</td>
+       <td class="rj">0.20</td>
+       <td class="rj">35.69</td>
+       <td class="rj">44.47</td>
+       <td class="rj">40.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.26</td>
+       <td class="rj">297</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+VO173">2015 VO173</a></td>
+       <td class="rj">302.1</td>
+       <td class="rj">55.9</td>
+       <td class="rj">20.9</td>
+       <td class="rj">0.15</td>
+       <td class="rj">37.91</td>
+       <td class="rj">44.68</td>
+       <td class="rj">42.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">51.45</td>
+       <td class="rj">299</td>
+       <td class="rj">9.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+WV35">2019 WV35</a></td>
+       <td class="rj">199.5</td>
+       <td class="rj">72.6</td>
+       <td class="rj">25.3</td>
+       <td class="rj">0.13</td>
+       <td class="rj">39.00</td>
+       <td class="rj">44.76</td>
+       <td class="rj">109.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">50.52</td>
+       <td class="rj">299</td>
+       <td class="rj">9.0</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=143991">143991</a>) </td>
+       <td class="rj">63.5</td>
+       <td class="rj">66.8</td>
+       <td class="rj">19.4</td>
+       <td class="rj">0.14</td>
+       <td class="rj">38.55</td>
+       <td class="rj">44.92</td>
+       <td class="rj">337.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">51.30</td>
+       <td class="rj">301</td>
+       <td class="rj">5.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KJ465">2015 KJ465</a></td>
+       <td class="rj">77.8</td>
+       <td class="rj">61.1</td>
+       <td class="rj">34.1</td>
+       <td class="rj">0.16</td>
+       <td class="rj">37.66</td>
+       <td class="rj">45.06</td>
+       <td class="rj">71.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.46</td>
+       <td class="rj">302</td>
+       <td class="rj">9.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+SN363">2014 SN363</a></td>
+       <td class="rj">268.8</td>
+       <td class="rj">60.0</td>
+       <td class="rj">27.1</td>
+       <td class="rj">0.19</td>
+       <td class="rj">36.40</td>
+       <td class="rj">45.10</td>
+       <td class="rj">39.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.80</td>
+       <td class="rj">303</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+YT72">2014 YT72</a></td>
+       <td class="rj">321.5</td>
+       <td class="rj">96.0</td>
+       <td class="rj">31.7</td>
+       <td class="rj">0.18</td>
+       <td class="rj">36.87</td>
+       <td class="rj">45.13</td>
+       <td class="rj">333.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.39</td>
+       <td class="rj">303</td>
+       <td class="rj">7.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+FH561">2015 FH561</a></td>
+       <td class="rj">54.8</td>
+       <td class="rj">76.6</td>
+       <td class="rj">18.6</td>
+       <td class="rj">0.24</td>
+       <td class="rj">34.69</td>
+       <td class="rj">45.41</td>
+       <td class="rj">66.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.12</td>
+       <td class="rj">306</td>
+       <td class="rj">8.3</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=136472">136472</a>) Makemake</td>
+       <td class="rj">297.1</td>
+       <td class="rj">79.3</td>
+       <td class="rj">29.0</td>
+       <td class="rj">0.16</td>
+       <td class="rj">38.33</td>
+       <td class="rj">45.57</td>
+       <td class="rj">169.9</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.81</td>
+       <td class="rj">308</td>
+       <td class="rj">-0.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KV175">2015 KV175</a></td>
+       <td class="rj">147.5</td>
+       <td class="rj">70.2</td>
+       <td class="rj">19.2</td>
+       <td class="rj">0.16</td>
+       <td class="rj">38.17</td>
+       <td class="rj">45.65</td>
+       <td class="rj">17.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.13</td>
+       <td class="rj">308</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2004+LC33">2004 LC33</a></td>
+       <td class="rj">283.0</td>
+       <td class="rj">91.3</td>
+       <td class="rj">35.6</td>
+       <td class="rj">0.10</td>
+       <td class="rj">41.16</td>
+       <td class="rj">45.90</td>
+       <td class="rj">291.2</td>
+       <td class="rj">0.003</td>
+       <td class="rj">50.63</td>
+       <td class="rj">311</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+RD82">2016 RD82</a></td>
+       <td class="rj">288.7</td>
+       <td class="rj">78.5</td>
+       <td class="rj">25.1</td>
+       <td class="rj">0.15</td>
+       <td class="rj">38.95</td>
+       <td class="rj">45.94</td>
+       <td class="rj">357.9</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.92</td>
+       <td class="rj">311</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2005+YM292">2005 YM292</a></td>
+       <td class="rj">1.1</td>
+       <td class="rj">74.3</td>
+       <td class="rj">28.2</td>
+       <td class="rj">0.02</td>
+       <td class="rj">44.95</td>
+       <td class="rj">45.98</td>
+       <td class="rj">360.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">47.00</td>
+       <td class="rj">312</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SN56">2016 SN56</a></td>
+       <td class="rj">65.6</td>
+       <td class="rj">61.4</td>
+       <td class="rj">26.6</td>
+       <td class="rj">0.20</td>
+       <td class="rj">36.72</td>
+       <td class="rj">45.98</td>
+       <td class="rj">299.6</td>
+       <td class="rj">0.003</td>
+       <td class="rj">55.25</td>
+       <td class="rj">312</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+UU277">2014 UU277</a></td>
+       <td class="rj">321.8</td>
+       <td class="rj">101.9</td>
+       <td class="rj">28.4</td>
+       <td class="rj">0.19</td>
+       <td class="rj">37.15</td>
+       <td class="rj">46.06</td>
+       <td class="rj">343.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">54.97</td>
+       <td class="rj">313</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2007+VK302">2007 VK302</a></td>
+       <td class="rj">215.6</td>
+       <td class="rj">61.4</td>
+       <td class="rj">26.5</td>
+       <td class="rj">0.03</td>
+       <td class="rj">44.84</td>
+       <td class="rj">46.11</td>
+       <td class="rj">125.2</td>
+       <td class="rj">0.003</td>
+       <td class="rj">47.38</td>
+       <td class="rj">313</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SY105">2016 SY105</a></td>
+       <td class="rj">261.8</td>
+       <td class="rj">65.2</td>
+       <td class="rj">26.4</td>
+       <td class="rj">0.27</td>
+       <td class="rj">33.88</td>
+       <td class="rj">46.12</td>
+       <td class="rj">353.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">58.37</td>
+       <td class="rj">313</td>
+       <td class="rj">8.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+QW33">2015 QW33</a></td>
+       <td class="rj">73.6</td>
+       <td class="rj">77.4</td>
+       <td class="rj">21.5</td>
+       <td class="rj">0.17</td>
+       <td class="rj">38.37</td>
+       <td class="rj">46.17</td>
+       <td class="rj">249.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.98</td>
+       <td class="rj">314</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WA602">2014 WA602</a></td>
+       <td class="rj">241.3</td>
+       <td class="rj">94.2</td>
+       <td class="rj">30.7</td>
+       <td class="rj">0.12</td>
+       <td class="rj">40.65</td>
+       <td class="rj">46.29</td>
+       <td class="rj">19.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">51.93</td>
+       <td class="rj">315</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SH57">2016 SH57</a></td>
+       <td class="rj">333.3</td>
+       <td class="rj">93.6</td>
+       <td class="rj">17.4</td>
+       <td class="rj">0.20</td>
+       <td class="rj">37.25</td>
+       <td class="rj">46.41</td>
+       <td class="rj">341.6</td>
+       <td class="rj">0.003</td>
+       <td class="rj">55.58</td>
+       <td class="rj">316</td>
+       <td class="rj">8.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2010+RM45">2010 RM45</a></td>
+       <td class="rj">298.0</td>
+       <td class="rj">87.1</td>
+       <td class="rj">19.1</td>
+       <td class="rj">0.15</td>
+       <td class="rj">39.28</td>
+       <td class="rj">46.41</td>
+       <td class="rj">338.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">53.54</td>
+       <td class="rj">316</td>
+       <td class="rj">6.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+LP88">2016 LP88</a></td>
+       <td class="rj">301.9</td>
+       <td class="rj">63.3</td>
+       <td class="rj">25.3</td>
+       <td class="rj">0.12</td>
+       <td class="rj">40.78</td>
+       <td class="rj">46.45</td>
+       <td class="rj">259.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.12</td>
+       <td class="rj">317</td>
+       <td class="rj">6.9</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KC175">2015 KC175</a></td>
+       <td class="rj">263.1</td>
+       <td class="rj">66.5</td>
+       <td class="rj">29.8</td>
+       <td class="rj">0.21</td>
+       <td class="rj">36.55</td>
+       <td class="rj">46.46</td>
+       <td class="rj">293.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.36</td>
+       <td class="rj">317</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+LT89">2016 LT89</a></td>
+       <td class="rj">179.4</td>
+       <td class="rj">63.8</td>
+       <td class="rj">34.7</td>
+       <td class="rj">0.13</td>
+       <td class="rj">40.39</td>
+       <td class="rj">46.51</td>
+       <td class="rj">10.4</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.63</td>
+       <td class="rj">317</td>
+       <td class="rj">7.7</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2003+UF292">2003 UF292</a></td>
+       <td class="rj">354.9</td>
+       <td class="rj">58.7</td>
+       <td class="rj">30.2</td>
+       <td class="rj">0.16</td>
+       <td class="rj">38.97</td>
+       <td class="rj">46.54</td>
+       <td class="rj">23.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">54.12</td>
+       <td class="rj">318</td>
+       <td class="rj">7.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+QK562">2014 QK562</a></td>
+       <td class="rj">205.7</td>
+       <td class="rj">97.0</td>
+       <td class="rj">39.9</td>
+       <td class="rj">0.19</td>
+       <td class="rj">37.55</td>
+       <td class="rj">46.58</td>
+       <td class="rj">21.6</td>
+       <td class="rj">0.003</td>
+       <td class="rj">55.61</td>
+       <td class="rj">318</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XA48">2014 XA48</a></td>
+       <td class="rj">225.2</td>
+       <td class="rj">82.9</td>
+       <td class="rj">26.5</td>
+       <td class="rj">0.20</td>
+       <td class="rj">37.36</td>
+       <td class="rj">46.98</td>
+       <td class="rj">56.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.61</td>
+       <td class="rj">322</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KZ175">2015 KZ175</a></td>
+       <td class="rj">315.6</td>
+       <td class="rj">72.9</td>
+       <td class="rj">18.6</td>
+       <td class="rj">0.19</td>
+       <td class="rj">38.00</td>
+       <td class="rj">47.10</td>
+       <td class="rj">219.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.20</td>
+       <td class="rj">323</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KH463">2015 KH463</a></td>
+       <td class="rj">221.5</td>
+       <td class="rj">67.1</td>
+       <td class="rj">30.3</td>
+       <td class="rj">0.11</td>
+       <td class="rj">42.19</td>
+       <td class="rj">47.18</td>
+       <td class="rj">327.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">52.18</td>
+       <td class="rj">324</td>
+       <td class="rj">7.3</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+RT86">2014 RT86</a></td>
+       <td class="rj">316.7</td>
+       <td class="rj">95.0</td>
+       <td class="rj">30.8</td>
+       <td class="rj">0.25</td>
+       <td class="rj">35.62</td>
+       <td class="rj">47.21</td>
+       <td class="rj">348.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">58.80</td>
+       <td class="rj">324</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+TL176">2016 TL176</a></td>
+       <td class="rj">234.2</td>
+       <td class="rj">102.0</td>
+       <td class="rj">21.2</td>
+       <td class="rj">0.23</td>
+       <td class="rj">36.43</td>
+       <td class="rj">47.35</td>
+       <td class="rj">27.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">58.27</td>
+       <td class="rj">326</td>
+       <td class="rj">8.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XS54">2014 XS54</a></td>
+       <td class="rj">229.4</td>
+       <td class="rj">95.0</td>
+       <td class="rj">28.9</td>
+       <td class="rj">0.23</td>
+       <td class="rj">36.69</td>
+       <td class="rj">47.36</td>
+       <td class="rj">49.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">58.03</td>
+       <td class="rj">326</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+RS86">2014 RS86</a></td>
+       <td class="rj">173.9</td>
+       <td class="rj">62.1</td>
+       <td class="rj">25.2</td>
+       <td class="rj">0.22</td>
+       <td class="rj">37.16</td>
+       <td class="rj">47.66</td>
+       <td class="rj">57.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">58.16</td>
+       <td class="rj">329</td>
+       <td class="rj">7.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2005+JK186">2005 JK186</a></td>
+       <td class="rj">228.8</td>
+       <td class="rj">63.1</td>
+       <td class="rj">27.2</td>
+       <td class="rj">0.25</td>
+       <td class="rj">35.76</td>
+       <td class="rj">47.77</td>
+       <td class="rj">347.2</td>
+       <td class="rj">0.003</td>
+       <td class="rj">59.79</td>
+       <td class="rj">330</td>
+       <td class="rj">6.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+QW23">2015 QW23</a></td>
+       <td class="rj">108.4</td>
+       <td class="rj">94.0</td>
+       <td class="rj">20.8</td>
+       <td class="rj">0.03</td>
+       <td class="rj">46.17</td>
+       <td class="rj">47.82</td>
+       <td class="rj">103.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">49.46</td>
+       <td class="rj">331</td>
+       <td class="rj">6.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2012+WE37">2012 WE37</a></td>
+       <td class="rj">331.7</td>
+       <td class="rj">59.9</td>
+       <td class="rj">25.6</td>
+       <td class="rj">0.25</td>
+       <td class="rj">35.98</td>
+       <td class="rj">48.09</td>
+       <td class="rj">13.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">60.20</td>
+       <td class="rj">333</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+YG92">2014 YG92</a></td>
+       <td class="rj">224.9</td>
+       <td class="rj">101.5</td>
+       <td class="rj">26.6</td>
+       <td class="rj">0.20</td>
+       <td class="rj">38.69</td>
+       <td class="rj">48.21</td>
+       <td class="rj">39.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">57.72</td>
+       <td class="rj">335</td>
+       <td class="rj">7.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+ST403">2014 ST403</a></td>
+       <td class="rj">254.0</td>
+       <td class="rj">64.3</td>
+       <td class="rj">30.0</td>
+       <td class="rj">0.16</td>
+       <td class="rj">40.62</td>
+       <td class="rj">48.47</td>
+       <td class="rj">359.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">56.31</td>
+       <td class="rj">337</td>
+       <td class="rj">7.7</td>
+      </tr>
+      <tr>
+          <td>(<a href="/db_search/show_object?object_id=534073">534073</a>) </td>
+       <td class="rj">291.3</td>
+       <td class="rj">75.9</td>
+       <td class="rj">26.2</td>
+       <td class="rj">0.26</td>
+       <td class="rj">36.10</td>
+       <td class="rj">49.06</td>
+       <td class="rj">22.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">62.02</td>
+       <td class="rj">344</td>
+       <td class="rj">6.5</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+UE174">2019 UE174</a></td>
+       <td class="rj">311.3</td>
+       <td class="rj">65.4</td>
+       <td class="rj">27.5</td>
+       <td class="rj">0.27</td>
+       <td class="rj">36.08</td>
+       <td class="rj">49.17</td>
+       <td class="rj">10.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">62.26</td>
+       <td class="rj">345</td>
+       <td class="rj">9.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SP56">2016 SP56</a></td>
+       <td class="rj">29.6</td>
+       <td class="rj">75.3</td>
+       <td class="rj">20.0</td>
+       <td class="rj">0.26</td>
+       <td class="rj">36.96</td>
+       <td class="rj">50.10</td>
+       <td class="rj">325.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">63.24</td>
+       <td class="rj">355</td>
+       <td class="rj">6.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KU418">2015 KU418</a></td>
+       <td class="rj">87.8</td>
+       <td class="rj">96.5</td>
+       <td class="rj">17.8</td>
+       <td class="rj">0.30</td>
+       <td class="rj">35.05</td>
+       <td class="rj">50.30</td>
+       <td class="rj">28.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">65.54</td>
+       <td class="rj">357</td>
+       <td class="rj">8.0</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2013+RR98">2013 RR98</a></td>
+       <td class="rj">233.9</td>
+       <td class="rj">62.4</td>
+       <td class="rj">37.7</td>
+       <td class="rj">0.29</td>
+       <td class="rj">35.96</td>
+       <td class="rj">50.30</td>
+       <td class="rj">31.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">64.64</td>
+       <td class="rj">357</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+SX105">2016 SX105</a></td>
+       <td class="rj">312.5</td>
+       <td class="rj">73.9</td>
+       <td class="rj">36.1</td>
+       <td class="rj">0.31</td>
+       <td class="rj">35.15</td>
+       <td class="rj">51.04</td>
+       <td class="rj">360.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">66.93</td>
+       <td class="rj">365</td>
+       <td class="rj">7.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+TQ454">2015 TQ454</a></td>
+       <td class="rj">338.6</td>
+       <td class="rj">59.2</td>
+       <td class="rj">32.1</td>
+       <td class="rj">0.27</td>
+       <td class="rj">37.75</td>
+       <td class="rj">51.90</td>
+       <td class="rj">349.0</td>
+       <td class="rj">0.003</td>
+       <td class="rj">66.05</td>
+       <td class="rj">374</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KJ166">2015 KJ166</a></td>
+       <td class="rj">106.3</td>
+       <td class="rj">72.0</td>
+       <td class="rj">25.2</td>
+       <td class="rj">0.30</td>
+       <td class="rj">36.35</td>
+       <td class="rj">52.11</td>
+       <td class="rj">29.8</td>
+       <td class="rj">0.003</td>
+       <td class="rj">67.88</td>
+       <td class="rj">376</td>
+       <td class="rj">7.4</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+XX47">2014 XX47</a></td>
+       <td class="rj">339.3</td>
+       <td class="rj">102.2</td>
+       <td class="rj">26.6</td>
+       <td class="rj">0.31</td>
+       <td class="rj">35.82</td>
+       <td class="rj">52.13</td>
+       <td class="rj">326.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">68.43</td>
+       <td class="rj">376</td>
+       <td class="rj">7.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KV174">2015 KV174</a></td>
+       <td class="rj">196.5</td>
+       <td class="rj">72.0</td>
+       <td class="rj">23.2</td>
+       <td class="rj">0.31</td>
+       <td class="rj">36.41</td>
+       <td class="rj">52.43</td>
+       <td class="rj">347.3</td>
+       <td class="rj">0.003</td>
+       <td class="rj">68.45</td>
+       <td class="rj">380</td>
+       <td class="rj">8.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2019+UU173">2019 UU173</a></td>
+       <td class="rj">313.5</td>
+       <td class="rj">73.4</td>
+       <td class="rj">25.5</td>
+       <td class="rj">0.25</td>
+       <td class="rj">39.91</td>
+       <td class="rj">53.09</td>
+       <td class="rj">7.6</td>
+       <td class="rj">0.003</td>
+       <td class="rj">66.27</td>
+       <td class="rj">387</td>
+       <td class="rj">8.2</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+WJ602">2014 WJ602</a></td>
+       <td class="rj">182.2</td>
+       <td class="rj">101.4</td>
+       <td class="rj">24.4</td>
+       <td class="rj">0.33</td>
+       <td class="rj">35.96</td>
+       <td class="rj">53.34</td>
+       <td class="rj">60.5</td>
+       <td class="rj">0.003</td>
+       <td class="rj">70.73</td>
+       <td class="rj">390</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2016+RL82">2016 RL82</a></td>
+       <td class="rj">354.6</td>
+       <td class="rj">62.6</td>
+       <td class="rj">23.0</td>
+       <td class="rj">0.31</td>
+       <td class="rj">36.68</td>
+       <td class="rj">53.47</td>
+       <td class="rj">354.1</td>
+       <td class="rj">0.003</td>
+       <td class="rj">70.26</td>
+       <td class="rj">391</td>
+       <td class="rj">8.1</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2014+UK277">2014 UK277</a></td>
+       <td class="rj">5.8</td>
+       <td class="rj">62.1</td>
+       <td class="rj">18.3</td>
+       <td class="rj">0.28</td>
+       <td class="rj">38.64</td>
+       <td class="rj">53.62</td>
+       <td class="rj">344.7</td>
+       <td class="rj">0.003</td>
+       <td class="rj">68.59</td>
+       <td class="rj">393</td>
+       <td class="rj">7.6</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+AR293">2015 AR293</a></td>
+       <td class="rj">104.3</td>
+       <td class="rj">80.9</td>
+       <td class="rj">24.4</td>
+       <td class="rj">0.34</td>
+       <td class="rj">35.45</td>
+       <td class="rj">54.05</td>
+       <td class="rj">355.8</td>
+       <td class="rj">0.002</td>
+       <td class="rj">72.64</td>
+       <td class="rj">397</td>
+       <td class="rj">6.8</td>
+      </tr>
+      <tr>
+          <td><a href="/db_search/show_object?object_id=2015+KY174">2015 KY174</a></td>
+       <td class="rj">60.4</td>
+       <td class="rj">77.7</td>
+       <td class="rj">19.9</td>
+       <td class="rj">0.33</td>
+       <td class="rj">36.08</td>
+       <td class="rj">54.19</td>
+       <td class="rj">63.2</td>
+       <td class="rj">0.002</td>
+       <td class="rj">72.29</td>
+       <td class="rj">399</td>
+       <td class="rj">7.6</td>
+      </tr>
+   </tbody>
+  </table>
+
+
+        </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer id="footer">
+    <div class="holder">
+      <nav class="nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+	  <!-- Contact link changed to Jira and name changed to helpdesk.
+	       Should be consistent with top right of banner -->
+          <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+<!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
+        </ul>
+      </nav>
+      
+      <a href="https://www.cfa.harvard.edu">
+      <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
+      <p>
+      <p>
+      <p>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+  </footer>
+
+<script type="text/javascript">
+  $(window).on('load', (function() {
+    $("table").tablesorter();
+  })); 
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCustom=function(){
+// Add custom parameters here.
+//_tag.DCSext.param_name=param_value;
+}
+_tag.dcsCollect();
+//]]>
+</script>
+
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="//logs1.smithsonian.museum/dcsa7yzrmbdzpxzrosrn4tyep_5i1d/njs.gif?dcsuri=/nojavascript&amp;WT.js=No&amp;WT.tv=9.4.0&amp;dcssip=www.minorplanetcenter.net"/></div>
+</noscript>
+</body>
+
+</html>

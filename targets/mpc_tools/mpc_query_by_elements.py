@@ -2,13 +2,14 @@
 # targets/mpc_tools/mpc_query_by_elements.py
 ##########################################################################################
 
+import hashlib
 import math
 import re
 
 import numpy as np
 import requests
 
-from ._utils import _MPC_BY_PROPERTIES
+from ._utils import _MPC_BY_PROPERTIES, _MPC_CACHE, _MPC_CACHING
 from .mpc_query_by_name import mpc_query_by_name
 
 _OBJECT_COUNT_RE = re.compile(rb'(\d+) objects match search criteria.')
@@ -217,10 +218,26 @@ def _read_mpc_element_table(url):
         RuntimeError: If the MPC returns a malformed web page.
     """
 
-    request = requests.get(url, allow_redirects=True)
-    request.raise_for_status()
+    # Retrieve from cache if available; the query string uniquely determines the response,
+    # so it is hashed into the cache filename. The "too many objects" and empty responses
+    # are cached too, so the delta-tuning retry loop replays identically offline.
+    html = b''
+    filepath = None
+    if _MPC_CACHING:
+        query = url.partition('show_by_properties?')[2]
+        digest = hashlib.md5(query.encode()).hexdigest()
+        filepath = _MPC_CACHE / ('SEARCH-' + digest + '.html')
+        if filepath.exists():
+            html = filepath.read_bytes()
 
-    html = request.content
+    if not html:
+        request = requests.get(url, allow_redirects=True)
+        request.raise_for_status()
+        html = request.content
+        if _MPC_CACHING and filepath is not None:
+            with open(filepath, 'wb') as f:
+                f.write(html)
+
     if html == b'Too many objects to display.':
         raise RuntimeError(f'MPC "show_by_properties" response is "{html.decode()}"')
 
