@@ -151,8 +151,9 @@ _HST_PROGRAM_OVERRIDES = {
     '4257_18' : {'MT_LV1_1': 'STD=URANUS'},
 
     # Triton occultations (FGS). STD=TRITON applies to every visit via '7489_*'; each
-    # occulted-star visit adds its own star. 7489_9 (TR180-T) is a distinct pointing with
-    # no Gaia source at its header position, so its star is left unresolved.
+    # occulted-star visit adds its own star. 7489_9 (TR180-T) points at Triton itself
+    # (JPL Horizons puts Triton 1.7" from its header position), not at a background star,
+    # so it carries no star dict and resolves to Triton via '7489_*'.
     '7489_*'  : {'MT_LV1_1': 'STD=TRITON'},
     '7489_1'  : {'dict': {'ttype'      : TT.STAR,        # TR176
                           'name'       : '2MASS J20025129-2000571',
