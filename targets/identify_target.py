@@ -478,7 +478,8 @@ def identify_target(
         for mdict in mdicts:
             categorize_minor_planet(mdict, ttypes)
             full_name = mdict['full_name']
-            prev_single = mdict_lookup[full_name][2] if full_name in mdict_lookup else False
+            prev_single = (mdict_lookup[full_name][2] if full_name in mdict_lookup
+                           else False)
             mdict_lookup[full_name] = (mdict, elements, single or prev_single)
 
         if _has_orbital_elements(elements) and elements not in unique_elements:

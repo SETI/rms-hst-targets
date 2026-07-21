@@ -7,8 +7,7 @@ header.
 
 import re
 
-from targets._utils          import (_collect_strings, _complete_body, _parse_mt_lv,
-                                     _unique_targets)
+from targets._utils          import _collect_strings, _parse_mt_lv, _unique_targets
 from targets.hst_repairs     import hst_repairs
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
 from targets.targettype      import TargetType
@@ -212,7 +211,7 @@ def identify_standard_body(headers, *, logger=None):
         body = STANDARD_BODY_LOOKUP[n]
         if body['name'] not in seen:
             seen.add(body['name'])
-            bodies.append(_complete_body(body))
+            bodies.append(body)
 
     return bodies
 

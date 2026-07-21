@@ -14,6 +14,7 @@ class TargetType:
     DUST = 'd'
     DWARF_PLANET = 'D'
     EQUIPMENT = 'E'
+    GALAXY = 'G'
     LABORATORY_ANALOG = 'L'
     MAGNETIC_FIELD = 'm'
     PLANET = 'P'
@@ -24,6 +25,7 @@ class TargetType:
     RING = 'R'
     SATELLITE = 'S'
     STAR = '*'
+    STAR_CLUSTER = 's'
     TRANS_NEPTUNIAN_OBJECT = 'T'
 
     # Lookup table
@@ -37,6 +39,7 @@ class TargetType:
         'd': 'Dust',
         'D': 'Dwarf Planet',
         'E': 'Equipment',
+        'G': 'Galaxy',
         'L': 'Laboratory Analog',
         'm': 'Magnetic Field',
         'P': 'Planet',
@@ -47,6 +50,7 @@ class TargetType:
         'R': 'Ring',
         'S': 'Satellite',
         '*': 'Star',
+        's': 'Star Cluster',
         'T': 'Trans-Neptunian Object',
     }
 
@@ -54,6 +58,11 @@ class TargetType:
     MINOR_PLANET = 'M'
     MCODES = 'AHDT'
     TORUS = PLASMA_CLOUD
+
+
+TargetType.LOOKUP = {name: key for key, name in TargetType.NAME.items()}
+TargetType.LOOKUP.update({name.lower().replace(' ', '_'): key
+                          for key, name in TargetType.NAME.items()})
 
 __all__ = ['TargetType']
 

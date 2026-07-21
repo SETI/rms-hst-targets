@@ -4,10 +4,7 @@
 
 import re
 
-import anyascii
-
-from targets.cometdb         import centaur_lookup, comet_lookup
-from targets.roman           import int_to_roman
+from targets.cometdb         import centaur_lookup
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
 from targets.targettype      import TargetType
 
@@ -155,33 +152,6 @@ def _parse_mt_lv(header, prefix, *, logger=None):
 
     return values
 
-##########################################################################################
-##########################################################################################
-
-
-def lid(body: dict) -> str:
-    """The LID of the body, depending on `full_name` and `ttype`."""
-
-    name = anyascii.anyascii(body['full_name']).lower()
-
-    # Slashes and spaces are handled inconsistently!
-    if body['ttype'] == TargetType.SATELLITE:
-        name = name.replace(' ', '').replace('/', '')           # S/2003 J 5 -> s2003j5
-    elif body['ttype'] == TargetType.COMET:
-        if name[1] == '/':
-            name = name.replace('/', '').replace(' ', '_')      # C/2007 N3 -> c2007_n3
-        else:
-            name = name.replace('/', '_').replace(' ', '_')     # 1P/Halley -> 1p_halley
-    else:
-        name = name.replace(' ', '_')
-
-    # Filter out disallowed characters
-    chars = [c for c in name if c in 'abcdefghijklmnopqrstuvwxyz0123456789_-.:']
-    name = ''.join(chars)
-
-    tail = TargetType.NAME[body['ttype']].replace(' ', '_').lower() + '.' + name
-    return 'urn:nasa:pds:context:target:' + tail
-
 
 ##########################################################################################
 ##########################################################################################
@@ -253,97 +223,6 @@ def categorize_minor_planet(body, ttypes, *, logger=None):
         body['ttype'] = TargetType.ASTEROID
         logger and logger.debug(f'{name} is an asteroid '
                                 f'(a = {a:.2f} AU; q = {q:.2f} AU)')
-
-
-_TYPE_WORD = {
-    TargetType.SATELLITE: 'Satellite',
-    TargetType.COMET    : 'Fragment',
-    TargetType.RING     : 'Ring',
-}
-
-
-def _complete_body(body, ttypes=''):
-    """Fill in any missing, required parameters in the given body dictionary.
-
-    These items are required:
-
-    * "title": The title (with preferred capitalization).
-    * "lid_name": The name as it will appear in the LID.
-    * "type_name": The full name of the target type, e.g., "Trans-Neptunian Object".
-    * "parent": For satellites, rings, and tori, the body dictionary describing the
-      primary. Ignored for other target types.
-    * "alt_titles": A list of standard aliases for this body, using standard
-      capitalization. Each of these will be used as an `alternate_title` in the context
-      product.
-    * "description": Descriptive text, if needed; otherwise, blank or "none".
-
-    Parameters:
-        body (dict): Body dictionary.
-        ttypes (str): The string of TargetType characters provided by hst_repairs().
-
-    Returns:
-        dict: `body`, modified in place and returned.
-    """
-
-    categorize_minor_planet(body, ttypes)
-    body['type_name'] = TargetType.NAME[body['ttype']]
-
-    # alt_titles
-    if 'alt_titles' not in body:
-        alt_titles = list(body.get('aliases', []))
-        naif_id = body.get('naif_id')
-        if naif_id:
-            alias = f'NAIF ID {naif_id}'
-            if alias not in alt_titles:
-                alt_titles.append(alias)
-
-        body['alt_titles'] = alt_titles
-
-    # parent (could be None, but shouldn't be missing)
-    parent_name = body.get('parent_key', '')
-    if parent_name:
-        parent = STANDARD_BODY_LOOKUP.get(parent_name) or comet_lookup().get(parent_name)
-    else:
-        parent = None
-    body['parent'] = parent
-
-    # description
-    if 'description' not in body:
-        desc = []
-        if parent:
-            type_word = _TYPE_WORD.get(body['ttype'], '')
-            if type_word:
-                desc.append(f'{type_word} of: {parent["full_name"]};')
-            if parent['ttype'] != TargetType.COMET:
-                desc.append(f'Type of primary: {TargetType.NAME[parent["ttype"]]};')
-            desc.append(f'LID of primary: {lid(parent)};')
-            if parent['naif_id']:
-                desc.append(f'NAIF ID of primary: {parent["naif_id"]};')
-        else:
-            desc = ['none']
-
-        body['description'] = '\n'.join(desc)
-
-    # title
-    if (body['ttype'] == TargetType.SATELLITE and parent['ttype'] != TargetType.PLANET
-            and body.get('satnum')):
-        body['title'] = (parent['full_name'] + ' ' + int_to_roman(body['satnum']) + ' ('
-                         + body['name'] + ')')
-        if body['name'] not in body['alt_titles']:
-            body['alt_titles'] = [body['name']] + body['alt_titles']
-    else:
-        body['title'] = body['full_name']
-
-    # lid_name
-    if body['ttype'] == TargetType.RING and body['name'].startswith(parent['name']):
-        lparent = len(parent['name'])
-        body['lid_name'] = parent['full_name'] + '.' + body['name'][lparent + 1:]
-    elif parent and body['ttype'] != TargetType.COMET:
-        body['lid_name'] = parent['full_name'] + '.' + body['name']
-    else:
-        body['lid_name'] = body['full_name']
-
-    return body
 
 
 ##########################################################################################

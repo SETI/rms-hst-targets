@@ -30,7 +30,7 @@ import argparse
 
 import pdslogger
 
-from targets.target_xml_support import _update_target_cache, _TARGET_XML_CACHE
+from targets.target_xml_cache_support import _update_target_cache, _TARGET_XML_CACHE
 
 # Set up parser
 PARSER = argparse.ArgumentParser(

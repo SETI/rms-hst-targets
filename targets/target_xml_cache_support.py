@@ -1,5 +1,5 @@
 ##########################################################################################
-# targets/target_xml_support.py
+# targets/target_xml_cache_support.py
 ##########################################################################################
 """The target context product index is stored in `caches/TARGET_XML_CACHE/$LOOKUP.pickle`.
 This pickle file contains a single dictionary keyed by `title`, every `alternate_title`,
@@ -21,6 +21,7 @@ import requests
 from pdslogger import PdsLogger
 
 from targets.remote_listdir import remote_listdir
+from targets.targettype     import TargetType
 
 
 _TARGET_URL = 'https://pds.nasa.gov/data/pds4/context-pds4/target/'
@@ -32,7 +33,7 @@ _BASENAME_SPLITTER = re.compile(r'(.*)_(\d\.\d)(|_local)\.xml$')
 _TARGET_XML_DICT = None   # filled in lazily
 
 
-def target_xml_dict() -> dict:
+def target_xml_lookup() -> dict:
     """The target lookup dictionary, which returns a file path given a name, alias, or
     lid.
     """
@@ -46,7 +47,7 @@ def target_xml_dict() -> dict:
     return _TARGET_XML_DICT
 
 
-def write_target_xml_dict(lookup: dict):
+def write_target_xml_lookup(lookup: dict):
     """Write the target context lookup dictionary."""
 
     global _TARGET_XML_DICT
@@ -173,10 +174,7 @@ def _update_target_cache(*, logger: PdsLogger | None = None, rebuild: bool = Fal
                 lookup_by_name[key] = basename
 
     # Save the dictionaries as a pickle file
-    with _TARGET_DICT_PATH.open('wb') as f:
-        pickle.dump(lookup_by_name, f)
-
-    _TARGET_XML_DICT = lookup_by_name
+    write_target_xml_lookup(lookup_by_name)
     logger and logger.info('Index rebuilt', _TARGET_DICT_BASENAME)
 
 
@@ -264,6 +262,47 @@ def _get_etree(xml_path: str) -> lxml.etree._Element:
     return lxml.etree.fromstring(content)
 
 
-__all__ = ['target_xml_dict', 'write_target_xml_dict']
+def read_target_xml(key: str) -> dict | None:
+    """Return a target dictionary containing the core content of a target XML file.
+
+    Parameters:
+        key: Any key defining the body, as found in the LOOKUP dictionary.
+
+    Returns:
+        A dictionary containing keys "lid", "lid_tail", "version_id", "title",
+        "alt_titles", "type_name", "ttype", "description", and "xml_path". None if there
+        is no existing XML file for this body.
+    """
+
+    try:
+        basename = target_xml_lookup()[key.upper()]
+    except KeyError:
+        return None
+
+    xml_path = _TARGET_XML_CACHE / basename
+    tree = _get_etree(xml_path)
+    target_dict = {
+        'lid': tree.xpath('//logical_identifier')[0].text,
+        'version_id': tree.xpath('//version_id')[0].text,
+        'title': tree.xpath('//title')[0].text,
+        'alt_titles': [node.text for node in tree.xpath('//alternate_title')],
+        'type_name': tree.xpath('//type')[-1].text,
+        'xml_path': xml_path,
+    }
+
+    target_dict['lid_tail'] = target_dict['lid'].rpartition(':')[-1]
+    target_dict['ttype'] = TargetType.LOOKUP[target_dict['type_name']]
+
+    desc = tree.xpath('//description')[-1].text
+    if not desc or desc == 'none':
+        target_dict['description'] = []
+    else:
+        desc = [line.strip() for line in desc.split('\n')]
+        target_dict['description'] = [line for line in desc if line]
+
+    return target_dict
+
+
+__all__ = ['target_xml_lookup', 'read_target_xml', 'write_target_xml_lookup']
 
 ##########################################################################################
