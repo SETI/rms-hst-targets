@@ -2,15 +2,16 @@
 ##########################################################################################
 # support/retrieve_mast_moving_target_spts.py
 ##########################################################################################
-"""Retrieve HST target files (SPT/SHM/SHF) for every moving-target observation.
+"""Retrieve HST target files (SPT/SHM/SHF/DMF) for every moving-target observation.
 
 Workflow
 --------
 1. Query MAST (CAOM) for every HST observation flagged as a moving target
    (``mtFlag = True``).  These span 845 programs across all instrument eras.
 2. For those observations, list the data products and keep only the files whose
-   name ends in ``_spt.fits``, ``_shm.fits`` or ``_shf.fits`` (the support /
-   standard-header files that carry the MT_LVn ephemeris keywords).
+   name ends in ``_spt.fits``, ``_shm.fits``, ``_shf.fits`` or ``_dmf.fits`` (the
+   support / standard-header files that carry the target-description and MT_LVn
+   ephemeris keywords; ``_dmf.fits`` is the FGS analog of the others).
 3. Write a manifest CSV, then download the files into per-program subfolders::
 
        <outdir>/<proposal_id>/<rootname>_spt.fits
@@ -45,7 +46,7 @@ import requests
 from astropy.table import Table, vstack
 from astroquery.mast import Observations
 
-SUFFIXES = ("_spt.fits", "_shm.fits", "_shf.fits")
+SUFFIXES = ("_spt.fits", "_shm.fits", "_shf.fits", "_dmf.fits")
 DOWNLOAD_URL = "https://mast.stsci.edu/api/v0.1/Download/file"
 
 _HERE = pathlib.Path(__file__).resolve().parent

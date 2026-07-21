@@ -410,6 +410,8 @@ def identify_target(
             repaired_headers.append(header)
 
     # Check for special overrides
+    extra_dicts = []
+    done = False
     for header in repaired_headers:
         if 'reject' in header:
             message = 'Not a planetary observation; do not re-archive'
@@ -417,14 +419,18 @@ def identify_target(
             raise TargetIdentificationFailure(message)
 
         if 'dict' in header:
-            return [header['dict']]
+            extra_dicts = [header['dict']]
+        done = done or header.get('done', False)
+
+    if done:
+        return extra_dicts
 
     headers = repaired_headers + unrepaired_headers
 
     # A standard-body observation is identified entirely from the header
     bodies = identify_standard_body(headers, logger=logger)
     if bodies is not None:
-        return bodies
+        return bodies + extra_dicts
 
     # Handle each unique header
     cdict_lookup = {}       # name -> (body dict, mt_lv1 elements)
@@ -580,8 +586,8 @@ def identify_target(
         for header in headers:
             test_elements = _parse_mt_lv(header, 'MT_LV1')
             if test_elements == elements:
-                message = (f'Target could not be determined: file = {header["FILENAME"]}; '
-                           f'TARGNAME={header.get("TARGNAME")}')
+                message = (f'Target could not be determined: file = {header["FILENAME"]};'
+                           f' TARGNAME={header.get("TARGNAME")}')
                 logger and logger.error(message)
                 raise TargetIdentificationFailure(message)
 
@@ -594,7 +600,7 @@ def identify_target(
         logger and logger.error(message)
         raise TargetIdentificationFailure(message)
 
-    return results
+    return results + extra_dicts
 
 
 ##########################################################################################

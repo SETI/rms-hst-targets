@@ -7,8 +7,9 @@ Running `hst_repairs` on the TARKEY*/TARGNAME strings of every SPT_TESTS entry m
 reproduce the committed baseline `SPT_TESTS_OUTPUT.txt`, so that any change to the repair
 tables that alters an identification is caught here.
 
-Each baseline line is `repr(filename) --- (answers, types)`, exactly what
-`print(repr(filename), '---', hst_repairs(strings))` produces.
+Each baseline line is `repr(FILENAME) --- (answers, types)`, exactly what
+`print(repr(spt['FILENAME']), '---', hst_repairs(strings))` produces. SPT_TESTS is keyed
+by visit; every per-file header dict across all visits contributes one line, in order.
 
 After an *intentional* change to the repair tables, regenerate the baseline by running
 this file as a script from the repository root::
@@ -43,16 +44,22 @@ def _spt_strings(spt: dict[str, Any]) -> list[str]:
     return strings
 
 
-def _output_line(filename: str, spt: dict[str, Any]) -> str:
-    """The baseline line for one SPT entry: `repr(filename) --- (answers, types)`."""
+def _output_line(spt: dict[str, Any]) -> str:
+    """The baseline line for one SPT entry: `repr(FILENAME) --- (answers, types)`."""
 
     result = hst_repairs(_spt_strings(spt), logger=None)
-    return f'{filename!r} --- {result}'
+    return f'{spt["FILENAME"]!r} --- {result}'
+
+
+def _all_entries() -> list[dict[str, Any]]:
+    """Every per-file header dict across all visits, in SPT_TESTS order."""
+
+    return [spt for headers in SPT_TESTS.values() for spt in headers]
 
 
 def test_hst_repairs_matches_baseline() -> None:
     expected = _BASELINE.read_text().splitlines()
-    actual = [_output_line(filename, spt) for filename, spt in SPT_TESTS]
+    actual = [_output_line(spt) for spt in _all_entries()]
 
     assert len(actual) == len(expected), (
         f'{len(actual)} SPT_TESTS entries but {len(expected)} baseline lines; '
@@ -70,7 +77,7 @@ def test_hst_repairs_matches_baseline() -> None:
 
 
 if __name__ == '__main__':
-    lines = [_output_line(filename, spt) for filename, spt in SPT_TESTS]
+    lines = [_output_line(spt) for spt in _all_entries()]
     _BASELINE.write_text('\n'.join(lines) + '\n')
     print(f'Wrote {len(lines)} lines to {_BASELINE}')
 

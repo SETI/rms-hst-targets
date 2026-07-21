@@ -6,8 +6,9 @@
 by visit.
 
 This reads every FITS file in ``caches/SPT_CACHE`` (the ``_spt.fits``/``_shm.fits``/
-``_shf.fits`` support files retrieved by ``retrieve_mast_moving_target_spts.py``) and
-extracts the key target-description keywords from each primary header:
+``_shf.fits``/``_dmf.fits`` support files retrieved by
+``retrieve_mast_moving_target_spts.py``; ``_dmf.fits`` is the FGS analog) and extracts
+the key target-description keywords from each primary header:
 
     PSTRTIME, PSTPTIME, TARG_ID, TAR_TYPE, TARGTYPE, TARDESC*, TARGCAT, TARKEY*,
     MT_LV*, TARGNAME, RA_TARG, DEC_TARG, PROPOSID
