@@ -13,7 +13,7 @@ the key target-description keywords from each primary header:
     PSTRTIME, PSTPTIME, TARG_ID, TAR_TYPE, TARGTYPE, TARDESC*, TARGCAT, TARKEY*,
     MT_LV*, TARGNAME, RA_TARG, DEC_TARG, PROPOSID
 
-Because `identify_target` now works one HST visit at a time, the output is organized by
+Because `identify_target_dicts` now works one HST visit at a time, the output is organized by
 visit rather than as a flat list. A visit is the first six characters of the rootname
 (the file's base name), which encodes the program and visit and is unique across HST. The
 output module defines a single dictionary ``SPT_TESTS`` mapping each visit string to a
@@ -27,14 +27,14 @@ list of per-file header dictionaries::
         ...
     }
 
-Each header dictionary begins with FILENAME (the base name, which `identify_target` uses
+Each header dictionary begins with FILENAME (the base name, which `identify_target_dicts` uses
 to group headers by visit) and then the keywords above, in the order listed, omitting any
 keyword absent from the header.
 
 Within a single visit, only files with a distinct *target description* are kept: two files
 collapse to one when they share an identical set of values for the keywords matching
 ``targets._utils._KEYWORD_PREFIX_REGEX`` (TARGNAME, TARDESC*, TARKEY*, and MT_LV*), which
-is exactly the subset `identify_target` uses to decide target uniqueness. The first file
+is exactly the subset `identify_target_dicts` uses to decide target uniqueness. The first file
 encountered (in sorted base-name order) is kept. Duplicates are removed only within a
 visit, so the same target description reappears once per visit that contains it.
 

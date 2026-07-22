@@ -2,12 +2,12 @@
 ##########################################################################################
 # programs/identify_visit.py
 ##########################################################################################
-"""Run `identify_target` on a single visit from the SPT_TESTS corpus and print its log.
+"""Run `identify_target_dicts` on a single visit from the SPT_TESTS corpus and print its log.
 
 The SPT_TESTS corpus (``tests/SPT_TESTS.py``, built by ``build_spt_tests.py``) is keyed by
 six-character HST visit; each value is the list of per-file header dictionaries for that
 visit. This program looks up one such visit, feeds its headers to
-`targets.identify_target`, and writes the resulting log narrative to stdout. It is a
+`targets.identify_target_dicts`, and writes the resulting log narrative to stdout. It is a
 convenience for inspecting, at any verbosity, exactly how the identification code reasons
 about a given visit.
 
@@ -24,7 +24,7 @@ import sys
 
 import pdslogger
 
-from targets import TargetIdentificationFailure, identify_target
+from targets import TargetIdentificationFailure, identify_target_dicts
 
 # tests/SPT_TESTS.py is a plain data module (not part of the importable package); add the
 # tests directory to the path so it can be imported, exactly as the test suite does.
@@ -62,9 +62,9 @@ def identify_visit(visit: str, *, level: str = 'info') -> None:
 
     logger.info(f'Identifying visit {visit} ({len(headers)} header(s))')
     try:
-        bodies = identify_target(headers, logger=logger)
+        bodies = identify_target_dicts(headers, logger=logger)
     except TargetIdentificationFailure as err:
-        # The failure has already been logged at ERROR level by identify_target.
+        # The failure has already been logged at ERROR level by identify_target_dicts.
         logger.info(f'No target identified: {err}')
         return
 
@@ -76,8 +76,8 @@ def identify_visit(visit: str, *, level: str = 'info') -> None:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description='Run identify_target on a single SPT_TESTS visit and write its log '
-        'narrative to stdout.'
+        description='Run identify_target_dicts on a single SPT_TESTS visit and write its '
+        'log narrative to stdout.'
     )
     parser.add_argument('visit', help='the six-character visit key, e.g. "y0zz03"')
     parser.add_argument(

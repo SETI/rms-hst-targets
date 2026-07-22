@@ -52,13 +52,14 @@ def test_complete_target_ring() -> None:
     assert target['description'].startswith('Ring of: Saturn;')
 
 
-def test_complete_target_minor_planet_categorized_by_elements() -> None:
-    # ttype 'M' with a TNO-scale orbit is categorized to 'T'; no parent, description "none".
-    minor_planet = {'name': '', 'full_name': '1999 XY99', 'desig': '1999 XY99',
-                    'aliases': [], 'mnum': '', 'ttype': TargetType.MINOR_PLANET,
-                    'A': 45., 'E': 0.1, 'parent_key': ''}
-    target = _complete_target(minor_planet)
-    assert target['ttype'] == TargetType.TRANS_NEPTUNIAN_OBJECT
+def test_complete_target_trans_neptunian_object() -> None:
+    # _complete_target fills the PDS fields of an already-categorized minor planet; the
+    # identification core categorizes minor planets, _complete_target no longer does. A TNO
+    # has no parent and description "none".
+    tno = {'name': '', 'full_name': '1999 XY99', 'desig': '1999 XY99',
+           'aliases': [], 'mnum': '', 'ttype': TargetType.TRANS_NEPTUNIAN_OBJECT,
+           'parent_key': ''}
+    target = _complete_target(tno)
     assert target['type_name'] == 'Trans-Neptunian Object'
     assert target['title'] == '1999 XY99'
     assert target['lid_tail'] == 'trans-neptunian_object.1999_xy99'

@@ -14,10 +14,10 @@ Planetary Data System at the SETI Institute. Early-stage / work in progress.
 .. code-block:: python
 
    from astropy.io import fits
-   from targets.identify_target import identify_target
+   from targets.identify_targets import identify_target_dicts
 
    with fits.open('j8i701011_spt.fits') as hdul:
-       bodies = identify_target(hdul[0].header)
+       bodies = identify_target_dicts(hdul[0].header)
 
    for body in bodies:
        print(body['full_name'], body['ttype_name'], body['lid_suffix'])

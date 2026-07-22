@@ -1,7 +1,7 @@
 # How target identification works
 
 This document walks through the identification pipeline in
-`targets/identify_target.py` and its supporting modules, from raw SPT/SHF
+`targets/identify_targets.py` and its supporting modules, from raw SPT/SHF
 header keywords to the normalized body dictionaries it returns.
 
 See also:
@@ -13,7 +13,7 @@ See also:
 
 ## The input: SPT/SHF header keywords
 
-`identify_target(header)` accepts either an `astropy.io.fits.Header` or a
+`identify_target_dicts(header)` accepts either an `astropy.io.fits.Header` or a
 plain dictionary. It uses these keywords:
 
 | Keyword | Meaning |
@@ -210,7 +210,7 @@ elements.
 
 ### 8. Confirmation against the header
 
-Identification by name is only half the job; `identify_target` then confirms
+Identification by name is only half the job; `identify_target_dicts` then confirms
 the result against the header's own ephemeris:
 
 * **Comets** (`MT_LV1 TYPE=COMET`): the element residual must fall within
@@ -300,7 +300,7 @@ resolved to `A`/`H`/`D`/`T` before a body is returned.
 
 ## Tunable thresholds
 
-Per-call parameters of `identify_target`:
+Per-call parameters of `identify_target_dicts`:
 
 | Parameter | Default | Meaning |
 | --------- | ------- | ------- |
@@ -308,7 +308,7 @@ Per-call parameters of `identify_target`:
 | `mp_rms` | 0.08 | Max element residual for a minor-planet identification |
 | `radec_tolerance` | 120″ | Base sky-position tolerance for a named minor planet |
 
-Module constants in `identify_target.py`:
+Module constants in `identify_targets.py`:
 
 | Constant | Value | Meaning |
 | -------- | ----- | ------- |

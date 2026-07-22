@@ -1,10 +1,10 @@
 ##########################################################################################
-# identify_target.py
+# identify_targets.py
 ##########################################################################################
 """Identify the target bodies of an HST observation from its SPT/SHF header.
 
-The `identify_target` function examines the target description keywords of an SPT or SHF
-header (TARGNAME, TARDESCR, TARKEY*, and the MT_LV* moving target descriptions) and
+The `identify_target_dicts` function examines the target description keywords of an SPT or
+SHF header (TARGNAME, TARDESCR, TARKEY*, and the MT_LV* moving target descriptions) and
 returns a list of dictionaries, one for each body relevant to the observation. Bodies
 are identified by name whenever possible and are confirmed against the orbital elements
 embedded in the MT_LV1_* keywords: comets by direct element comparison, minor planets by
@@ -12,13 +12,18 @@ propagating their catalog orbit to the observation time and comparing the sky po
 to RA_TARG/DEC_TARG. When no name can be recognized, the body is identified by searching
 the comet database or the Minor Planet Center for the nearest orbital elements.
 
+`identify_targets` is the same but returns the path to each body's PDS4 target context
+product instead of its dictionary.
+
 To use::
 
-    from targets.identify_target import identify_target, TargetIdentificationFailure
+    from targets.identify_targets import identify_target_dicts, identify_targets
+    from targets import TargetIdentificationFailure
 
 """
 
 import math
+import pathlib
 from datetime import datetime, timedelta
 from logging import Logger
 
@@ -30,9 +35,10 @@ from targets._utils                  import (_collect_strings, _headers_by_visit
 from targets._HST_PROGRAM_OVERRIDES  import _HST_PROGRAM_OVERRIDES
 from targets.hst_repairs             import hst_repairs
 from targets.identify_standard_body  import identify_standard_body
+from targets.target_xml_support      import _complete_target, get_target_xml_path
 from targets.targettype              import TargetType
 
-__all__ = ['identify_target']
+__all__ = ['identify_target_dicts', 'identify_targets']
 
 
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
@@ -308,7 +314,7 @@ def minor_planet_by_radec(
 
 
 ##########################################################################################
-# identify_target()
+# identify_target_dicts() and identify_targets()
 ##########################################################################################
 
 
@@ -326,7 +332,7 @@ def _has_orbital_elements(elements):
     return 'E' in elements and ('A' in elements or 'Q' in elements)
 
 
-def identify_target(
+def identify_target_dicts(
     headers: list[dict], *,
     comet_rms: float = 0.1,
     mp_rms: float = 0.08,
@@ -476,7 +482,7 @@ def identify_target(
         for cdict in cdicts:
             cdict_lookup[cdict['full_name']] = (cdict, elements)
         for mdict in mdicts:
-            categorize_minor_planet(mdict, ttypes)
+            categorize_minor_planet(mdict, ttypes, logger=logger)
             full_name = mdict['full_name']
             prev_single = (mdict_lookup[full_name][2] if full_name in mdict_lookup
                            else False)
@@ -562,6 +568,7 @@ def identify_target(
                                        mp_rms, logger=logger)
         if result is not None:
             mdict, _ = result
+            categorize_minor_planet(mdict, ttypes, logger=logger)
             logger and logger.info(f'Minor planet {mdict["full_name"]} identified by '
                                    'RA/dec')
             results.append(mdict)
@@ -602,6 +609,43 @@ def identify_target(
         raise TargetIdentificationFailure(message)
 
     return results + extra_dicts
+
+
+def identify_targets(
+    headers: list[dict], *,
+    comet_rms: float = 0.1,
+    mp_rms: float = 0.08,
+    radec_delta: float = 120.,
+    logger: Logger | None = None
+) -> list[pathlib.Path]:
+    """Identify the target bodies of an HST observation and return their context products.
+
+    Identical to `identify_target_dicts` in its inputs and in how it identifies bodies,
+    but each identified body dictionary is resolved to the path of its PDS4 target context
+    product rather than returned directly. The dictionary is first completed with its PDS
+    fields (`_complete_target`), then `get_target_xml_path` returns the path of the matching
+    context product, generating a new "_local" product when none exists.
+
+    Parameters:
+        headers: The SPT/SHF headers of a single visit; see `identify_target_dicts`.
+        comet_rms: Upper limit on the comet element root-mean-square discrepancy.
+        mp_rms: Upper limit on the minor-planet element root-mean-square discrepancy.
+        radec_delta: Base tolerance in arcsec on the minor-planet sky-position offset.
+        logger: An optional Logger.
+
+    Returns:
+        A list of `pathlib.Path` objects, one per identified target, in the same order as
+        `identify_target_dicts` returns them.
+
+    Raises:
+        TargetIdentificationFailure: If no target can be identified (see
+            `identify_target_dicts`).
+    """
+
+    targets = identify_target_dicts(headers, comet_rms=comet_rms, mp_rms=mp_rms,
+                                    radec_delta=radec_delta, logger=logger)
+    return [get_target_xml_path(_complete_target(target), logger=logger)
+            for target in targets]
 
 
 ##########################################################################################

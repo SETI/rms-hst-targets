@@ -141,4 +141,38 @@ def test_local_overlay_isolates_writes_from_committed_cache(
     assert target_xml_cache_support.target_xml_path('JUPITER').parent == primary
 
 
+def test_new_target_xml_dict_generates_valid_label(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Regression: the PdsTemplate refers to the body as `target`, so new_target_xml_dict
+    # must nest the dict under that key; otherwise it raises NameError and writes a broken
+    # label. The generated "_local" label must be well-formed and read back cleanly.
+    primary = tmp_path / 'primary'
+    overlay = tmp_path / 'overlay'
+    primary.mkdir()
+    monkeypatch.setattr(target_xml_cache_support, '_TARGET_XML_CACHE', primary)
+    monkeypatch.setattr(target_xml_cache_support, '_TARGET_XML_LOOKUP', None)
+
+    body = {
+        'lid': 'urn:nasa:pds:context:target:comet.c9999_test',
+        'lid_tail': 'comet.c9999_test',
+        'title': 'C/9999 Test',
+        'alt_titles': ['Test', 'NAIF ID 1009999'],
+        'type_name': 'Comet',
+        'ttype': TargetType.COMET,
+        'description': 'none',  # _complete_target yields a string, not a list
+    }
+    with target_xml_cache_support.use_local_xml_dir(overlay):
+        path = target_xml_cache_support.new_target_xml_dict(body)
+        assert path == overlay / 'comet.c9999_test_1.0_local.xml'
+        assert path.exists()
+
+        parsed = target_xml_cache_support._read_target_xml_dict(path)
+        assert parsed['lid'] == body['lid']
+        assert parsed['title'] == body['title']
+        assert parsed['alt_titles'] == body['alt_titles']
+        assert parsed['type_name'] == 'Comet'
+        assert parsed['ttype'] == TargetType.COMET
+
+
 ##########################################################################################

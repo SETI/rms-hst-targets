@@ -4,7 +4,6 @@
 
 import anyascii
 
-from targets._utils          import categorize_minor_planet
 from targets.cometdb         import comet_lookup
 from targets.roman           import int_to_roman
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
@@ -48,8 +47,11 @@ _TYPE_WORD = {
 }
 
 
-def _complete_target(target, ttypes=''):
+def _complete_target(target):
     """Fill in any missing, required parameters in the given target dictionary.
+
+    The target's `ttype` must already be its final category; the identification core
+    (`identify_target_dicts`) categorizes minor planets, so this function does not.
 
     These items are required:
 
@@ -66,13 +68,11 @@ def _complete_target(target, ttypes=''):
 
     Parameters:
         target (dict): Body dictionary.
-        ttypes (str): The string of TargetType characters provided by hst_repairs().
 
     Returns:
         dict: `target`, modified in place and returned.
     """
 
-    categorize_minor_planet(target, ttypes)
     target['type_name'] = TargetType.NAME[target['ttype']]
 
     # alt_titles

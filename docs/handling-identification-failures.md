@@ -1,6 +1,6 @@
 # Developer's guide: handling identification failures
 
-`identify_target()` is built around a corpus of ~35 years of inconsistent HST
+`identify_target_dicts()` is built around a corpus of ~35 years of inconsistent HST
 header conventions, so new failures are expected as new observations (or new
 header quirks) appear. This guide explains how a failure presents, how to
 diagnose it, and — most importantly — **every mechanism available for fixing
@@ -12,7 +12,7 @@ assumes you know the pipeline stages.
 ## How failures present
 
 `TargetIdentificationError` is raised from four places in
-`targets/identify_target.py`:
+`targets/identify_targets.py`:
 
 1. **`Unresolved standard target "STD=..." in MT_LV1/2`** — an `MT_LV*`
    `STD=` field named something that isn't in `STANDARD_BODY_LOOKUP` and
@@ -43,10 +43,10 @@ narrative:
 
 ```python
 import pdslogger
-from targets.identify_target import identify_target
+from targets.identify_targets import identify_target_dicts
 
 logger = pdslogger.EasyLogger()
-bodies = identify_target(header, logger=logger)
+bodies = identify_target_dicts(header, logger=logger)
 ```
 
 The log shows the applied overrides, the collected strings, the repaired
@@ -170,7 +170,7 @@ When the observation *has no target that can ever be named*, don't force an
 identification — flag the `TARG_ID` with a sentinel string instead of a
 repair dict:
 
-| Sentinel | Use for | `identify_target` returns |
+| Sentinel | Use for | `identify_target_dicts` returns |
 | -------- | ------- | ------------------------- |
 | `'ANTISOLAR_POINTING'` | Pointing at the anti-solar point (zodiacal light etc.) | `[]` |
 | `'SLEW_TEST'` | Engineering exposures with dummy ephemerides | `[]` |
@@ -253,7 +253,7 @@ The cache is consulted before the network, so:
 
 ### 3.8 The thresholds are wrong for a class of observations → tolerances
 
-`identify_target` exposes `comet_rms` (0.1), `mp_rms` (0.08), and
+`identify_target_dicts` exposes `comet_rms` (0.1), `mp_rms` (0.08), and
 `radec_tolerance` (120″) as per-call parameters, and the module constants
 (`_RADEC_TOLERANCE_PER_YEAR`, `_REVISED_ORBIT_RMS`, ...) encode the current
 policy. Loosening a threshold is almost never the right fix for a single
@@ -311,7 +311,7 @@ may be in the escape hatch, not the data.
    * The full test corpus `tests/SPT_TESTS.py` holds every *unique* target
      description harvested from the SPT cache (regenerate with
      `python programs/build_spt_tests.py` — requires the `caches/SPT_CACHE`
-     SSD to be mounted). Loop `identify_target` (or `identify_small_body`)
+     SSD to be mounted). Loop `identify_target_dicts` (or `identify_small_body`)
      over it and diff the failures against the previous run.
    * `hst_repairs` regressions: run the `if False:` block at the bottom of
      `targets/hst_repairs.py` over `SPT_TESTS` and diff the output against

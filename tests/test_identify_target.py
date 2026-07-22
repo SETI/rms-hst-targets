@@ -2,6 +2,7 @@
 # tests/test_identify_target.py
 ##########################################################################################
 
+import pathlib
 import sys
 from types import ModuleType
 from typing import Any, cast
@@ -12,10 +13,12 @@ from SPT_TESTS import SPT_TESTS
 
 from targets import (
     TargetIdentificationFailure,
-    identify_target,
+    identify_target_dicts,
+    identify_targets,
 )
 from targets._utils import _collect_strings, _norm_date, _parse_mt_lv
 from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
+from targets.target_xml_cache_support import use_local_xml_dir
 
 # SPT_TESTS is keyed by six-character visit; each value is the list of per-file header
 # dictionaries for that visit, each carrying its own "FILENAME".
@@ -56,7 +59,7 @@ def _no_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_planet_std() -> None:
     # MT_LV1 "STD = URANUS", TARGNAME "URANUS-CENTER"
-    bodies = identify_target([_header('1083/v0zf0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('1083/v0zf0101t_shf.fits')])
     assert len(bodies) == 1
     body = bodies[0]
     assert body['name'] == 'Uranus'
@@ -65,7 +68,7 @@ def test_planet_std() -> None:
 
 def test_satellite_observed() -> None:
     # MT_LV1 "STD = JUPITER", MT_LV2 "STD = IO": the satellite observed is returned
-    bodies = identify_target([_header('1206/z1cw0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('1206/z1cw0101t_shf.fits')])
     assert bodies[0]['name'] == 'Io'
     assert bodies[0]['ttype'] == 'S'
     assert bodies[0]['naif_id'] == 501
@@ -78,13 +81,13 @@ def test_satellite_from_tardescr_alone() -> None:
     del header['TARKEY1']
     del header['TARGNAME']
     assert header['TARDESCR'] == 'SOLAR SYSTEM;SATELLITE IO'
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert bodies[0]['name'] == 'Io'
 
 
 def test_offset_pointing() -> None:
     # TARGNAME "...-BACKGROUND" with TARKEY "OFFSET JUPITER": only Jupiter is relevant
-    bodies = identify_target([_header('1080/y0zz0301t_shf.fits')])
+    bodies = identify_target_dicts([_header('1080/y0zz0301t_shf.fits')])
     assert [b['name'] for b in bodies] == ['Jupiter']
 
 
@@ -92,7 +95,7 @@ def test_astropy_header_input() -> None:
     header = fits.Header()
     for key, value in _header('1083/v0zf0101t_shf.fits').items():
         header[key] = value
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert [b['name'] for b in bodies] == ['Uranus']
 
 
@@ -102,7 +105,7 @@ def test_astropy_header_input() -> None:
 
 def test_std_ceres_is_dwarf_planet() -> None:
     # MT_LV1 "STD = 1 (CERES)"
-    bodies = identify_target([_header('1268/x0xa0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('1268/x0xa0101t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['name'] == 'Ceres'
     assert bodies[0]['ttype'] == 'D'
@@ -110,7 +113,7 @@ def test_std_ceres_is_dwarf_planet() -> None:
 
 def test_std_number_is_centaur() -> None:
     # MT_LV1 "STD=2060" identifies Chiron by minor planet number
-    bodies = identify_target([_header('3769/w1a70201t_shf.fits')])
+    bodies = identify_target_dicts([_header('3769/w1a70201t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '2060 Chiron'
     assert bodies[0]['ttype'] == 'H'
@@ -118,7 +121,7 @@ def test_std_number_is_centaur() -> None:
 
 def test_std_metis_is_the_asteroid() -> None:
     # MT_LV1 "STD = 9(METIS)": the asteroid 9 Metis, not the satellite of Jupiter
-    bodies = identify_target([_header('4521/w1k10r01t_shf.fits')])
+    bodies = identify_target_dicts([_header('4521/w1k10r01t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '9 Metis'
     assert bodies[0]['ttype'] == 'A'
@@ -126,7 +129,7 @@ def test_std_metis_is_the_asteroid() -> None:
 
 def test_std_wrong_number_right_name() -> None:
     # MT_LV1 "STD = 1 (VESTA)": the name is right, the number is not
-    bodies = identify_target([_header('5175/x2it0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('5175/x2it0101t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '4 Vesta'
     assert bodies[0]['ttype'] == 'A'
@@ -134,7 +137,7 @@ def test_std_wrong_number_right_name() -> None:
 
 def test_std_comet() -> None:
     # MT_LV1 "STD = HARTLEY-2,ACQ = 0.25" names a comet
-    bodies = identify_target([_header('2481/y0rib201t_shf.fits')])
+    bodies = identify_target_dicts([_header('2481/y0rib201t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '103P/Hartley 2'
     assert bodies[0]['ttype'] == 'C'
@@ -147,7 +150,7 @@ def test_std_comet() -> None:
 def test_comet_by_name_b1950_elements() -> None:
     # TARGNAME "COMET-FAYE-1984XI" with B1950 elements in MT_LV1
     pytest.importorskip('palpy')    # for the B1950 -> J2000 element rotation
-    bodies = identify_target([_header('2231/w0sb0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('2231/w0sb0101t_shf.fits')])
     assert len(bodies) == 1
     body = bodies[0]
     assert body['full_name'] == '4P/Faye'
@@ -156,7 +159,7 @@ def test_comet_by_name_b1950_elements() -> None:
 
 
 def test_comet_fragment() -> None:
-    bodies = identify_target([_header('10625/j9fr01010_spt.fits')])
+    bodies = identify_target_dicts([_header('10625/j9fr01010_spt.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '73P/Schwassmann-Wachmann 3-C'
     assert bodies[0]['ttype'] == 'C'
@@ -168,7 +171,7 @@ def test_comet_incompatible_elements_raises() -> None:
     assert 'Q = 1.5933855' in header['MT_LV1_1']
     header['MT_LV1_1'] = header['MT_LV1_1'].replace('Q = 1.5933855', 'Q = 4.78')
     with pytest.raises(TargetIdentificationFailure, match='could not be determined'):
-        identify_target([header])
+        identify_target_dicts([header])
 
 
 def test_comet_by_elements_alone() -> None:
@@ -179,7 +182,7 @@ def test_comet_by_elements_alone() -> None:
     header['TARGNAME'] = 'ZZZZZ'
     del header['TARKEY1']
     del header['TARDESCR']
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert bodies[0]['full_name'] == '4P/Faye'
 
 
@@ -187,13 +190,13 @@ def test_comet_rescued_by_elements_and_name() -> None:
     # Program 2442: the TARGNAME resolves to the wrong comet (an old designation
     # shared with 97P), but the elements plus the name "SHOEMAKER-LEVY" identify
     # C/1991 T2
-    bodies = identify_target([_header('2442/w0yy0201t_shf.fits')])
+    bodies = identify_target_dicts([_header('2442/w0yy0201t_shf.fits')])
     assert bodies[0]['full_name'] == 'C/1991 T2 (Shoemaker-Levy)'
 
 
 def test_element_typo_fixed_by_override() -> None:
     # Program 6841 header had Q=.05320503 (10x too small); the override repairs it
-    bodies = identify_target([_header('6841/u33k0201t_shm.fits')])
+    bodies = identify_target_dicts([_header('6841/u33k0201t_shm.fits')])
     assert bodies[0]['full_name'] == '45P/Honda-Mrkos-Pajdusakova'
 
 
@@ -205,14 +208,14 @@ def test_asteroid_named_pholus_is_centaur() -> None:
     # TARGNAME "1992AD", header says ASTEROID; the body is the Centaur 5145 Pholus and
     # its sky position confirms the identification
     pytest.importorskip('palpy')
-    bodies = identify_target([_header('2432/w0xh0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('2432/w0xh0101t_shf.fits')])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '5145 Pholus'
     assert bodies[0]['ttype'] == 'H'
 
 
 def test_tno() -> None:
-    bodies = identify_target([_header('9110/o6e939010_spt.fits')])
+    bodies = identify_target_dicts([_header('9110/o6e939010_spt.fits')])
     assert bodies[0]['full_name'] == '66652 Borasisi'
     assert bodies[0]['ttype'] == 'T'
 
@@ -221,14 +224,14 @@ def test_dwarf_planet_via_override() -> None:
     # TARG_ID 10545_22 has a TARKEY2 override replacing "KBO-Santa" with "HAUMEA"
     header = _header('10545/j9fs20011_spt.fits')
     assert header['TARG_ID'] == '10545_22'
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert len(bodies) == 1
     assert bodies[0]['full_name'] == '136108 Haumea'
     assert bodies[0]['ttype'] == 'D'
 
 
 def test_arrokoth() -> None:
-    bodies = identify_target([_header('14053/ict101efq_spt.fits')])
+    bodies = identify_target_dicts([_header('14053/ict101efq_spt.fits')])
     assert bodies[0]['full_name'] == '486958 Arrokoth'
     assert bodies[0]['ttype'] == 'T'
 
@@ -251,7 +254,7 @@ def test_asteroid_position_winnow(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr('targets.mpc_tools.mpc_query_by_elements',
                         lambda *args, **kwargs: canned)
 
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert bodies[0]['full_name'] == '66652 Borasisi'
 
 
@@ -259,14 +262,14 @@ def test_pholus_pointing_not_at_body() -> None:
     # Program 7239: RA_TARG is ~68 degrees from where both the header orbit and the
     # catalog put Pholus; the body is still identified from the name and elements
     pytest.importorskip('palpy')
-    bodies = identify_target([_header('7239/n4je09010_spt.fits')])
+    bodies = identify_target_dicts([_header('7239/n4je09010_spt.fits')])
     assert bodies[0]['full_name'] == '5145 Pholus'
 
 
 def test_mislabeled_targname_fixed_by_override() -> None:
     # The 11113_14 entry with its TARGNAME override identifies the body actually observed
     pytest.importorskip('palpy')
-    bodies = identify_target([_header('11113/u9yz1401m_shm.fits')])
+    bodies = identify_target_dicts([_header('11113/u9yz1401m_shm.fits')])
     assert bodies[0]['full_name'] == '(308634) 2005 XU100'
 
 
@@ -274,7 +277,7 @@ def test_revised_orbit_accepted() -> None:
     # (19308) 1996 TO66: the catalog orbit was revised after the observation, so the
     # propagated position misses RA_TARG, but the elements still match; accept
     pytest.importorskip('palpy')
-    bodies = identify_target([_header('8258/o5lk05g2q_spt.fits')])
+    bodies = identify_target_dicts([_header('8258/o5lk05g2q_spt.fits')])
     assert bodies[0]['full_name'] == '(19308) 1996 TO66'
     assert bodies[0]['ttype'] == 'T'
 
@@ -282,10 +285,10 @@ def test_revised_orbit_accepted() -> None:
 def test_comet_rescued_from_wrong_name() -> None:
     # TARGNAME "KUSHIDA" resolves to 144P/Kushida, but the elements identify
     # 147P/Kushida-Muramatsu, whose name also matches
-    bodies = identify_target([_header('8699/u65z7a01r_shm.fits')])
+    bodies = identify_target_dicts([_header('8699/u65z7a01r_shm.fits')])
     assert bodies[0]['full_name'] == '147P/Kushida-Muramatsu'
 
-    bodies = identify_target([_header('8699/u65z7i01r_shm.fits')])
+    bodies = identify_target_dicts([_header('8699/u65z7i01r_shm.fits')])
     assert bodies[0]['full_name'] == 'C/1999 T1 (McNaught-Hartley)'
 
 
@@ -293,7 +296,7 @@ def test_palpy_unavailable_degrades(monkeypatch: pytest.MonkeyPatch) -> None:
     # Without palpy the sky position check is skipped and the element match decides
     monkeypatch.setitem(sys.modules, 'targets.orbital_radec',
                         cast(ModuleType, None))
-    bodies = identify_target([_header('2432/w0xh0101t_shf.fits')])
+    bodies = identify_target_dicts([_header('2432/w0xh0101t_shf.fits')])
     assert bodies[0]['full_name'] == '5145 Pholus'
 
 
@@ -308,7 +311,7 @@ def test_nh_survey_field_override() -> None:
                  '6497/o45001010_spt.fits',      # 6497_1
                  '16183/iedk11dbq_spt.fits',     # 16183_*
                  '12887/ibzx01g4q_spt.fits'):    # 12887_1
-        bodies = identify_target([_header(spec)])
+        bodies = identify_target_dicts([_header(spec)])
         assert len(bodies) == 1
         assert bodies[0]['name'] == 'New Horizons survey field'
         assert bodies[0]['ttype'] == 'T'
@@ -317,7 +320,7 @@ def test_nh_survey_field_override() -> None:
 def test_wildcard_override() -> None:
     # TARG_ID "13633_*" flags every target of program 13633 as a survey field
     header = {'FILENAME': 'x.fits', 'TARG_ID': '13633_5', 'TARGNAME': 'ANY'}
-    bodies = identify_target([header])
+    bodies = identify_target_dicts([header])
     assert len(bodies) == 1
     assert bodies[0]['name'] == 'New Horizons survey field'
 
@@ -325,16 +328,19 @@ def test_wildcard_override() -> None:
 def test_nicknamed_targets_resolved_by_override() -> None:
     # Survey-internal and pre-announcement names mapped to real designations
     pytest.importorskip('palpy')
-    bodies = identify_target([_header('9110/o6e945010_spt.fits')])    # "MINIXENA"
+    bodies = identify_target_dicts([_header('9110/o6e945010_spt.fits')])    # "MINIXENA"
     assert bodies[0]['full_name'] == '55565 Aya'
+    # Found only by the RA/dec element search (no name match); it must still be categorized
+    # (ttype 'M' -> 'T'), not left as a raw minor planet.
+    assert bodies[0]['ttype'] == 'T'
 
     # MT_LV1 is a FILE ephemeris, not a standard-body STD field, so Quaoar is identified
     # through the small-body path in its numbered minor-planet form.
-    bodies = identify_target([_header('9678/j8i701011_spt.fits')])    # "OBJECTX"
+    bodies = identify_target_dicts([_header('9678/j8i701011_spt.fits')])    # "OBJECTX"
     assert bodies[0]['full_name'] == '50000 Quaoar'
     assert bodies[0]['ttype'] == 'T'
 
-    bodies = identify_target([_header('14498/id3t01n9q_spt.fits')])   # "P2010-V-C-OFFSET"
+    bodies = identify_target_dicts([_header('14498/id3t01n9q_spt.fits')])   # "P2010-V-C-OFFSET"
     assert bodies[0]['full_name'] == '332P/Ikeya-Murakami-C'
 
 
@@ -342,7 +348,7 @@ def test_occultation_adds_occulted_star() -> None:
     # Occultation overrides record the occulting body plus the occulted star (an added
     # 'dict'), exercising both the standard-body and small-body extra-body paths.
     def _names(visit: str) -> list[str]:
-        return [b['name'] for b in identify_target([dict(h) for h in _SPT[visit]])]
+        return [b['name'] for b in identify_target_dicts([dict(h) for h in _SPT[visit]])]
 
     saturn = _names('v0qj04')          # 2771: Saturn-rings occultation (standard body)
     assert 'Saturn Rings' in saturn
@@ -364,24 +370,24 @@ def test_no_target_sentinels() -> None:
                  '8800/u69va201r_shm.fits',     # 8800_* (reject)
                  '12537/ibu5110e1_spt.fits'):   # parallel field
         with pytest.raises(TargetIdentificationFailure):
-            identify_target([_header(spec)])
+            identify_target_dicts([_header(spec)])
 
 
 def test_internal_calibration_targnames() -> None:
     # Lamp/calibration exposures (COS "WAVE", FOS "TALED") are not sky targets
     with pytest.raises(TargetIdentificationFailure):
-        identify_target([_header('17780/lfee01fgq_spt.fits')])
+        identify_target_dicts([_header('17780/lfee01fgq_spt.fits')])
     with pytest.raises(TargetIdentificationFailure):
-        identify_target([_header('2569/y11e0c03t_shf.fits')])
+        identify_target_dicts([_header('2569/y11e0c03t_shf.fits')])
     with pytest.raises(TargetIdentificationFailure):
-        identify_target([{'FILENAME': 'x.fits', 'TARGNAME': 'DARK', 'TARG_ID': '1_1'}])
+        identify_target_dicts([{'FILENAME': 'x.fits', 'TARGNAME': 'DARK', 'TARG_ID': '1_1'}])
 
 
 def test_unidentifiable_raises() -> None:
     header = {'FILENAME': 'x.fits', 'TARG_ID': '9999_1', 'TARGNAME': 'XYZZYQ'}
     with pytest.raises(TargetIdentificationFailure,
                        match='No target could be identified'):
-        identify_target([header])
+        identify_target_dicts([header])
 
 
 ##########################################################################################
@@ -438,8 +444,19 @@ def test_parse_mt_lv_drops_free_text() -> None:
     # not be glued onto the value
     header = {'MT_LV1_1': 'STD = SATURN,CML OF SATURN FROM EARTH BETWEEN 0 60'}
     assert _parse_mt_lv(header, 'MT_LV1') == {'STD': 'SATURN'}
-    bodies = identify_target([_header('6854/o4bd04vmq_spt.fits')])
+    bodies = identify_target_dicts([_header('6854/o4bd04vmq_spt.fits')])
     assert bodies[0]['name'] == 'Saturn'
+
+
+def test_identify_targets_returns_context_product_paths(tmp_path: pathlib.Path) -> None:
+    # identify_targets() is identify_target_dicts() followed by get_target_xml_path() on
+    # each completed dict, so it returns the path of each body's context product. Wrap in
+    # an overlay so any generated "_local" product cannot touch the committed cache.
+    with use_local_xml_dir(tmp_path):
+        paths = identify_targets([_header('1080/y0zz0301t_shf.fits')])   # Jupiter
+    assert len(paths) == 1
+    assert paths[0].name.startswith('planet.jupiter')
+    assert paths[0].exists()
 
 
 def test_collect_strings_skips_category() -> None:

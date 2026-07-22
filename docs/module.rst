@@ -2,13 +2,13 @@ API reference
 =============
 
 The importable package is ``targets``. The primary entry point is
-:func:`~targets.identify_target.identify_target`; the remaining modules
+:func:`~targets.identify_targets.identify_target_dicts`; the remaining modules
 implement the stages it orchestrates.
 
 Top-level identification
 -------------------------
 
-.. automodule:: targets.identify_target
+.. automodule:: targets.identify_targets
    :members:
    :member-order: bysource
 

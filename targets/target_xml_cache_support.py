@@ -468,7 +468,9 @@ def new_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None) -> pat
     if xml_path.exists():
         raise FileExistsError(f'File {xml_path} already exists')
 
-    _PDS_TEMPLATE.write(body_dict, xml_path)
+    # The template refers to the body as `target`, so the dictionary is nested under that
+    # key rather than passed as the top-level namespace.
+    _PDS_TEMPLATE.write({'target': body_dict}, xml_path, raise_exceptions=True)
     _update_target_cache(offline=True, warn_on_duplicates=False)    # update the lookup
     return xml_path
 
