@@ -10,7 +10,7 @@ The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `pa
 
 - `targets/` — main package: identification logic (`identify_small_body.py`, `identify_comet.py`, `identify_minor_planet.py`, `standard_bodies.py`, `orbital_radec.py`), data modules (`_STANDARD_BODY_LIST.py`, `_HST_PROGRAM_OVERRIDES.py`, etc.), and subpackages `cometdb/` (comet/centaur DB builders & scrapers) and `mpc_tools/` (MPC packing/queries).
 - `tests/` — pytest tests. Also holds non-pytest fixtures/baselines named in caps (`SPT_TESTS.py`, `SPT_TESTS_OUTPUT.txt`) — these are not collected by pytest.
-- `support/` — maintenance / data-refresh scripts (`update_cometdb.py`, `retrieve_mast_moving_target_spts.py`, `reality_check_radec.py`). Not shipped.
+- `programs/` — maintenance / data-refresh scripts (`update_cometdb.py`, `retrieve_mast_moving_target_spts.py`, `reality_check_radec.py`). Not shipped.
 - `caches/` — on-disk data caches: `COMET_CACHE/`, `MPC_CACHE/`, `TARGET_XML_CACHE/` (committed). Modules find these by repo-relative path, falling back to `./NAME`.
 
 ## Commands
@@ -18,7 +18,7 @@ The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `pa
 - Install dev env: `pip install -e ".[dev]"` (work inside a venv at `./venv`; never system Python).
 - Run all tests: `python -m pytest -q -n auto tests` (xdist, coverage, `--strict-markers` come from pyproject `addopts`; source is `targets`; branch-coverage gate `fail_under = 90`).
 - Single test: `pytest tests/test_orbital_radec.py::test_name`.
-- Type-check: `python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `support/`; it only ever runs on `tests/`.** Don't run mypy against the package.
+- Type-check: `python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `programs/`; it only ever runs on `tests/`.** Don't run mypy against the package.
 - Lint / format: `ruff check` and `ruff format`.
 
 **Do not use `scripts/run-all-checks.sh`, `.github/workflows/run-tests.yml`, or the Sphinx files in `docs/` (`conf.py`, `*.rst`, `Makefile`) as references** — they are stale project-template artifacts pointing at a nonexistent `src/` with literal `REPONAME` names. `pyproject.toml` is the source of truth for tooling. Real documentation is `README.md` and the Markdown files in `docs/` (`how-it-works.md`, `handling-identification-failures.md`, `data-and-caches.md`) — keep these in sync with behavior changes.
@@ -36,5 +36,5 @@ The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `pa
 
 - `caches/SPT_CACHE` is a **symlink to an external SSD** (`/Volumes/Data-SSD/SPT_CACHE`) and is gitignored — SPT-based work fails unless that volume is mounted.
 - `palpy` (SLALIB/PAL astrometry, used by `orbital_radec.py`) needs a C build; `test_orbital_radec.py` does `pytest.importorskip("palpy")`.
-- Scrapers in `cometdb/` and `support/` hit external services (MPC, JPL Horizons, MAST) — only when those scripts run, never at import.
+- Scrapers in `cometdb/` and `programs/` hit external services (MPC, JPL Horizons, MAST) — only when those scripts run, never at import.
 - Logging uses `rms-pdslogger` (imported as `pdslogger`); name transliteration uses `anyascii` (not `unidecode`).

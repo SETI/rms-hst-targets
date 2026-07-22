@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# support/retrieve_mast_moving_target_spts.py
+# programs/retrieve_mast_moving_target_spts.py
 ##########################################################################################
 """Retrieve HST target files (SPT/SHM/SHF/DMF) for every moving-target observation.
 

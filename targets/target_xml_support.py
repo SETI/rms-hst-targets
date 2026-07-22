@@ -1,5 +1,5 @@
 ##########################################################################################
-# targets/xml_support.py
+# targets/target_xml_support.py
 ##########################################################################################
 
 import anyascii
@@ -8,6 +8,8 @@ from targets._utils          import categorize_minor_planet
 from targets.cometdb         import comet_lookup
 from targets.roman           import int_to_roman
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
+from targets.target_xml_cache_support import (new_target_xml_dict, target_xml_dict,
+                                              target_xml_path, update_target_xml_dict)
 from targets.targettype      import TargetType
 
 _LID_PREFIX = 'urn:nasa:pds:context:target:'
@@ -129,6 +131,39 @@ def _complete_target(target, ttypes=''):
         target['description'] = '\n'.join(desc)
 
     return target
+
+
+def get_target_xml_path(target, logger=None):
+    """The cached directory path containing the content of the given target dictionary.
+    """
+
+    for key in [target['lid_tail'], target['title']] + target['alt_titles']:
+        xml_path = target_xml_path(key)
+        if xml_path is not None:
+            break
+
+    # If this target has no pre-existing context product
+    if xml_path is None:
+        return new_target_xml_dict(target, logger=logger)
+
+    # Check for a conflict
+    xml_dict = target_xml_dict(key)
+    for key in ('lid_tail', 'title', 'ttype'):
+        if xml_dict[key] != target[key]:
+            logger and logger.warning(f'Target context XML mismatch at "{key}" in '
+                                      f'{xml_dict["xml_path"].name}: '
+                                      f'{target[key]!r}, {xml_dict[key]!r}')
+            logger and logger.warning('Pre-existing target XML file used', xml_path)
+
+    # Investigate alt_titles
+    new_alts = set(target['alt_titles'])
+    old_alts = set(xml_dict['alt_titles'])
+    if new_alts == old_alts:
+        return xml_path  # no conflict
+
+    diff = old_alts - new_alts
+    if diff:
+        return update_target_xml_dict(target, logger=logger)
 
 
 ##########################################################################################

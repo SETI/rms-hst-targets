@@ -3,7 +3,7 @@
 The identification pipeline runs almost entirely from local data: curated
 Python tables inside `targets/`, and on-disk caches under `caches/`. Network
 access happens only as a fallback (MPC lookups for uncached objects) or when
-the maintenance scripts in `support/` are run explicitly — never at import.
+the maintenance scripts in `programs/` are run explicitly — never at import.
 
 ## Cache directories
 
@@ -91,7 +91,7 @@ narrowing the search window, then ranks the returned bodies by
 A mirror of the PDS4 target context products from
 `https://pds.nasa.gov/data/pds4/context-pds4/target/`, plus a pickled
 name-lookup index (`$LOOKUP.pickle`). Maintained by
-`support/update_target_xml_cache.py`, which downloads new products, removes
+`programs/update_target_xml_cache.py`, which downloads new products, removes
 superseded versions, and rebuilds the index. To stage a product locally
 before it exists remotely, name it with a `_local` suffix before `.xml`.
 
@@ -111,7 +111,7 @@ fixing identification failures — see the
 | `_DISALLOWED_MINOR_PLANET_NAMES.py` | Names reserved for satellites/comets that must not match asteroids |
 | `_STANDARD_BODY_LIST.py` | Planets, satellites, dwarf planets, systems, rings, torus — names, numbers, NAIF IDs, aliases |
 
-## Maintenance scripts in `support/`
+## Maintenance scripts in `programs/`
 
 Not shipped with the package; all are run directly with Python and accept
 `--help`.

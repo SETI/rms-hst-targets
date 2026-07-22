@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# support/update_target_xml_cache.py
+# programs/update_target_xml_cache.py
 ##########################################################################################
 """
 .. update_target_xml_cache:
@@ -46,10 +46,13 @@ PARSER = argparse.ArgumentParser(
            '"_local" suffix, appears at the Engineering Node.')
 
 PARSER.add_argument('--debug', '-d', action='store_true',
-                    help='see warnings about duplicated aliases.')
+                    help='See warnings about duplicated aliases.')
 
 PARSER.add_argument('--rebuild', '-r', action='store_true',
-                    help='rebuild the index even if the cache is up to date.')
+                    help='Rebuild the index even if the cache is up to date.')
+
+PARSER.add_argument('--offline', '-o', action='store_true',
+                    help='Do not check the Engineering Node; just rebuild the index.')
 
 PARSER.add_argument('--quiet', '-q', action='store_true',
                     help='Do not log to the terminal.')
@@ -71,7 +74,7 @@ def main():
     if args.log:
         logger.add_handler(pdslogger.file_handler(args.log, rotation='none'))
 
-    _update_target_cache(logger=logger, rebuild=args.rebuild)
+    _update_target_cache(logger=logger, rebuild=args.rebuild, offline=args.offline)
 
 
 if __name__ == '__main__':

@@ -7,10 +7,10 @@ and `logical identifier`. Small bodies are also keyed by any of their standard
 designations, whether or not they appear in the XML file as an `alternate_title`. Keys
 appear in their given case and also in upper case.
 
-The dictionary returns the full path to the target context XML file (latest version), or
-to a list of paths if there is more than one.
+The dictionary returns the basename of the most recent version of the context XML file.
 """
 
+import datetime
 import pathlib
 import pickle
 import re
@@ -19,18 +19,26 @@ import anyascii
 import lxml.etree
 import requests
 from pdslogger import PdsLogger
+from pdstemplate import PdsTemplate
 
+from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets.remote_listdir import remote_listdir
-from targets.targettype     import TargetType
+from targets.targettype import TargetType
 
 
 _TARGET_URL = 'https://pds.nasa.gov/data/pds4/context-pds4/target/'
 _TARGET_XML_CACHE = pathlib.Path(__file__).parent.parent / 'caches/TARGET_XML_CACHE'
-_TARGET_DICT_BASENAME = '$LOOKUP.pickle'
-_TARGET_DICT_PATH = _TARGET_XML_CACHE / _TARGET_DICT_BASENAME
-_BASENAME_SPLITTER = re.compile(r'(.*)_(\d\.\d)(|_local)\.xml$')
+_TARGET_LOOKUP_BASENAME = '$LOOKUP.pickle'
+_TARGET_LOOKUP_PATH = _TARGET_XML_CACHE / _TARGET_LOOKUP_BASENAME
 
-_TARGET_XML_DICT = None   # filled in lazily
+_BASENAME_SPLITTER = re.compile(r'(.*)_(\d)\.(\d)(|_local)\.xml$')
+_XMLNS = re.compile(r'\s*(?:xmlns|xsi)(?:|:\w+)\s*=\s*"[^"]+"')
+
+_TARGET_XML_LOOKUP = None   # filled in lazily
+
+_TEMPLATE_BASENAME = 'TARGET_LABEL_1.0.xml'
+_TEMPLATE_PATH = pathlib.Path(__file__).parent.parent / 'templates' / _TEMPLATE_BASENAME
+_PDS_TEMPLATE = None        # filled in lazily
 
 
 def target_xml_lookup() -> dict:
@@ -38,235 +46,20 @@ def target_xml_lookup() -> dict:
     lid.
     """
 
-    global _TARGET_XML_DICT
+    global _TARGET_XML_LOOKUP
 
-    if _TARGET_XML_DICT is None:
-        with open(_TARGET_DICT_PATH, 'rb') as f:
-            _TARGET_XML_DICT = pickle.load(f)
+    if _TARGET_XML_LOOKUP is None:
+        with open(_TARGET_LOOKUP_PATH, 'rb') as f:
+            _TARGET_XML_LOOKUP = pickle.load(f)
 
-    return _TARGET_XML_DICT
-
-
-def write_target_xml_lookup(lookup: dict):
-    """Write the target context lookup dictionary."""
-
-    global _TARGET_XML_DICT
-
-    with open(_TARGET_DICT_PATH, 'wb') as f:
-        pickle.dump(lookup, f)
-
-    _TARGET_XML_DICT = lookup
+    return _TARGET_XML_LOOKUP
 
 
-def _update_target_cache(*, logger: PdsLogger | None = None, rebuild: bool = False):
-    """Update the target cache.
-
-    Parameters:
-        logger: Logger to use.
-        rebuild: True to rebuild the index even if no files have changed.
-    """
-
-    global _TARGET_XML_DICT
-
-    # Check the local context products
-    logger and logger.info(f'Checking local targets: {_TARGET_XML_CACHE}')
-    local_basenames = set(p.name for p in _TARGET_XML_CACHE.iterdir())
-    local_basenames.remove(_TARGET_DICT_BASENAME)
-
-    # Get the list of remote context products
-    logger and logger.info(f'Checking remote targets: {_TARGET_URL}')
-    remote_info = remote_listdir(_TARGET_URL, logger=logger, verbose=False)
-    remote_basenames = set(t[0] for t in remote_info)
-
-    # Delete deprecated local files
-    sorted_basenames = list(local_basenames)
-    sorted_basenames.sort()
-    for basename in sorted_basenames:
-        if basename.endswith('_local.xml'):
-            continue
-        if basename not in remote_basenames:
-            if basename.endswith('.xml'):
-                logger and logger.info('Deprecated file removed', basename)
-            else:
-                logger and logger.info('Extraneous file removed', basename)
-            (_TARGET_XML_CACHE / basename).unlink()
-
-    # Replace files updated remotely
-    updates = 0
-    remote_basenames = _latest_basenames(remote_basenames)
-    remote_basenames.sort()
-    for basename in remote_basenames:
-        if basename in local_basenames:
-            continue
-
-        updates += 1
-
-        # Retrieve remote content
-        url = _TARGET_URL + basename
-        logger and logger.info('Retrieving', basename)
-        try:
-            request = requests.get(url, allow_redirects=True, timeout=60)
-        except requests.RequestException as e:
-            logger and logger.error(f'Unable to retrieve {basename}: {e}')
-            continue
-        if request.status_code != 200:
-            logger and logger.error(f'Response {request.status_code} received', basename)
-            continue
-
-        # Remove old versions of this target from local cache
-        # This will also remove the _local.xml file if the remote copy is the same version
-        lid, vid, _ = _BASENAME_SPLITTER.match(basename).groups()
-        for old_version in _TARGET_XML_CACHE.glob(lid + '_*.xml'):
-            _, old_vid, suffix = _BASENAME_SPLITTER.match(old_version.name).groups()
-            if old_vid > vid and suffix:    # if local update is still newer
-                continue
-            logger and logger.debug('Superseded file removed', old_version)
-            old_version.unlink()
-
-        # Save the local version to the cache
-        (_TARGET_XML_CACHE / basename).write_bytes(request.content)
-
-    # Summarize local updates
-    for basename in sorted_basenames:
-        if basename.endswith('_local.xml') and (_TARGET_XML_CACHE / basename).exists():
-            logger and logger.info('Local update retained', basename)
-
-    if not updates:
-        logger and logger.info('Target cache is up to date')
-
-    if not (updates or rebuild):
-        logger and logger.blankline()
-        return
-
-    # Re-index...
-    logger and logger.info('Rebuilding index', _TARGET_DICT_BASENAME)
-
-    # Determine which local copies still supersede the remote versions
-    local_updates = {b for b in local_basenames if b.endswith('_local.xml')}
-    local_updates = {b for b in local_updates if (_TARGET_XML_CACHE / b).exists()}
-    # ^This filters out the local versions that were just superseded
-
-    local_update_dict = {_BASENAME_SPLITTER.match(b).group(1): b for b in local_updates}
-
-    # lookup_by_name[title, alias, or lid] -> context file basename or list if multiple
-    lookup_by_name = {}
-    for basename in remote_basenames:
-        key, version, suffix = _BASENAME_SPLITTER.match(basename).groups()
-        basename = local_update_dict.get(key, basename)  # use "_local" basename if any
-
-        tree = _get_etree(_TARGET_XML_CACHE / basename)
-        title = tree.xpath('//title')[0].text
-        alts = {node.text for node in tree.xpath('//alternate_title')}
-        lid = tree.xpath('//logical_identifier')[0].text
-        lid_tail = lid.rpartition(':')[-1]
-        keys = _lookup_keys(title, alts, lid_tail)
-        for key in keys:
-            if key in lookup_by_name:
-                other = lookup_by_name[key]
-                if isinstance(other, list):
-                    other.append(basename)
-                    first = other[0]
-                else:
-                    lookup_by_name[key] = [other, basename]
-                    first = other
-                logger.debug(f'Duplicated target "{key}": {first}, {basename}')
-            else:
-                lookup_by_name[key] = basename
-
-    # Save the dictionaries as a pickle file
-    write_target_xml_lookup(lookup_by_name)
-    logger and logger.info('Index rebuilt', _TARGET_DICT_BASENAME)
-
-
-def _latest_basenames(basenames: list[str]) -> str:
-    """Filter out all but the latest version of each target context file.
-
-    Also remove any "collection_target" files, which can appear in the online directory.
-    """
-
-    # Remove "collection_target" files, deprecated files, and anything not ending in .xml
-    basenames = [b for b in basenames if b.endswith('.xml')]
-    basenames = [b for b in basenames if not b.endswith('_deprecated.xml')]
-    basenames = [b for b in basenames if not b.startswith('collection_target')]
-    basenames = [b for b in basenames if not b.startswith('Collection_target')]
-
-    # Example basename: dwarf_planet.136108_haumea_1.2.xml
-    version_dict = {}
-    for basename in basenames:
-        lid = _BASENAME_SPLITTER.match(basename).group(1)
-        version_dict.setdefault(lid, []).append(basename)
-
-    latest = []
-    for lid, version_list in version_dict.items():
-        version_list.sort()
-        latest.append(version_list[-1])
-
-    return latest
-
-
-# MPNAME: Matches a name including diacritics, apostrophes and internal dashes; no digits
-# or spaces. Note that "[^\W\d_]" only matches letters but they can have diacritics.
-# Dashes cannot appear at the beginning or end.
-_MPNAME = r"(?:[^\W\d_]|['`]){3,}"  # at least 3 letters
-
-# Comet names can have spaces but no punctuation at end
-_CNAME = r"(?:[^\W\d_]|['`])(?:[^\W\d_]|['` -])*(?:[^\W\d_])"
-
-_MP_NUMBER_DESIG = re.compile(r'\((\d+)\) ([12]\d\d\d [A-HJ-Y][A-HJ-Z]\d*)$')
-_MP_NUMBER_SURVEY = re.compile(r'\((\d+)\) (\d\d\d\d (?:P-L|T-[123]))$')
-_MP_NUMBER_NAME = re.compile(rf'\(?(\d+)\)? ({_MPNAME})$')
-
-_C_PREFIX_NAME_FRAG = re.compile(rf'(\d+[CPDXI])/{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
-_C_NAME = re.compile(rf'{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
-
-
-def _lookup_keys(title: str, alts: list[str], lid_tail: str) -> list[str]:
-
-    category = lid_tail.split('.')[0]
-
-    old_keys = {title} | alts
-    new_keys = old_keys.copy()
-
-    if category in {'asteroid', 'centaur', 'comet', 'dwarf_planet',
-                    'trans-neptunian_object'}:
-        # Split number from name or designation
-        for key in old_keys:
-            for regex in (_MP_NUMBER_DESIG, _MP_NUMBER_SURVEY, _MP_NUMBER_NAME):
-                match = regex.match(key)
-                if match:
-                    new_keys |= set(match.groups())
-                    break
-
-    elif category == 'comet':
-        # Append fragment to designation if name intervenes
-        for key in old_keys:
-            match = _C_PREFIX_NAME_FRAG.match(key)
-            if match:
-                new_keys.add(match.group(1) + '-' + match.group(2))
-
-    new_keys |= {anyascii.anyascii(key).replace('`', "'") for key in new_keys}
-    new_keys |= {key.upper() for key in new_keys}
-
-    return new_keys
-
-
-_XMLNS = re.compile(r'\s*(?:xmlns|xsi)(?:|:\w+)\s*=\s*"[^"]+"')
-
-
-def _get_etree(xml_path: str) -> lxml.etree._Element:
-    """The content of the given XML file as an etree; header and namespaces stripped."""
-
-    content = pathlib.Path(xml_path).read_text()
-    content = content.rpartition('?>')[-1].lstrip()
-    content = ''.join(_XMLNS.split(content))
-    return lxml.etree.fromstring(content)
-
-
-def read_target_xml(key: str) -> dict | None:
+def target_xml_dict(key: str) -> dict | None:
     """Return a target dictionary containing the core content of a target XML file.
 
     Parameters:
-        key: Any key defining the body, as found in the LOOKUP dictionary.
+        key: Any key defining the body, as found in the `$LOOKUP` dictionary.
 
     Returns:
         A dictionary containing keys "lid", "lid_tail", "version_id", "title",
@@ -279,8 +72,45 @@ def read_target_xml(key: str) -> dict | None:
     except KeyError:
         return None
 
-    xml_path = _TARGET_XML_CACHE / basename
-    tree = _get_etree(xml_path)
+    return _read_target_xml_dict(_TARGET_XML_CACHE / basename)
+
+
+def target_xml_path(key: str) -> dict | None:
+    """Return the XML path for the lookup key.
+
+    Parameters:
+        key: Any key defining the body, as found in the `$LOOKUP` dictionary.
+
+    Returns:
+        A Path if the key is found; None otherwise.
+    """
+
+    try:
+        basename = target_xml_lookup()[key.upper()]
+    except KeyError:
+        return None
+
+    return _TARGET_XML_CACHE / basename
+
+
+def _read_target_xml_dict(xml_path: str | pathlib.Path) -> dict | None:
+    """Return a target dictionary containing the core content of a target XML file.
+
+    Parameters:
+        xml_path: Path to the XML file.
+
+    Returns:
+        A dictionary containing keys "lid", "lid_tail", "version_id", "title",
+        "alt_titles", "type_name", "ttype", "description", and "xml_path". None if there
+        is no existing XML file for this body.
+    """
+
+    xml_path = pathlib.Path(xml_path)
+    content = pathlib.Path(xml_path).read_text()
+    content = content.rpartition('?>')[-1].lstrip()
+    content = ''.join(_XMLNS.split(content))
+    tree = lxml.etree.fromstring(content)
+
     target_dict = {
         'lid': tree.xpath('//logical_identifier')[0].text,
         'version_id': tree.xpath('//version_id')[0].text,
@@ -303,6 +133,366 @@ def read_target_xml(key: str) -> dict | None:
     return target_dict
 
 
-__all__ = ['target_xml_lookup', 'read_target_xml', 'write_target_xml_lookup']
+##########################################################################################
+# Cache management
+##########################################################################################
+
+
+def _update_target_cache(*, logger: PdsLogger | None = None,
+                         rebuild: bool = False,
+                         offline: bool = False,
+                         warn_on_duplicates: bool = True):
+    """Update the target cache.
+
+    Parameters:
+        logger: Logger to use.
+        rebuild: True to rebuild the index even if no files have changed.
+        offline: True to prevent a check of the Engineering Node; this option can be used
+            to add a "_local" file and/or rebuild the cache without Internet access.
+        warn_on_duplicates: True to issue a warning about duplicate aliases; False to
+            suppress these warnings.
+    """
+
+    if offline:
+        rebuild = True
+
+    # Check the local context products
+    logger and logger.info(f'Checking local targets: {_TARGET_XML_CACHE}')
+    local_basenames = set(p.name for p in _TARGET_XML_CACHE.iterdir())
+    local_basenames.remove(_TARGET_LOOKUP_BASENAME)
+
+    if not offline:
+        # Get the list of remote XML files
+        logger and logger.info(f'Checking remote targets: {_TARGET_URL}')
+        remote_info = remote_listdir(_TARGET_URL, logger=logger, verbose=False)
+        remote_basenames = sorted(t[0] for t in remote_info)
+
+        # Merge the lists of local and remote basenames
+        merged_basenames = set(local_basenames) | set(remote_basenames)
+
+        # Identify and retrieve the latest versions
+        latest_basenames = _latest_basenames(merged_basenames)
+
+        updates = 0
+        for basename in latest_basenames:
+            if basename in local_basenames:
+                continue
+
+            # Retrieve remote content
+            url = _TARGET_URL + basename
+            logger and logger.info('Retrieving', basename)
+            try:
+                request = requests.get(url, allow_redirects=True, timeout=60)
+            except requests.RequestException as err:
+                logger and logger.error(f'Unable to retrieve {basename}: {err}')
+                continue
+
+            if request.status_code == 200:
+                # Save this file to the cache
+                (_TARGET_XML_CACHE / basename).write_bytes(request.content)
+                updates += 1
+            else:
+                logger and logger.error(f'Response {request.status_code} received',
+                                        basename)
+
+        # Remove local copies of old versions
+        local_basenames = [p.name for p in _TARGET_XML_CACHE.iterdir()]
+        local_basenames.sort()
+
+        latest_basenames = set(_latest_basenames(local_basenames))
+        for basename in local_basenames:
+            if basename.endswith('.xml') and basename not in latest_basenames:
+                logger and logger.debug('Superseded file removed', basename)
+                (_TARGET_XML_CACHE / basename).unlink()
+
+        # Summarize local updates
+        for basename in local_basenames:
+            if (basename.endswith('_local.xml')
+                    and (_TARGET_XML_CACHE / basename).exists()):
+                logger and logger.info('Local update retained', basename)
+
+        if not updates:
+            logger and logger.info('Target cache is up to date')
+
+        if not (updates or rebuild):
+            logger and logger.blankline()
+            return
+
+    else:
+        remote_basenames = [b for b in local_basenames if not b.endswith('_local.xml')]
+
+    # Re-index...
+    logger and logger.info('Rebuilding target cache index', _TARGET_LOOKUP_BASENAME)
+
+    # lookup_by_name[title, alias, or lid] -> context file basename
+    # ambiguous keys are removed
+    lookup = {}
+    duplicates = set()
+    for basename in local_basenames:
+        if not basename.endswith('.xml'):
+            continue
+        body_dict = _read_target_xml_dict(_TARGET_XML_CACHE / basename)
+        keys = _lookup_keys(body_dict)
+        for key in keys:
+            if key in lookup:
+                duplicates.add(key)
+                if warn_on_duplicates:
+                    logger.warning(f'Duplicate key "{key}" ignored: {lookup[key]}, '
+                                   f'{basename}')
+            else:
+                lookup[key] = basename
+
+    for key in duplicates:
+        del lookup[key]
+
+    # Add uppercase versions of all keys
+    lookup.update({key.upper(): value for key, value in lookup.items()})
+
+    # Save the dictionary as a pickle file
+    _write_target_xml_lookup(lookup)
+    logger and logger.info('Index rebuilt', _TARGET_LOOKUP_BASENAME)
+
+
+def _latest_basenames(basenames: list[str] | set[str]) -> str:
+    """Filter out all but the latest version of each target context file.
+
+    Also remove any "collection_target" files, which can appear in the online directory.
+    """
+
+    # Remove "collection_target" files, deprecated files, and anything not ending in .xml
+    basenames = [b for b in basenames if b.endswith('.xml')]
+    basenames = [b for b in basenames if not b.endswith('_deprecated.xml')]
+    basenames = [b for b in basenames if not b.startswith('collection_target')]
+    basenames = [b for b in basenames if not b.startswith('Collection_target')]
+
+    # Example basename: dwarf_planet.136108_haumea_1.2.xml
+    version_dict = {}
+    for basename in basenames:
+        lid = _BASENAME_SPLITTER.match(basename).group(1)
+        version_dict.setdefault(lid, []).append(basename)
+
+    latest = []
+    for lid, version_list in version_dict.items():
+        version_list.sort(key=_sort_key)
+        latest.append(version_list[-1])
+
+    latest.sort()   # return in alphabetical order
+    return latest
+
+
+# MPNAME: Matches a name including diacritics, apostrophes and internal dashes; no digits
+# or spaces. Note that "[^\W\d_]" only matches letters but they can have diacritics.
+# Dashes cannot appear at the beginning or end.
+_MPNAME = r"(?:[^\W\d_]|['`]){3,}"  # at least 3 letters
+
+# Comet names can have spaces but no punctuation at end
+_CNAME = r"(?:[^\W\d_]|['`])(?:[^\W\d_]|['` -])*(?:[^\W\d_])"
+
+_MP_NUMBER_DESIG = re.compile(r'\((\d+)\) ([12]\d\d\d [A-HJ-Y][A-HJ-Z]\d*)$')
+_MP_NUMBER_SURVEY = re.compile(r'\((\d+)\) (\d\d\d\d (?:P-L|T-[123]))$')
+_MP_NUMBER_NAME = re.compile(rf'\(?(\d+)\)? ({_MPNAME})$')
+
+_C_PREFIX_NAME_FRAG = re.compile(rf'(\d+[CPDXI])/{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
+_C_NAME = re.compile(rf'{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
+
+
+def _lookup_keys(body_dict: dict) -> list[str]:
+
+    old_keys = set([body_dict['title'], body_dict['lid_tail']] + body_dict['alt_titles'])
+    new_keys = old_keys.copy()
+
+    if body_dict['ttype'] in TargetType.MCODES:
+        # Split number from name or designation
+        for key in old_keys:
+            for regex in (_MP_NUMBER_DESIG, _MP_NUMBER_SURVEY, _MP_NUMBER_NAME):
+                match = regex.match(key)
+                if match:
+                    new_keys |= set(match.groups())
+                    break
+
+        new_keys = {k for k in new_keys if k not in _DISALLOWED_MINOR_PLANET_NAMES}
+
+    elif body_dict['ttype'] == TargetType.COMET:
+        # Append fragment to designation if name intervenes
+        for key in old_keys:
+            match = _C_PREFIX_NAME_FRAG.match(key)
+            if match:
+                new_keys.add(match.group(1) + '-' + match.group(2))
+
+    new_keys |= {anyascii.anyascii(key).replace('`', "'") for key in new_keys}
+    return new_keys
+
+
+def _write_target_xml_lookup(lookup: dict):
+    """Write the target context lookup dictionary."""
+
+    global _TARGET_XML_LOOKUP
+
+    with open(_TARGET_LOOKUP_PATH, 'wb') as f:
+        pickle.dump(lookup, f)
+
+    _TARGET_XML_LOOKUP = lookup
+
+
+def _sort_key(basename):
+    """Guarantees that basenames sort by increasing version even for x.9 -> x.10, and that
+    "_local.xml" comes before ".xml".
+    """
+
+    match = _BASENAME_SPLITTER.match(basename)
+    return (match.group(1), match.group(2), match.group(3), 0 if match.group(4) else 1)
+
+
+##########################################################################################
+# Target XML writers
+##########################################################################################
+
+def new_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None) -> pathlib.Path:
+    """Write a new target XML file into the cache; update the lookup.
+
+    Returns the path to the new file.
+    """
+
+    global _PDS_TEMPLATE
+
+    basename = f'{body_dict["lid_tail"]}_1.0_local.xml'
+    logger and logger.info('Writing new target context file: ', basename)
+    if _PDS_TEMPLATE is None:
+        _PDS_TEMPLATE = PdsTemplate(_TEMPLATE_PATH, xml=True)
+
+    xml_path = _TARGET_XML_CACHE / basename
+    if xml_path.exists():
+        raise FileExistsError(f'File {xml_path} already exists')
+
+    _PDS_TEMPLATE.write(body_dict, xml_path)
+    _update_target_cache(offline=True, warn_on_duplicates=False)    # update the lookup
+    return xml_path
+
+
+_ALT_TITLE = re.compile(r'(.*\n)'
+                        r'(\s*<Alias>\s*<alternate_title>)'
+                        r'(.*?)'
+                        r'(</alternate_title>\s*</Alias>\s*\n)'
+                        r'(.*)', re.DOTALL)
+
+_ALT_TITLE2 = re.compile(r'(.*?</product_class>\s*\n)'  # if Alias_List is absent
+                         r'(\s*?)'
+                         r'(<Modification_History>.*)', re.DOTALL)
+
+_MOD_DETAIL = re.compile(r'(.*?\n)'
+                         r'(\s*<Modification_Detail>\s*<modification_date>)'
+                         r'(.*?)'
+                         r'(</modification_date>\s*<version_id>)'
+                         r'(\d+)\.(\d+)'
+                         r'(</version_id>\s*<description>)'
+                         r'(.*?)'
+                         r'(\s*</description>\s*</Modification_Detail>\s*\n)'
+                         r'(.*)', re.DOTALL)
+
+_DESCRIPTION = re.compile(r'(.*\s<Target>.*\n)'
+                          r'(\s*)'
+                          r'<description>'
+                          r'(.*)'
+                          r'</description>\s*\n'
+                          r'(.*)', re.DOTALL)
+
+_VERSION_ID = re.compile(r'(.*?\n\s*<version_id>)'
+                         r'(\d+)\.(\d+)'
+                         r'(.*)', re.DOTALL)
+
+
+def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
+    """Write a new local XML file with and augmented list of aliases, possibly a new
+    description, and an updated modification history.
+
+    Returns the Path to the new file.
+
+    This function is designed to preserve the format and prior content of the existing
+    file. The version number is incremented by 0.1.
+    """
+
+    # Get the current body content
+    for key in [body_dict['lid_tail'], body_dict['title']] + body_dict['alt_titles']:
+        xml_path = target_xml_path(key)
+        if xml_path is not None:
+            break
+
+    if xml_path is None:
+        raise FileNotFoundError(f'XML file not found for {body_dict["lid_tail"]}')
+
+    content = xml_path.read_text()
+    xml_dict = _read_target_xml_dict(xml_path)
+    xml_titles = set([xml_dict['title']] + xml_dict['alt_titles'])
+
+    # Insert the new Aliases
+    titles = [body_dict['title']] + body_dict['alt_titles']
+    new_aliases = [t for t in titles if t not in xml_titles]
+    logger and logger.info(f'Inserting new aliases: {new_aliases}')
+
+    match = _ALT_TITLE.match(content)
+    if match:
+        (before, temp1, last_alt_title, temp2, after) = match.groups()
+        new_content = [before, temp1, last_alt_title, temp2]
+        for alt in new_aliases:
+            new_content += [temp1, alt, temp2]
+        new_content += [after]
+    else:
+        match = _ALT_TITLE2.match(content)
+        (before, indent, after) = match.groups()
+        new_content = [before, indent, '<Alias_List>\n']
+        for alt in new_aliases:
+            new_content += [indent, '  <Alias>\n', indent, '    <alternate_title>', alt,
+                            '</alternate_title>\n', indent, '  </Alias>\n']
+        new_content += [indent, '</Alias_List>\n', indent, after]
+    content = ''.join(new_content)
+
+    # Update the Target description if absent
+    new_desc = False
+    if body_dict.get('description'):
+        match = _DESCRIPTION.match(content)
+        (before, indent, desc, after) = match.groups()
+        if desc.strip() in ('', 'none'):
+            new_desc = True
+            logger and logger.info('Inserting new description')
+            new_content = [before, indent, '<description>\n']
+            for text in body_dict['description']:
+                new_content += [indent, '  ', text, '\n']
+            new_content += [indent, '</description>\n', after]
+        content = ''.join(new_content)
+
+    # Insert the new Modification_Detail
+    match = _MOD_DETAIL.match(content)
+    (before, temp1, mod_date, temp2, v1, v2, temp3, desc, temp4, after) = match.groups()
+    new_version = f'{v1}.{int(v2) + 1}'
+    new_content = [before,
+                   temp1, datetime.date.today().isoformat(),
+                   temp2, new_version,
+                   temp3, 'Additional <alternate_title>',
+                   ('s' if len(new_aliases) > 1 else ''),
+                   (', new <description>.' if new_desc else '.'),
+                   temp4,
+                   temp1, mod_date, temp2, v1, '.', v2, temp3, desc, temp4, after]
+    content = ''.join(new_content)
+
+    # Update the version_id
+    match = _VERSION_ID.match(content)
+    (before, v1, v2, after) = match.groups()
+    new_content = [before, new_version, after]
+    content = ''.join(new_content)
+
+    # Write the new file
+    new_path = str(xml_path).replace('_local.xml', '.xml')
+    new_path = new_path.replace(f'{v1}.{v2}.xml', f'{new_version}_local.xml')
+    new_path = pathlib.Path(new_path)
+    if new_path.exists():
+        raise FileExistsError(f'File {new_path} already exists')
+
+    new_path.write_text(content)
+    _update_target_cache(offline=True, warn_on_duplicates=False)    # update the lookup
+    return new_path
+
+
+__all__ = ['new_target_xml_dict', 'target_xml_dict', 'target_xml_lookup',
+           'target_xml_path', 'update_target_xml_dict']
 
 ##########################################################################################

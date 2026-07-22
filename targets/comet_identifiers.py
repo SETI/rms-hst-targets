@@ -95,17 +95,19 @@ def comet_identifiers(strings, *, logger=None):
         if key in parent_keys:
             del comets[key]
 
-    # Log the result
+    comets = list(comets.values())
+
+    # Log the results
+    names = [c['name'] for c in comets]
     if len(comets) == 1:
-        logger and logger.info(f'Comet identified: {comets[0]["name"]!r}')
+        logger and logger.info(f'Comet identified: {names[0]!r}')
     else:
-        names = [c['name'] for c in comets.values()]
         logger and logger.info(f'Multiple comets identified: {names}')
     if unused:
         logger and logger.info(f'Unused strings: {unused}')
 
     # Return the list of matches
-    return list(comets.values()), used, unused, True
+    return comets, used, unused, True
 
 
 _NUM   = r'(?:[1-9]\d*)'

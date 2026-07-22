@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# support/reality_check_radec.py
+# programs/reality_check_radec.py
 ##########################################################################################
 """Reality-check RA_TARG/DEC_TARG in tests/SPT_TESTS.py against a two-body
 propagation of the orbital elements stored in the MT_LV1_* keywords.
@@ -18,7 +18,7 @@ convention, so a correct entry should reproduce RA_TARG to ~arcsec.  Large
 offsets flag suspect header values, mis-entered elements, or frame issues
 (e.g. B1950 elements, which orbital_radec does not precess).
 
-Run:  python support/reality_check_radec.py [--asteroids] [--comets] [-o FILE]
+Run:  python programs/reality_check_radec.py [--asteroids] [--comets] [-o FILE]
 By default both asteroids and comets are checked; pass --asteroids or --comets to
 restrict to one type.
 """

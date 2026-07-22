@@ -1,16 +1,17 @@
 ##########################################################################################
-# tests/test_xml_support.py
+# tests/test_target_xml_support.py
 ##########################################################################################
-"""Tests for targets.xml_support: filling in the PDS-context fields (title, LID, parent,
-alt_titles, description) of a target dictionary produced by the identification code.
+"""Tests for targets.target_xml_support: filling in the PDS-context fields (title, LID,
+parent, alt_titles, description) of a target dictionary produced by the identification
+code.
 """
 
 import copy
 from typing import Any
 
 from targets.standard_bodies import STANDARD_BODY_DICT
+from targets.target_xml_support import _complete_target, _lid_tail
 from targets.targettype import TargetType
-from targets.xml_support import _complete_target, _lid_tail
 
 
 def _body(key: str) -> dict[str, Any]:

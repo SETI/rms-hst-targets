@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# support/build_spt_tests.py
+# programs/build_spt_tests.py
 ##########################################################################################
 """Build a Python module of unique HST target descriptions from the SPT cache, organized
 by visit.

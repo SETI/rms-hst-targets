@@ -52,7 +52,7 @@ See the documentation in [`docs/`](docs/):
   — the developer's guide: how to diagnose a failure and every mechanism
   available to fix one.
 * [Data files and caches](docs/data-and-caches.md) — the on-disk caches, the
-  curated data tables, and the `support/` maintenance scripts.
+  curated data tables, and the `programs/` maintenance scripts.
 
 ## Installation
 
@@ -93,7 +93,7 @@ Notes:
 | `targets/cometdb/` | Comet/Centaur database: builders, scrapers, and queries |
 | `targets/mpc_tools/` | Minor Planet Center queries and designation packing |
 | `tests/` | pytest tests, plus caps-named fixture/tester files not collected by pytest |
-| `support/` | Data-refresh and validation scripts (not shipped) |
+| `programs/` | Data-refresh and validation scripts (not shipped) |
 | `caches/` | On-disk data caches (see [docs/data-and-caches.md](docs/data-and-caches.md)) |
 
 ## Testing
@@ -108,7 +108,7 @@ the committed caches in `caches/MPC_CACHE` and `caches/COMET_CACHE`. Coverage
 of `targets/` is enforced by the pyproject gate.
 
 Type checking runs on the tests only (mypy is `strict` but excludes
-`targets/` and `support/`):
+`targets/` and `programs/`):
 
 ```bash
 MYPYPATH=targets python -m mypy tests

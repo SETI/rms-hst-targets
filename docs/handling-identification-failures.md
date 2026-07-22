@@ -219,7 +219,7 @@ missing, misnamed, or carries a wrong designation/fragment:
   `PANSTARRS` → `PanSTARRS`, fragment fixes, designation corrections via
   `_DESIG_REPAIRS`).
 * **Refresh or rebuild** the database with
-  `python support/update_cometdb.py` (`--rebuild` to force, `--local` to
+  `python programs/update_cometdb.py` (`--rebuild` to force, `--local` to
   rebuild from cached source pages without hitting the web). Sources are
   merged in decreasing authoritativeness: Wikipedia lists → MPC PeriodicCodes
   → PDS SBN → JPL SBDB → ICQ.
@@ -310,13 +310,13 @@ may be in the escape hatch, not the data.
 
    * The full test corpus `tests/SPT_TESTS.py` holds every *unique* target
      description harvested from the SPT cache (regenerate with
-     `python support/build_spt_tests.py` — requires the `caches/SPT_CACHE`
+     `python programs/build_spt_tests.py` — requires the `caches/SPT_CACHE`
      SSD to be mounted). Loop `identify_target` (or `identify_small_body`)
      over it and diff the failures against the previous run.
    * `hst_repairs` regressions: run the `if False:` block at the bottom of
      `targets/hst_repairs.py` over `SPT_TESTS` and diff the output against
      `tests/SPT_TESTS_OUTPUT.txt`.
-   * Header sanity: `python support/reality_check_radec.py` compares every
+   * Header sanity: `python programs/reality_check_radec.py` compares every
      header's `RA_TARG`/`DEC_TARG` against its own `MT_LV1` elements and
      highlights offsets ≥ 60″ with a categorized breakdown (dummy targets,
      B1950, nongravitational comets, epoch gaps, unexplained).

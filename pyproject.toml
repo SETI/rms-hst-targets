@@ -18,6 +18,7 @@ dependencies = [
   "palpy",
   "requests",
   "rms-pdslogger",
+  "rms-pdstemplate",
 ]
 license = {text = "Apache-2.0"}
 authors = [
@@ -106,7 +107,7 @@ omit = [
   "tests/*",
   "_version.py",
   # Data-refresh tools that scrape external services (MPC, JPL, Wikipedia, ...); they
-  # never run during tests, like the scripts in support/.
+  # never run during tests, like the scripts in programs/.
   "targets/cometdb/_get_*.py",
   "targets/cometdb/_build_*.py",
   "targets/cometdb/repair_comet.py",
@@ -126,13 +127,13 @@ fail_under = 75
 [tool.mypy]
 strict = true
 disallow_subclassing_any = false
-# Permanently exclude the targets/ and support/ trees from type checking. mypy is
+# Permanently exclude the targets/ and programs/ trees from type checking. mypy is
 # only ever run on tests/. Note: `exclude` only affects recursive discovery
-# (e.g. `mypy .`); the targets/support paths are also kept off every explicit
+# (e.g. `mypy .`); the targets/programs paths are also kept off every explicit
 # mypy invocation (see scripts/run-all-checks.sh and .github/workflows/run-tests.yml).
 exclude = [
   "^targets/",
-  "^support/",
+  "^programs/",
 ]
 
 [[tool.mypy.overrides]]

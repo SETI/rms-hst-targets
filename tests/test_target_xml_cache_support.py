@@ -6,7 +6,7 @@
 These read only the on-disk cache (caches/TARGET_XML_CACHE); no network access.
 """
 
-from targets.target_xml_cache_support import read_target_xml, target_xml_lookup
+from targets.target_xml_cache_support import target_xml_dict, target_xml_lookup
 from targets.targettype import TargetType
 
 
@@ -16,8 +16,8 @@ def test_target_xml_lookup_loads_and_contains_known_key() -> None:
     assert 'JUPITER' in lookup
 
 
-def test_read_target_xml_planet() -> None:
-    target = read_target_xml('JUPITER')
+def test_target_xml_dict_planet() -> None:
+    target = target_xml_dict('JUPITER')
     assert target is not None
     assert target['lid'] == 'urn:nasa:pds:context:target:planet.jupiter'
     assert target['lid_tail'] == 'planet.jupiter'
@@ -32,28 +32,28 @@ def test_read_target_xml_planet() -> None:
     assert 'jupiter' in target['xml_path'].name
 
 
-def test_read_target_xml_astrophysical_types() -> None:
+def test_target_xml_dict_astrophysical_types() -> None:
     # Galaxy and Star Cluster context products were previously unresolvable (their type
-    # names were missing from TargetType); read_target_xml must now handle them.
-    galaxy = read_target_xml('Andromeda')
+    # names were missing from TargetType); target_xml_dict must now handle them.
+    galaxy = target_xml_dict('Andromeda')
     assert galaxy is not None
     assert galaxy['ttype'] == TargetType.GALAXY
     assert galaxy['type_name'] == 'Galaxy'
 
-    cluster = read_target_xml('NGC 3532')
+    cluster = target_xml_dict('NGC 3532')
     assert cluster is not None
     assert cluster['ttype'] == TargetType.STAR_CLUSTER
     assert cluster['type_name'] == 'Star Cluster'
 
 
-def test_read_target_xml_derives_ttype_from_type_name() -> None:
+def test_target_xml_dict_derives_ttype_from_type_name() -> None:
     # The "ttype" code is recovered from the XML "type" text via TargetType.LOOKUP.
-    assert read_target_xml('1 CERES')['ttype'] == TargetType.DWARF_PLANET
-    assert read_target_xml('101955 BENNU')['ttype'] == TargetType.ASTEROID
+    assert target_xml_dict('1 CERES')['ttype'] == TargetType.DWARF_PLANET
+    assert target_xml_dict('101955 BENNU')['ttype'] == TargetType.ASTEROID
 
 
-def test_read_target_xml_satellite_has_multiline_description() -> None:
-    target = read_target_xml('IO')
+def test_target_xml_dict_satellite_has_multiline_description() -> None:
+    target = target_xml_dict('IO')
     assert target is not None
     assert target['ttype'] == TargetType.SATELLITE
     assert target['lid_tail'] == 'satellite.jupiter.io'
@@ -62,11 +62,11 @@ def test_read_target_xml_satellite_has_multiline_description() -> None:
     assert all(isinstance(line, str) and line for line in target['description'])
 
 
-def test_read_target_xml_key_is_case_insensitive() -> None:
-    assert read_target_xml('jupiter') == read_target_xml('JUPITER')
+def test_target_xml_dict_key_is_case_insensitive() -> None:
+    assert target_xml_dict('jupiter') == target_xml_dict('JUPITER')
 
 
-def test_read_target_xml_missing_returns_none() -> None:
-    assert read_target_xml('NO SUCH TARGET ZZZZZ') is None
+def test_target_xml_dict_missing_returns_none() -> None:
+    assert target_xml_dict('NO SUCH TARGET ZZZZZ') is None
 
 ##########################################################################################
