@@ -137,6 +137,7 @@ def get_target_xml_path(target, logger=None):
     """The cached directory path containing the content of the given target dictionary.
     """
 
+    xml_path = None
     for key in [target['lid_tail'], target['title']] + target['alt_titles']:
         xml_path = target_xml_path(key)
         if xml_path is not None:
