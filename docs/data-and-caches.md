@@ -95,6 +95,27 @@ name-lookup index (`$LOOKUP.pickle`). Maintained by
 superseded versions, and rebuilds the index. To stage a product locally
 before it exists remotely, name it with a `_local` suffix before `.xml`.
 
+The committed `caches/TARGET_XML_CACHE/` is a **read-only mirror** (latest
+versions only). New products are generated on the fly by
+`new_target_xml_dict()` (a body with no existing context product) and
+`update_target_xml_dict()` (an existing product gaining aliases or a
+description); both write a `_local.xml` file. To keep those writes out of the
+committed mirror — most importantly during testing — activate an **overlay
+directory** with the `use_local_xml_dir(path)` context manager in
+`targets.target_xml_cache_support`:
+
+```python
+with use_local_xml_dir(path):
+    ...   # _local.xml files and the merged $LOOKUP.pickle are written to `path`
+```
+
+Within the context, all `_local` writes and the rebuilt (merged) index go to
+`path`; reads resolve overlay-first, then fall back to the committed mirror; and
+the committed cache — both its XML files and its `$LOOKUP.pickle` — is never
+modified or deleted. Outside the context (the default) everything resolves to
+the committed cache, exactly as before, so `update_target_xml_cache.py` still
+refreshes and commits the mirror normally.
+
 ## Curated data tables in `targets/`
 
 These are Python modules, maintained by hand, that encode the accumulated
