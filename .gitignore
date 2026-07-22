@@ -178,4 +178,9 @@ HST/*.db
 
 # HST moving-target support files (bulk MAST download, not versioned)
 caches/SPT_CACHE
+
+# Writable overlay for locally-generated target "_local" context products; the committed
+# caches/TARGET_XML_CACHE is a read-only Engineering Node mirror and must stay clean.
+caches/TARGET_XML_OVERLAY/
+
 targets/_version.py

@@ -101,20 +101,23 @@ versions only). New products are generated on the fly by
 `update_target_xml_dict()` (an existing product gaining aliases or a
 description); both write a `_local.xml` file. To keep those writes out of the
 committed mirror — most importantly during testing — activate an **overlay
-directory** with the `use_local_xml_dir(path)` context manager in
+directory** with the `use_local_xml_dir()` context manager in
 `targets.target_xml_cache_support`:
 
 ```python
-with use_local_xml_dir(path):
-    ...   # _local.xml files and the merged $LOOKUP.pickle are written to `path`
+with use_local_xml_dir():        # defaults to caches/TARGET_XML_OVERLAY
+    ...   # _local.xml files and the merged $LOOKUP.pickle are written to the overlay
 ```
 
-Within the context, all `_local` writes and the rebuilt (merged) index go to
-`path`; reads resolve overlay-first, then fall back to the committed mirror; and
-the committed cache — both its XML files and its `$LOOKUP.pickle` — is never
-modified or deleted. Outside the context (the default) everything resolves to
-the committed cache, exactly as before, so `update_target_xml_cache.py` still
-refreshes and commits the mirror normally.
+The overlay directory is hard-wired to **`caches/TARGET_XML_OVERLAY`**, which is
+listed in `.gitignore` so it is never tracked; pass an explicit path (e.g. a
+`tmp_path`) to override it, or `None` to disable the overlay. Within the context,
+all `_local` writes and the rebuilt (merged) index go to the overlay; reads
+resolve overlay-first, then fall back to the committed mirror; and the committed
+cache — both its XML files and its `$LOOKUP.pickle` — is never modified or
+deleted. Outside the context (the default) everything resolves to the committed
+cache, exactly as before, so `update_target_xml_cache.py` still refreshes and
+commits the mirror normally.
 
 ## Curated data tables in `targets/`
 

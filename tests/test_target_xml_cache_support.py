@@ -6,6 +6,7 @@
 These read only the on-disk cache (caches/TARGET_XML_CACHE); no network access.
 """
 
+import inspect
 import pathlib
 import shutil
 
@@ -85,6 +86,19 @@ def test_target_xml_dict_key_is_case_insensitive() -> None:
 
 def test_target_xml_dict_missing_returns_none() -> None:
     assert target_xml_dict('NO SUCH TARGET ZZZZZ') is None
+
+
+def test_overlay_dir_is_hardwired_to_caches() -> None:
+    # The overlay is hard-wired to caches/TARGET_XML_OVERLAY and is the default target of
+    # use_local_xml_dir(). (Checked without entering the context, so no directory is made.)
+    assert (
+        target_xml_cache_support._TARGET_XML_CACHE.parent / 'TARGET_XML_OVERLAY'
+        == target_xml_cache_support._TARGET_XML_OVERLAY
+    )
+    default = (
+        inspect.signature(target_xml_cache_support.use_local_xml_dir).parameters['path'].default
+    )
+    assert default == target_xml_cache_support._TARGET_XML_OVERLAY
 
 
 def test_local_overlay_isolates_writes_from_committed_cache(
