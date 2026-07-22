@@ -148,22 +148,22 @@ def get_target_xml_path(target, logger=None):
 
     # Check for a conflict
     xml_dict = target_xml_dict(key)
-    for key in ('lid_tail', 'title', 'ttype'):
-        if xml_dict[key] != target[key]:
-            logger and logger.warning(f'Target context XML mismatch at "{key}" in '
+    for field in ('lid_tail', 'title', 'ttype'):
+        if xml_dict[field] != target[field]:
+            logger and logger.warning(f'Target context XML mismatch at "{field}" in '
                                       f'{xml_dict["xml_path"].name}: '
-                                      f'{target[key]!r}, {xml_dict[key]!r}')
+                                      f'{target[field]!r}, {xml_dict[field]!r}')
             logger and logger.warning('Pre-existing target XML file used', xml_path)
 
-    # Investigate alt_titles
-    new_alts = set(target['alt_titles'])
-    old_alts = set(xml_dict['alt_titles'])
-    if new_alts == old_alts:
-        return xml_path  # no conflict
-
-    diff = old_alts - new_alts
-    if diff:
+    # Update the file only if this target adds aliases or a description it lacks; otherwise
+    # the existing file already covers it.
+    missing_aliases = set(target['alt_titles']) - set(xml_dict['alt_titles'])
+    body_desc = (target.get('description') or '').strip()
+    needs_desc = body_desc not in ('', 'none') and not xml_dict['description']
+    if missing_aliases or needs_desc:
         return update_target_xml_dict(target, logger=logger)
+
+    return xml_path
 
 
 ##########################################################################################
