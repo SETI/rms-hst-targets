@@ -23,6 +23,7 @@ import datetime
 import pathlib
 import pickle
 import re
+from xml.sax.saxutils import escape
 
 import anyascii
 import lxml.etree
@@ -540,42 +541,48 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
         (before, temp1, last_alt_title, temp2, after) = match.groups()
         new_content = [before, temp1, last_alt_title, temp2]
         for alt in new_aliases:
-            new_content += [temp1, alt, temp2]
+            new_content += [temp1, escape(alt), temp2]
         new_content += [after]
     else:
         match = _ALT_TITLE2.match(content)
         (before, indent, after) = match.groups()
         new_content = [before, indent, '<Alias_List>\n']
         for alt in new_aliases:
-            new_content += [indent, '  <Alias>\n', indent, '    <alternate_title>', alt,
-                            '</alternate_title>\n', indent, '  </Alias>\n']
+            new_content += [indent, '  <Alias>\n', indent, '    <alternate_title>',
+                            escape(alt), '</alternate_title>\n', indent, '  </Alias>\n']
         new_content += [indent, '</Alias_List>\n', indent, after]
     content = ''.join(new_content)
 
-    # Update the Target description if absent
+    # Fill in the Target description if the body has a real one and the file's is absent
     new_desc = False
-    if body_dict.get('description'):
+    body_desc = (body_dict.get('description') or '').strip()
+    if body_desc and body_desc != 'none':
         match = _DESCRIPTION.match(content)
         (before, indent, desc, after) = match.groups()
         if desc.strip() in ('', 'none'):
             new_desc = True
             logger and logger.info('Inserting new description')
             new_content = [before, indent, '<description>\n']
-            for text in body_dict['description']:
-                new_content += [indent, '  ', text, '\n']
+            for line in body_desc.split('\n'):
+                new_content += [indent, '  ', escape(line), '\n']
             new_content += [indent, '</description>\n', after]
-        content = ''.join(new_content)
+            content = ''.join(new_content)
 
-    # Insert the new Modification_Detail
+    # Insert the new Modification_Detail describing exactly what changed
+    parts = []
+    if new_aliases:
+        parts.append(f'alternate_title{"s" if len(new_aliases) > 1 else ""}')
+    if new_desc:
+        parts.append('description')
+    change = ('Added ' + ' and '.join(parts) + '.') if parts else 'Metadata update.'
+
     match = _MOD_DETAIL.match(content)
     (before, temp1, mod_date, temp2, v1, v2, temp3, desc, temp4, after) = match.groups()
     new_version = f'{v1}.{int(v2) + 1}'
     new_content = [before,
                    temp1, datetime.date.today().isoformat(),
                    temp2, new_version,
-                   temp3, 'Additional <alternate_title>',
-                   ('s' if len(new_aliases) > 1 else ''),
-                   (', new <description>.' if new_desc else '.'),
+                   temp3, escape(change),
                    temp4,
                    temp1, mod_date, temp2, v1, '.', v2, temp3, desc, temp4, after]
     content = ''.join(new_content)

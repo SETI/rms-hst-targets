@@ -27,6 +27,37 @@ _LOCAL_XML = (
     '</Product_Context>'
 )
 
+# A realistically-formatted existing context product (Alias_List, Modification_History, and
+# a "none" Target description), for exercising update_target_xml_dict.
+_EXISTING_XML = """<?xml version='1.0' encoding='UTF-8'?>
+<Product_Context xmlns="http://pds.nasa.gov/pds4/pds/v1">
+  <Identification_Area>
+    <logical_identifier>urn:nasa:pds:context:target:asteroid.9999_testbody</logical_identifier>
+    <version_id>1.1</version_id>
+    <title>9999 Testbody</title>
+    <information_model_version>1.22.0.0</information_model_version>
+    <product_class>Product_Context</product_class>
+    <Alias_List>
+      <Alias>
+        <alternate_title>Testbody</alternate_title>
+      </Alias>
+    </Alias_List>
+    <Modification_History>
+      <Modification_Detail>
+        <modification_date>2025-04-24</modification_date>
+        <version_id>1.1</version_id>
+        <description>Updated schema version.</description>
+      </Modification_Detail>
+    </Modification_History>
+  </Identification_Area>
+  <Target>
+    <name>9999 Testbody</name>
+    <type>Asteroid</type>
+    <description>none</description>
+  </Target>
+</Product_Context>
+"""
+
 
 def test_target_xml_lookup_loads_and_contains_known_key() -> None:
     lookup = target_xml_lookup()
@@ -173,6 +204,46 @@ def test_new_target_xml_dict_generates_valid_label(
         assert parsed['alt_titles'] == body['alt_titles']
         assert parsed['type_name'] == 'Comet'
         assert parsed['ttype'] == TargetType.COMET
+        # A "none" description renders as the bare sentinel, not a wrapped "none".
+        assert '<description>none</description>' in path.read_text()
+        assert parsed['description'] == []
+
+
+def test_update_target_xml_dict_produces_valid_label(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Regression: adding an alias to an existing product must produce well-formed XML.
+    # Previously the modification note injected literal <alternate_title>/<description>
+    # markup, and a "none" description was iterated character-by-character.
+    primary = tmp_path / 'primary'
+    overlay = tmp_path / 'overlay'
+    primary.mkdir()
+    (primary / 'asteroid.9999_testbody_1.1.xml').write_text(_EXISTING_XML)
+    monkeypatch.setattr(target_xml_cache_support, '_TARGET_XML_CACHE', primary)
+    monkeypatch.setattr(target_xml_cache_support, '_TARGET_XML_LOOKUP', None)
+    target_xml_cache_support._update_target_cache(offline=True, warn_on_duplicates=False)
+
+    body = {
+        'lid': 'urn:nasa:pds:context:target:asteroid.9999_testbody',
+        'lid_tail': 'asteroid.9999_testbody',
+        'title': '9999 Testbody',
+        'alt_titles': ['Testbody', 'Minor Planet 9999'],  # "Minor Planet 9999" is new
+        'type_name': 'Asteroid',
+        'ttype': TargetType.ASTEROID,
+        'description': 'none',
+    }
+    with target_xml_cache_support.use_local_xml_dir(overlay):
+        path = target_xml_cache_support.update_target_xml_dict(body)
+        assert path == overlay / 'asteroid.9999_testbody_1.2_local.xml'
+
+        parsed = target_xml_cache_support._read_target_xml_dict(path)  # parses => valid XML
+        assert parsed['version_id'] == '1.2'
+        assert 'Minor Planet 9999' in parsed['alt_titles']
+        assert parsed['description'] == []  # Target description stays "none"
+
+        raw = path.read_text()
+        assert '<description>Added alternate_title.</description>' in raw
+        assert '<alternate_title>Minor Planet 9999</alternate_title>' in raw
 
 
 ##########################################################################################
