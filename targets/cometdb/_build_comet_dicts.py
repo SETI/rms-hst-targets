@@ -75,6 +75,8 @@ def _build_comet_dicts(
           year is found.
         * 'key' (str): The unique dictionary key for this object.
         * `parent_key` (str): The key for the "parent" object if this comet is a fragment.
+        * `fragment_keys` (list[str]): The list of keys of the fragments if this is a
+          parent.
         * `full_name` (str): The comet's name as it will be adapted to the LID, with
           standard capitalization.
         * `aliases` (list[str]): Standard aliases for this comet, to appear in the context
@@ -263,7 +265,8 @@ def _merge_comets(
             comet['fragment'] = alt_fragment
 
     # Merge lists
-    for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes', 'old_desigs'):
+    # for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes', 'old_desigs'):
+    for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes'):
         list_ = comet.setdefault(field, [])
         list_ += alt.get(field, [])
 
@@ -334,6 +337,18 @@ def _complete_comets(
         comets[parent_key] = parent
         logger and logger.info(f'Parent comet {parent_key} constructed')
 
+    # Fill in fragment_keys
+    parent_keys = set()
+    for key, comet in comets.items():
+        parent_key = comet.get('parent_key', '')
+        if parent_key:
+            parent_keys.add(parent_key)
+            parent = comets[parent_key]
+            parent.setdefault('fragment_keys', []).append(key)
+
+    for key in parent_keys:
+        comets[key]['fragment_keys'].sort()
+
     # Make sure fragments have all the designations of their parent
     for comet in comets.values():
         parent_key = comet.get('parent_key', '')
@@ -359,8 +374,9 @@ def _complete_comets(
 
         # Fill in year
         years = [-9999]  # if no year is found
-        desigs = (comet.get('alt_desigs', []) + [comet.get('desig', '')]
-                  + comet.get('old_desigs', []))
+        # desigs = (comet.get('alt_desigs', []) + [comet.get('desig', '')]
+        #           + comet.get('old_desigs', []))
+        desigs = comet.get('alt_desigs', []) + [comet.get('desig', '')]
         for desig in desigs:
             after_slash = desig.rpartition('/')[-1]
             match = _INT_MATCH.match(after_slash)
@@ -495,6 +511,7 @@ def _fill_comet_aliases(
         for p in prefixes:
             for nn in name_nums:
                 for df in dash_frags:
+                    aliases.append(p + '/' + desig[2:] + df + ' (' + nn + df + ')')
                     aliases.append(p + '/' + desig[2:] + df + ' (' + nn + ')')
 
         # Every prefix + primary designation + fragment
@@ -504,7 +521,7 @@ def _fill_comet_aliases(
 
     # Append all remaining designations
     aliases += comet.get('alt_desigs', [])
-    aliases += comet.get('old_desigs', [])
+    # aliases += comet.get('old_desigs', [])
 
     aliases = _clean_list(aliases)
     comet['full_name'] = aliases[0]

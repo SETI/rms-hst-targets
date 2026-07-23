@@ -2,14 +2,16 @@
 ##########################################################################################
 # programs/identify_visit.py
 ##########################################################################################
-"""Run `identify_target_dicts` on a single visit from the SPT_TESTS corpus and print its log.
+"""Identify the targets of one or more SPT_TESTS visits, print the context-product paths,
+and optionally open them in $EDITOR.
 
 The SPT_TESTS corpus (``tests/SPT_TESTS.py``, built by ``build_spt_tests.py``) is keyed by
-six-character HST visit; each value is the list of per-file header dictionaries for that
-visit. This program looks up one such visit, feeds its headers to
-`targets.identify_target_dicts`, and writes the resulting log narrative to stdout. It is a
-convenience for inspecting, at any verbosity, exactly how the identification code reasons
-about a given visit.
+six-character HST visit. This program resolves each visit argument -- the wildcards ``*``,
+``?`` and ``[...]`` are expanded against the corpus -- feeds each visit's headers to
+`targets.identify_targets`, writes the identification narrative to stdout, and finally
+prints the full path of every XML context product identified. Any newly generated "_local"
+products are written to the gitignored overlay directory (``caches/TARGET_XML_OVERLAY``),
+never the committed ``TARGET_XML_CACHE``.
 
 Type::
 
@@ -19,12 +21,17 @@ for more information.
 """
 
 import argparse
+import fnmatch
+import os
 import pathlib
+import shlex
+import subprocess
 import sys
 
 import pdslogger
 
-from targets import TargetIdentificationFailure, identify_target_dicts
+from targets import TargetIdentificationFailure, identify_targets
+from targets.target_xml_cache_support import use_local_xml_dir
 
 # tests/SPT_TESTS.py is a plain data module (not part of the importable package); add the
 # tests directory to the path so it can be imported, exactly as the test suite does.
@@ -41,60 +48,137 @@ def _load_spt_tests() -> dict[str, list[dict]]:
     return SPT_TESTS
 
 
-def identify_visit(visit: str, *, level: str = 'info') -> None:
-    """Identify the target(s) of one SPT_TESTS visit, logging the narrative to stdout.
+def _resolve_visits(patterns: list[str]) -> tuple[list[str], list[str]]:
+    """Expand visit patterns against the corpus keys.
+
+    Each pattern is matched against every visit with `fnmatch` (so a literal visit matches
+    only itself, while `*`, `?` and `[...]` expand). Order follows the patterns, then the
+    corpus, and duplicates are dropped.
 
     Parameters:
-        visit: The six-character visit key, e.g. "y0zz03".
-        level: The minimum level of log messages to print: "debug", "info", or "warning".
+        patterns: The visit arguments, possibly containing wildcards.
 
-    Raises:
-        KeyError: If the visit is not present in the SPT_TESTS corpus.
+    Returns:
+        A tuple (resolved visits, patterns that matched nothing).
     """
 
-    headers = _load_spt_tests()[visit]
+    keys = list(_load_spt_tests())
+    resolved: list[str] = []
+    seen: set[str] = set()
+    unmatched: list[str] = []
+    for pattern in patterns:
+        matches = [key for key in keys if fnmatch.fnmatchcase(key, pattern)]
+        if not matches:
+            unmatched.append(pattern)
+        for key in matches:
+            if key not in seen:
+                seen.add(key)
+                resolved.append(key)
+
+    return resolved, unmatched
+
+
+def _make_logger(level: str) -> pdslogger.PdsLogger:
+    """A PdsLogger that writes the narrative to stdout at the given level."""
 
     logger = pdslogger.PdsLogger(
-        'pds.identify_visit', lognames=False, indent=True, timestamps=True, digits=3, level=level
+        'pds.identify_visit', lognames=False, indent=True, timestamps=True, digits=3,
+        level=level
     )
     logger.add_handler(pdslogger.NULL_HANDLER)  # suppress the default stdout handler
     logger.add_handler(pdslogger.STDOUT_HANDLER)
+    return logger
 
+
+def identify_visit(visit: str, logger: pdslogger.PdsLogger) -> list[pathlib.Path]:
+    """Identify the targets of one SPT_TESTS visit and return their context-product paths.
+
+    The identification narrative is logged. Returns an empty list if no target can be
+    identified for the visit.
+
+    Parameters:
+        visit: The six-character visit key.
+        logger: The logger receiving the narrative.
+    """
+
+    headers = _load_spt_tests()[visit]
+    logger.blankline()
     logger.info(f'Identifying visit {visit} ({len(headers)} header(s))')
     try:
-        bodies = identify_target_dicts(headers, logger=logger)
+        paths = identify_targets(headers, logger=logger)
     except TargetIdentificationFailure as err:
-        # The failure has already been logged at ERROR level by identify_target_dicts.
         logger.info(f'No target identified: {err}')
-        return
+        return []
 
-    logger.blankline()
-    logger.info(
-        f'Identified {len(bodies)} target(s): {", ".join(body["full_name"] for body in bodies)}'
-    )
+    logger.info(f'{visit}: {len(paths)} target(s) identified')
+    return [p for p in paths if p is not None]
+
+
+def _open_in_editor(paths: list[pathlib.Path]) -> None:
+    """Open the given files in the editor named by $EDITOR."""
+
+    editor = os.environ['EDITOR']
+    try:
+        subprocess.run(shlex.split(editor) + [str(p) for p in paths])
+    except OSError as err:
+        print(f'Could not launch $EDITOR ({editor!r}): {err}', file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description='Run identify_target_dicts on a single SPT_TESTS visit and write its '
-        'log narrative to stdout.'
+        description='Run identify_targets on one or more SPT_TESTS visits, print the '
+        'paths of the XML context products identified, and optionally open them in '
+        '$EDITOR. New "_local" products are written to the overlay directory, '
+        'never the committed TARGET_XML_CACHE.'
     )
-    parser.add_argument('visit', help='the six-character visit key, e.g. "y0zz03"')
+    parser.add_argument(
+        'visits',
+        nargs='+',
+        metavar='VISIT',
+        help='one or more six-character visit keys; the wildcards *, ? and '
+        '[...] are expanded against the corpus',
+    )
     parser.add_argument(
         '--level',
         '-l',
         choices=('debug', 'info', 'warning'),
-        default='info',
+        default='debug',
         help='minimum level of log messages to show (default: %(default)s)',
+    )
+    parser.add_argument(
+        '--edit', action='store_true', help='open the identified XML files in $EDITOR'
     )
     args = parser.parse_args(argv)
 
-    # Validate the visit up front so that a genuine KeyError raised *inside* the
-    # identification code is never mistaken for a missing visit.
-    if args.visit not in _load_spt_tests():
-        parser.error(f'visit {args.visit!r} is not in the SPT_TESTS corpus')
+    if args.edit and not os.environ.get('EDITOR'):
+        parser.error('--edit requires the $EDITOR environment variable to be set')
 
-    identify_visit(args.visit, level=args.level)
+    visits, unmatched = _resolve_visits(args.visits)
+    for pattern in unmatched:
+        print(f'Warning: no visit in the SPT_TESTS corpus matches {pattern!r}',
+              file=sys.stderr)
+    if not visits:
+        parser.error(f'no visits in the SPT_TESTS corpus match {args.visits}')
+
+    logger = _make_logger(args.level)
+
+    # New "_local" products go to the overlay (caches/TARGET_XML_OVERLAY), never the
+    # committed TARGET_XML_CACHE.
+    paths: list[pathlib.Path] = []
+    seen: set[pathlib.Path] = set()
+    with use_local_xml_dir():
+        for visit in visits:
+            for path in identify_visit(visit, logger):
+                if path not in seen:
+                    seen.add(path)
+                    paths.append(path)
+
+    print(f'\nIdentified {len(paths)} XML file(s):')
+    for path in paths:
+        print(f'  {path}')
+
+    if args.edit and paths:
+        _open_in_editor(paths)
 
 
 ############################################

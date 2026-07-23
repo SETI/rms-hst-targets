@@ -28,7 +28,7 @@ from xml.sax.saxutils import escape
 import anyascii
 import lxml.etree
 import requests
-from pdslogger import PdsLogger
+from pdslogger import PdsLogger, NullLogger
 from pdstemplate import PdsTemplate
 
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
@@ -42,10 +42,11 @@ _TARGET_LOOKUP_BASENAME = '$LOOKUP.pickle'
 # The committed cache above is a read-only mirror of the Engineering Node (latest versions
 # only) plus its $LOOKUP.pickle. When an overlay directory is activated via
 # use_local_xml_dir(), all "_local" files and the effective (merged) lookup pickle are
-# written there instead, leaving the committed cache pristine; reads resolve overlay-first.
-# The overlay is hard-wired to caches/TARGET_XML_OVERLAY (gitignored, so it is never
-# committed); it is the default target of use_local_xml_dir(). _LOCAL_XML_DIR is the active
-# overlay, or None to disable it so that everything resolves to the committed cache.
+# written there instead, leaving the committed cache pristine; reads resolve
+# overlay-first. The overlay is hard-wired to caches/TARGET_XML_OVERLAY (gitignored, so it
+# is never committed); it is the default target of use_local_xml_dir(). _LOCAL_XML_DIR is
+# the active overlay, or None to disable it so that everything resolves to the committed
+# cache.
 _TARGET_XML_OVERLAY = _TARGET_XML_CACHE.parent / 'TARGET_XML_OVERLAY'
 _LOCAL_XML_DIR: pathlib.Path | None = None
 
@@ -91,8 +92,8 @@ def _lookup_path() -> pathlib.Path:
 
 
 def _find_xml(basename: str) -> pathlib.Path | None:
-    """The full path of an XML basename, searching the overlay first and then the committed
-    cache. None if it is in neither directory."""
+    """The full path of an XML basename, searching the overlay first and then the
+    committed cache. None if it is in neither directory."""
 
     for directory in _search_dirs():
         path = directory / basename
@@ -152,27 +153,6 @@ def target_xml_lookup() -> dict:
     return _TARGET_XML_LOOKUP
 
 
-def target_xml_dict(key: str) -> dict | None:
-    """Return a target dictionary containing the core content of a target XML file.
-
-    Parameters:
-        key: Any key defining the body, as found in the `$LOOKUP` dictionary.
-
-    Returns:
-        A dictionary containing keys "lid", "lid_tail", "version_id", "title",
-        "alt_titles", "type_name", "ttype", "description", and "xml_path". None if there
-        is no existing XML file for this body.
-    """
-
-    try:
-        basename = target_xml_lookup()[key.upper()]
-    except KeyError:
-        return None
-
-    xml_path = _find_xml(basename)
-    return _read_target_xml_dict(xml_path) if xml_path is not None else None
-
-
 def target_xml_path(key: str) -> dict | None:
     """Return the XML path for the lookup key.
 
@@ -189,6 +169,22 @@ def target_xml_path(key: str) -> dict | None:
         return None
 
     return _find_xml(basename)
+
+
+def target_xml_dict(key: str) -> dict | None:
+    """Return a target dictionary containing the core content of a target XML file.
+
+    Parameters:
+        key: Any key defining the body, as found in the `$LOOKUP` dictionary.
+
+    Returns:
+        A dictionary containing keys "lid", "lid_tail", "version_id", "title",
+        "alt_titles", "type_name", "ttype", "description", and "xml_path". None if there
+        is no existing XML file for this body.
+    """
+
+    xml_path = target_xml_path(key)
+    return _read_target_xml_dict(xml_path) if xml_path is not None else None
 
 
 def _read_target_xml_dict(xml_path: str | pathlib.Path) -> dict | None:
@@ -222,13 +218,46 @@ def _read_target_xml_dict(xml_path: str | pathlib.Path) -> dict | None:
     target_dict['ttype'] = TargetType.LOOKUP[target_dict['type_name']]
 
     desc = tree.xpath('//description')[-1].text
-    if not desc or desc == 'none':
+    if not desc or desc.lower() in ('none', 'none.'):
         target_dict['description'] = []
     else:
         desc = [line.strip() for line in desc.split('\n')]
         target_dict['description'] = [line for line in desc if line]
 
     return target_dict
+
+
+def find_xml_path(body_dict: dict) -> dict | None:
+    """Return the path to an existing XML context product for a body defined by the given
+    dict.
+
+    Returns None if the body is not found.
+    """
+
+    options = []
+    for key in ('lid_tail', 'title', 'full_name'):
+        if key in body_dict:
+            options.append(body_dict[key].upper())
+    for key in ('alt_titles', 'aliases', 'lookups'):
+        if key in body_dict:
+            options += [k.upper() for k in body_dict[key]]
+
+    for key in options:
+        xml_path = target_xml_path(key)
+        if xml_path:
+            return xml_path
+
+    return None
+
+
+def find_xml_dict(body_dict: dict) -> dict | None:
+    """Return the content of an XML context product for a body defined by the given dict.
+
+    Returns None if the body is not found.
+    """
+
+    xml_path = find_xml_path(body_dict)
+    return _read_target_xml_dict(xml_path) if xml_path is not None else None
 
 
 ##########################################################################################
@@ -463,6 +492,7 @@ def new_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None) -> pat
     basename = f'{body_dict["lid_tail"]}_1.0_local.xml'
     logger and logger.info('Writing new target context file: ', basename)
     if _PDS_TEMPLATE is None:
+        PdsTemplate.set_logger(logger or NullLogger())
         _PDS_TEMPLATE = PdsTemplate(_TEMPLATE_PATH, xml=True)
 
     xml_path = _write_dir() / basename
@@ -529,44 +559,42 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
 
     content = xml_path.read_text()
     xml_dict = _read_target_xml_dict(xml_path)
-    xml_titles = set([xml_dict['title']] + xml_dict['alt_titles'])
 
     # Insert the new Aliases
-    titles = [body_dict['title']] + body_dict['alt_titles']
-    new_aliases = [t for t in titles if t not in xml_titles]
-    logger and logger.info(f'Inserting new aliases: {new_aliases}')
+    new_aliases = _missing_aliases(body_dict, xml_dict)
+    if new_aliases:
+        logger and logger.info(f'Inserting new aliases: {new_aliases}')
+        match = _ALT_TITLE.match(content)
+        if match:
+            (before, temp1, last_alt_title, temp2, after) = match.groups()
+            new_content = [before, temp1, last_alt_title, temp2]
+            for alt in new_aliases:
+                new_content += [temp1, escape(alt), temp2]
+            new_content += [after]
+        else:
+            match = _ALT_TITLE2.match(content)
+            (before, indent, after) = match.groups()
+            new_content = [before, indent, '<Alias_List>\n']
+            for alt in new_aliases:
+                new_content += [indent, '  <Alias>\n', indent, '    <alternate_title>',
+                                escape(alt), '</alternate_title>\n', indent,
+                                '  </Alias>\n']
+            new_content += [indent, '</Alias_List>\n', indent, after]
+        content = ''.join(new_content)
 
-    match = _ALT_TITLE.match(content)
-    if match:
-        (before, temp1, last_alt_title, temp2, after) = match.groups()
-        new_content = [before, temp1, last_alt_title, temp2]
-        for alt in new_aliases:
-            new_content += [temp1, escape(alt), temp2]
-        new_content += [after]
-    else:
-        match = _ALT_TITLE2.match(content)
-        (before, indent, after) = match.groups()
-        new_content = [before, indent, '<Alias_List>\n']
-        for alt in new_aliases:
-            new_content += [indent, '  <Alias>\n', indent, '    <alternate_title>',
-                            escape(alt), '</alternate_title>\n', indent, '  </Alias>\n']
-        new_content += [indent, '</Alias_List>\n', indent, after]
-    content = ''.join(new_content)
-
-    # Fill in the Target description if the body has a real one and the file's is absent
-    new_desc = False
-    body_desc = (body_dict.get('description') or '').strip()
-    if body_desc and body_desc != 'none':
+    # Fill in the Target description if the body has one and the file's is absent
+    new_desc = _new_desc(body_dict, xml_dict)
+    if new_desc:
         match = _DESCRIPTION.match(content)
-        (before, indent, desc, after) = match.groups()
-        if desc.strip() in ('', 'none'):
-            new_desc = True
-            logger and logger.info('Inserting new description')
-            new_content = [before, indent, '<description>\n']
-            for line in body_desc.split('\n'):
-                new_content += [indent, '  ', escape(line), '\n']
-            new_content += [indent, '</description>\n', after]
-            content = ''.join(new_content)
+        (before, indent, old_desc, after) = match.groups()
+        logger and logger.info('Inserting new description')
+        new_content = [before, indent, '<description>\n']
+        if old_desc.lower() not in ('', 'none', 'none.'):
+            new_content += [old_desc, '\n']
+        for text in body_dict['description']:
+            new_content += [indent, '  ', escape(text), '\n']
+        new_content += [indent, '</description>\n', after]
+        content = ''.join(new_content)
 
     # Insert the new Modification_Detail describing exactly what changed
     parts = []
@@ -574,7 +602,8 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
         parts.append(f'alternate_title{"s" if len(new_aliases) > 1 else ""}')
     if new_desc:
         parts.append('description')
-    change = ('Added ' + ' and '.join(parts) + '.') if parts else 'Metadata update.'
+    change = ("RMS Node's HST pipeline added " + ' and '.join(parts) + '.' if parts
+              else "Metadata update by the RMS Node's HST pipeline.")
 
     match = _MOD_DETAIL.match(content)
     (before, temp1, mod_date, temp2, v1, v2, temp3, desc, temp4, after) = match.groups()
@@ -582,7 +611,7 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     new_content = [before,
                    temp1, datetime.date.today().isoformat(),
                    temp2, new_version,
-                   temp3, escape(change),
+                   temp3, change,
                    temp4,
                    temp1, mod_date, temp2, v1, '.', v2, temp3, desc, temp4, after]
     content = ''.join(new_content)
@@ -593,7 +622,8 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     new_content = [before, new_version, after]
     content = ''.join(new_content)
 
-    # Write the new file into the overlay (or the committed cache when no overlay is active)
+    # Write the new file into the overlay (or the committed cache when no overlay is
+    # active)
     new_basename = xml_path.name.replace('_local.xml', '.xml')
     new_basename = new_basename.replace(f'{v1}.{v2}.xml', f'{new_version}_local.xml')
     new_path = _write_dir() / new_basename
@@ -605,7 +635,70 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     return new_path
 
 
-__all__ = ['new_target_xml_dict', 'target_xml_dict', 'target_xml_lookup',
-           'target_xml_path', 'update_target_xml_dict', 'use_local_xml_dir']
+def _missing_aliases(new_body, old_body):
+    """Titles of the new body that do not appear in the old body's list of titles, either
+    as a string or a substring.
+
+    Returns the list of extra names.
+    """
+
+    new_names = [new_body['title']] + new_body['alt_titles']
+    old_names = set([old_body['title']] + old_body['alt_titles'])
+
+    extras = []
+    for name in new_names:
+        if name in old_names:
+            continue
+
+        # Omit a name entirely inside another
+        inside = False
+        for test in old_names:
+            if name in test:
+                inside = True
+                break
+        if inside:
+            continue
+
+        # Omit "Minor Planet ..."
+        if name.startswith('Minor Planet'):
+            continue
+
+        # Omit a name that is the same except for parentheses
+        match = False
+        for test in old_names:
+            test = test.replace('(', '').replace(')', '')
+            name2 = name.replace('(', '').replace(')', '')
+            if test == name2:
+                match = True
+                break
+        if match:
+            continue
+
+        extras.append(name)
+
+    return extras
+
+
+def _new_desc(new_body, old_body):
+    """True if none of the new body's description appears in the old body's description.
+    """
+
+    if not new_body['description']:
+        return False
+
+    # Compare ignoring spaces and case
+    old_desc = set(d.replace(' ', '').lower() for d in old_body['description'])
+
+    for text in new_body['description']:
+        text = text.replace(' ', '').lower()
+        if text and text in old_desc:
+            return False
+
+    return True
+
+
+__all__ = ['new_target_xml_dict', 'find_xml_dict', 'find_xml_path', 'target_xml_dict',
+           'target_xml_lookup', 'target_xml_path', 'update_target_xml_dict',
+           'use_local_xml_dir']
 
 ##########################################################################################

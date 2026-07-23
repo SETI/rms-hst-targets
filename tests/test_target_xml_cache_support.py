@@ -191,7 +191,7 @@ def test_new_target_xml_dict_generates_valid_label(
         'alt_titles': ['Test', 'NAIF ID 1009999'],
         'type_name': 'Comet',
         'ttype': TargetType.COMET,
-        'description': 'none',  # _complete_target yields a string, not a list
+        'description': [],  # a list of strings; empty means "none"
     }
     with target_xml_cache_support.use_local_xml_dir(overlay):
         path = target_xml_cache_support.new_target_xml_dict(body)
@@ -227,10 +227,10 @@ def test_update_target_xml_dict_produces_valid_label(
         'lid': 'urn:nasa:pds:context:target:asteroid.9999_testbody',
         'lid_tail': 'asteroid.9999_testbody',
         'title': '9999 Testbody',
-        'alt_titles': ['Testbody', 'Minor Planet 9999'],  # "Minor Planet 9999" is new
+        'alt_titles': ['Testbody', '2001 XY99'],  # "2001 XY99" is a genuinely new alias
         'type_name': 'Asteroid',
         'ttype': TargetType.ASTEROID,
-        'description': 'none',
+        'description': [],
     }
     with target_xml_cache_support.use_local_xml_dir(overlay):
         path = target_xml_cache_support.update_target_xml_dict(body)
@@ -238,12 +238,12 @@ def test_update_target_xml_dict_produces_valid_label(
 
         parsed = target_xml_cache_support._read_target_xml_dict(path)  # parses => valid XML
         assert parsed['version_id'] == '1.2'
-        assert 'Minor Planet 9999' in parsed['alt_titles']
+        assert '2001 XY99' in parsed['alt_titles']
         assert parsed['description'] == []  # Target description stays "none"
 
         raw = path.read_text()
-        assert '<description>Added alternate_title.</description>' in raw
-        assert '<alternate_title>Minor Planet 9999</alternate_title>' in raw
+        assert "<description>RMS Node's HST pipeline added alternate_title.</description>" in raw
+        assert '<alternate_title>2001 XY99</alternate_title>' in raw
 
 
 ##########################################################################################

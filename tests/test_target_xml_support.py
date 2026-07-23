@@ -12,10 +12,17 @@ from typing import Any
 
 import pytest
 
-from targets import target_xml_cache_support
+from targets import target_xml_cache_support, target_xml_support
 from targets.standard_bodies import STANDARD_BODY_DICT
 from targets.target_xml_support import _complete_target, _lid_tail, get_target_xml_path
 from targets.targettype import TargetType
+
+
+def _fake_find_xml_dict(body: dict[str, Any]) -> dict[str, Any] | None:
+    """Stand-in for find_xml_dict: returns the '_xml' marker a test attached to a body's
+    dict (simulating an existing context product), or None when there is none."""
+
+    return body.get('_xml')
 
 # An existing context product with two aliases (AliasA, AliasB) and a "none" description.
 _EXISTING_XML = """<?xml version='1.0' encoding='UTF-8'?>
@@ -69,7 +76,7 @@ def _install_existing_product(tmp_path: pathlib.Path,
 def _asteroid_body(alt_titles: list[str]) -> dict[str, Any]:
     return {'lid': 'urn:nasa:pds:context:target:asteroid.9999_testbody',
             'lid_tail': 'asteroid.9999_testbody', 'title': '9999 Testbody',
-            'alt_titles': alt_titles, 'ttype': TargetType.ASTEROID, 'description': 'none'}
+            'alt_titles': alt_titles, 'ttype': TargetType.ASTEROID, 'description': []}
 
 
 def test_get_target_xml_path_updates_when_body_adds_an_alias(
@@ -110,8 +117,8 @@ def test_complete_target_planet() -> None:
     assert '_system' not in target['lid_tail']
     assert target['parent']['name'] == 'Uranus System'   # set, but not used in the LID
     assert 'NAIF ID 799' in target['alt_titles']
-    assert isinstance(target['description'], str)
-    assert target['description']
+    # A planet's parent is its planetary system, so no parent-description is generated.
+    assert target['description'] == []
 
 
 def test_complete_target_satellite() -> None:
@@ -128,7 +135,7 @@ def test_complete_target_ring() -> None:
     assert target['type_name'] == 'Ring'
     assert target['lid_tail'] == 'ring.saturn.saturn_rings'
     assert target['parent']['name'] == 'Saturn'
-    assert target['description'].startswith('Ring of: Saturn;')
+    assert target['description'][0] == 'Ring of: Saturn;'
 
 
 def test_complete_target_trans_neptunian_object() -> None:
@@ -143,7 +150,7 @@ def test_complete_target_trans_neptunian_object() -> None:
     assert target['title'] == '1999 XY99'
     assert target['lid_tail'] == 'trans-neptunian_object.1999_xy99'
     assert target['parent'] is None
-    assert target['description'] == 'none'
+    assert target['description'] == []
 
 
 def test_complete_target_alt_titles_from_number_and_naif() -> None:
@@ -157,8 +164,87 @@ def test_complete_target_alt_titles_from_number_and_naif() -> None:
 
 def test_complete_target_respects_existing_description() -> None:
     body = _body('Io')
-    body['description'] = 'preset'
-    assert _complete_target(body)['description'] == 'preset'
+    body['description'] = ['preset']
+    assert _complete_target(body)['description'] == ['preset']
+
+
+def test_complete_target_comet_fragment_cataloged_parent(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # A comet fragment whose parent comet already has a context product: the LID of the
+    # primary is taken from that product, and the parent's NAIF ID adds a final line.
+    parent = {'full_name': 'D/1993 F2 (Shoemaker-Levy 9)', 'ttype': TargetType.COMET,
+              'naif_id': 1000130, '_xml': {'lid_tail': 'comet.d1993_f2'}}
+    monkeypatch.setattr(target_xml_support, 'comet_lookup', lambda: {'SL9': parent})
+    monkeypatch.setattr(target_xml_support, 'find_xml_dict', _fake_find_xml_dict)
+
+    target = _complete_target({'full_name': 'D/1993 F2-A', 'ttype': TargetType.COMET,
+                               'parent_key': 'SL9', 'aliases': []})
+    assert target['description'] == [
+        'Fragment of: D/1993 F2 (Shoemaker-Levy 9);',
+        'LID of primary: comet.d1993_f2;',
+        'NAIF ID of primary: 1000130;',
+    ]
+
+
+def test_complete_target_comet_fragment_uncataloged_parent(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # A comet fragment whose parent has no context product yet: the LID of the primary
+    # falls back to the derived LID, and a zero NAIF ID adds no line.
+    # The parent_key must not collide with a STANDARD_BODY_LOOKUP name (e.g. "ATLAS", a
+    # Saturn moon), which is consulted before comet_lookup().
+    parent = {'full_name': 'C/2019 Y4 (ATLAS)', 'ttype': TargetType.COMET, 'naif_id': 0}
+    monkeypatch.setattr(target_xml_support, 'comet_lookup', lambda: {'C2019Y4': parent})
+    monkeypatch.setattr(target_xml_support, 'find_xml_dict', _fake_find_xml_dict)
+
+    target = _complete_target({'full_name': 'C/2019 Y4-A', 'ttype': TargetType.COMET,
+                               'parent_key': 'C2019Y4', 'aliases': []})
+    assert target['description'] == [
+        'Fragment of: C/2019 Y4 (ATLAS);',
+        'LID of primary: comet.c2019_y4_atlas;',
+    ]
+
+
+def test_complete_target_parent_comet_all_fragments_uncataloged(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # A parent comet whose fragments are neither cataloged nor NAIF-numbered collapses to a
+    # single summary line naming each fragment.
+    fragments = {'F-A': {'fragment': 'A', 'naif_id': 0},
+                 'F-B': {'fragment': 'B', 'naif_id': 0}}
+    monkeypatch.setattr(target_xml_support, 'comet_lookup', lambda: fragments)
+    monkeypatch.setattr(target_xml_support, 'find_xml_dict', _fake_find_xml_dict)
+
+    target = _complete_target({'full_name': 'D/1993 F2', 'ttype': TargetType.COMET,
+                               'parent_key': '', 'fragment_keys': ['F-A', 'F-B'],
+                               'aliases': []})
+    assert target['description'] == ['Cometary fragments: A, B']
+
+
+def test_complete_target_parent_comet_mixed_fragments(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # A parent comet with every kind of fragment: cataloged + NAIF-numbered, cataloged
+    # only, NAIF-numbered only, and one neither (which lands in "Additional fragments").
+    fragments = {
+        'F-A': {'fragment': 'A', 'naif_id': 1000131,
+                '_xml': {'lid_tail': 'comet.d1993_f2_a'}},
+        'F-B': {'fragment': 'B', 'naif_id': 0,
+                '_xml': {'lid_tail': 'comet.d1993_f2_b'}},
+        'F-C': {'fragment': 'C', 'naif_id': 1000133},
+        'F-D': {'fragment': 'D', 'naif_id': 0},
+    }
+    monkeypatch.setattr(target_xml_support, 'comet_lookup', lambda: fragments)
+    monkeypatch.setattr(target_xml_support, 'find_xml_dict', _fake_find_xml_dict)
+
+    target = _complete_target({'full_name': 'D/1993 F2', 'ttype': TargetType.COMET,
+                               'parent_key': '',
+                               'fragment_keys': ['F-A', 'F-B', 'F-C', 'F-D'],
+                               'aliases': []})
+    assert target['description'] == [
+        'Cometary fragments:',
+        'A: LID = comet.d1993_f2_a; NAIF ID = 1000131',
+        'B: LID = comet.d1993_f2_b',
+        'C: NAIF ID = 1000133',
+        'Additional fragments: D',
+    ]
 
 
 def test_lid_tail_comet_variants() -> None:

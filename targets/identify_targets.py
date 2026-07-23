@@ -501,11 +501,11 @@ def identify_target_dicts(
     for key, (cdict, elements) in cdict_lookup.items():
         rms, _ = mpc_tools.element_resid(elements, cdict)
         if rms > comet_rms:
-            logger and logger.info(f'Comet {key} rejected; '
-                                   f'element RMS {rms:.03} > {comet_rms}')
+            logger and logger.debug(f'Comet {key} rejected; '
+                                    f'element RMS {rms:.3f} > {comet_rms}')
         else:
             logger and logger.info(f'Comet {key} confirmed; '
-                                   f'element RMS {rms:.03} <= {comet_rms}')
+                                   f'element RMS {rms:.3f} <= {comet_rms}')
             results.append(cdict)
             unique_elements = [e for e in unique_elements if e != elements]
 
@@ -516,7 +516,7 @@ def identify_target_dicts(
         # The element test is quick and easy and does not produce false positives
         if rms <= mp_rms:
             logger and logger.info(f'Minor planet {key} confirmed; '
-                                   f'element RMS {rms:.03} <= {mp_rms}')
+                                   f'element RMS {rms:.3f} <= {mp_rms}')
             results.append(mdict)
             unique_elements = [e for e in unique_elements if e != elements]
             continue

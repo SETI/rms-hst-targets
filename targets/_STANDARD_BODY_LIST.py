@@ -32,11 +32,11 @@ where:
 _STANDARD_BODY_LIST = [
     ('Sun'        ,  0,    10, '*', '', []),
 
-    ('Mars System'   , 0, 4, 'p', '', []),
-    ('Jupiter System', 0, 5, 'p', '', []),
-    ('Saturn System' , 0, 6, 'p', '', []),
-    ('Uranus System' , 0, 7, 'p', '', []),
-    ('Neptune System', 0, 8, 'p', '', []),
+    ('Mars System'   , 0, 0, 'p', '', []),
+    ('Jupiter System', 0, 0, 'p', '', []),
+    ('Saturn System' , 0, 0, 'p', '', []),
+    ('Uranus System' , 0, 0, 'p', '', []),
+    ('Neptune System', 0, 0, 'p', '', []),
 
     ('Mercury'    ,  0,   199, 'P', '', []),
     ('Venus'      ,  0,   299, 'P', '', []),
@@ -231,13 +231,12 @@ _STANDARD_BODY_LIST = [
     # "S/2005 $ 1" -> "S/2005 (136199) 1" or "S/2005 (2003 UB313) 1"
     ('Ceres'   ,  1, 2000001, 'D', '', ['1899 OF', '1943 XB']),
 
-    ('Pluto System',  0,   9, 'p', ''            , []),
-    ('Pluto'   , 134340, 999, 'D', 'Pluto System', []),
-    ('Charon'  ,      1, 901, 'S', 'Pluto'       , ['S/1978 P 1']),
-    ('Nix'     ,      2, 902, 'S', 'Pluto'       , ['S/2005 $ 2']),
-    ('Hydra'   ,      3, 903, 'S', 'Pluto'       , ['S/2005 $ 1']),
-    ('Kerberos',      4, 904, 'S', 'Pluto'       , ['S/2011 $ 1']),
-    ('Styx'    ,      5, 905, 'S', 'Pluto'       , ['S/2012 $ 1']),
+    ('Pluto'   , 134340, 999, 'D', ''     , []),
+    ('Charon'  ,      1, 901, 'S', 'Pluto', []),
+    ('Nix'     ,      2, 902, 'S', 'Pluto', ['S/2005 $ 2']),
+    ('Hydra'   ,      3, 903, 'S', 'Pluto', ['S/2005 $ 1']),
+    ('Kerberos',      4, 904, 'S', 'Pluto', ['S/2011 $ 1']),
+    ('Styx'    ,      5, 905, 'S', 'Pluto', ['S/2012 $ 1']),
 
     ('Eris'    , 136199, 2136199, 'D', '', ['2003 UB313']),
     ('Dysnomia',      1,       0, 'S', 'Eris', ['S/2005 $ 1']),

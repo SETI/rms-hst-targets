@@ -25,19 +25,21 @@ schematypens="http://purl.oclc.org/dsdl/schematron"?>
       <Modification_Detail>
         <modification_date>$CURRENT_TIME(date_only=True)$</modification_date>
         <version_id>1.0</version_id>
-        <description>Initial version from PDS RMS Node</description>
+        <description>Initial version from the RMS Node's HST pipeline.</description>
       </Modification_Detail>
     </Modification_History>
   </Identification_Area>
   <Target>
     <name>$target['title']$</name>
     <type>$target['type_name']$</type>
-    $IF(target['description'].strip() in ('', 'none'))
+  $IF(target['description'])
+    <description>
+    $FOR(text=target['description'])
+      $WRAP(8, 90, text)$
+    $END_FOR
+    </description>
+  $ELSE
       <description>none</description>
-    $ELSE
-      <description>
-        $WRAP(8, 80, target['description'].strip())$
-      </description>
-    $END_IF
+  $END_IF
   </Target>
 </Product_Context>

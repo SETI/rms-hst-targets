@@ -7,8 +7,10 @@ import anyascii
 from targets.cometdb         import comet_lookup
 from targets.roman           import int_to_roman
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
-from targets.target_xml_cache_support import (new_target_xml_dict, target_xml_dict,
-                                              target_xml_path, update_target_xml_dict)
+from targets.target_xml_cache_support import (_missing_aliases, _new_desc,
+                                              _read_target_xml_dict,
+                                              find_xml_dict, find_xml_path,
+                                              new_target_xml_dict, update_target_xml_dict)
 from targets.targettype      import TargetType
 
 _LID_PREFIX = 'urn:nasa:pds:context:target:'
@@ -40,13 +42,6 @@ def _lid_tail(target):
     return tail
 
 
-_TYPE_WORD = {
-    TargetType.SATELLITE: 'Satellite',
-    TargetType.COMET    : 'Fragment',
-    TargetType.RING     : 'Ring',
-}
-
-
 def _complete_target(target):
     """Fill in any missing, required parameters in the given target dictionary.
 
@@ -64,7 +59,7 @@ def _complete_target(target):
     * "alt_titles": A list of standard aliases for this target, using standard
       capitalization. Each of these will be used as an `alternate_title` in the context
       product.
-    * "description": Descriptive text, if needed; otherwise, blank or "none".
+    * "description": A list of description lines (strings); an empty list means "none".
 
     Parameters:
         target (dict): Body dictionary.
@@ -113,22 +108,62 @@ def _complete_target(target):
     target['lid_tail'] = lid_tail
     target['lid'] = _LID_PREFIX + lid_tail
 
-    # description
+    # description (a list of strings, one per line; an empty list means "none")
     if 'description' not in target:
         desc = []
-        if parent:
-            type_word = _TYPE_WORD.get(target['ttype'], '')
-            if type_word:
-                desc.append(f'{type_word} of: {parent["full_name"]};')
-            if parent['ttype'] != TargetType.COMET:
-                desc.append(f'Type of primary: {TargetType.NAME[parent["ttype"]]};')
+        if target['ttype'] in (TargetType.SATELLITE, TargetType.RING):
+            desc.append(f'{target["type_name"]} of: {parent["full_name"]};')
+            desc.append(f'Type of primary: {TargetType.NAME[parent["ttype"]]};')
             desc.append(f'LID of primary: {_lid_tail(parent)};')
             if parent['naif_id']:
                 desc.append(f'NAIF ID of primary: {parent["naif_id"]};')
-        else:
-            desc = ['none']
 
-        target['description'] = '\n'.join(desc)
+        elif parent and target['ttype'] == TargetType.COMET:
+            desc.append(f'Fragment of: {parent["full_name"]};')
+            xml_dict = find_xml_dict(parent)
+            if xml_dict:
+                desc.append(f'LID of primary: {xml_dict["lid_tail"]};')
+            else:
+                desc.append(f'LID of primary: {_lid_tail(parent)};')
+            if parent['naif_id']:
+                desc.append(f'NAIF ID of primary: {parent["naif_id"]};')
+
+        elif target.get('fragment_keys', ''):
+            uncataloged = []
+            frag_info = {}
+            for frag_key in target['fragment_keys']:
+                comet = comet_lookup()[frag_key]
+                xml_dict = find_xml_dict(comet)
+                if xml_dict:
+                    frag_info[frag_key] = {}
+                    frag_info[frag_key]['lid_tail'] = xml_dict['lid_tail']
+                if comet.get('naif_id', 0):
+                    if frag_key not in frag_info:
+                        frag_info[frag_key] = {}
+                    frag_info[frag_key]['naif_id'] = comet['naif_id']
+
+                if frag_key in frag_info:
+                    frag_info[frag_key]['fragment'] = comet['fragment']
+                else:
+                    uncataloged.append(comet['fragment'])
+
+            if not frag_info:
+                desc = ['Cometary fragments: ' + ', '.join(uncataloged)]
+            else:
+                desc = ['Cometary fragments:']
+                for frag_key, info in frag_info.items():
+                    parts = [info['fragment'], ': ']
+                    if 'lid_tail' in info:
+                        parts += ['LID = ', info['lid_tail']]
+                        if 'naif_id' in info:
+                            parts += ['; ']
+                    if 'naif_id' in info:
+                        parts += ['NAIF ID = ', str(info['naif_id'])]
+                    desc.append(''.join(parts))
+                if uncataloged:
+                    desc.append('Additional fragments: ' + ', '.join(uncataloged))
+
+        target['description'] = desc
 
     return target
 
@@ -137,18 +172,12 @@ def get_target_xml_path(target, logger=None):
     """The cached directory path containing the content of the given target dictionary.
     """
 
-    xml_path = None
-    for key in [target['lid_tail'], target['title']] + target['alt_titles']:
-        xml_path = target_xml_path(key)
-        if xml_path is not None:
-            break
-
-    # If this target has no pre-existing context product
+    xml_path = find_xml_path(target)
     if xml_path is None:
         return new_target_xml_dict(target, logger=logger)
 
     # Check for a conflict
-    xml_dict = target_xml_dict(key)
+    xml_dict = _read_target_xml_dict(xml_path)
     for field in ('lid_tail', 'title', 'ttype'):
         if xml_dict[field] != target[field]:
             logger and logger.warning(f'Target context XML mismatch at "{field}" in '
@@ -156,11 +185,10 @@ def get_target_xml_path(target, logger=None):
                                       f'{target[field]!r}, {xml_dict[field]!r}')
             logger and logger.warning('Pre-existing target XML file used', xml_path)
 
-    # Update the file only if this target adds aliases or a description it lacks; otherwise
-    # the existing file already covers it.
-    missing_aliases = set(target['alt_titles']) - set(xml_dict['alt_titles'])
-    body_desc = (target.get('description') or '').strip()
-    needs_desc = body_desc not in ('', 'none') and not xml_dict['description']
+    # Update the file only if this target adds aliases or a description it lacks;
+    # otherwise the existing file already covers it.
+    missing_aliases = _missing_aliases(target, xml_dict)
+    needs_desc = _new_desc(target, xml_dict)
     if missing_aliases or needs_desc:
         return update_target_xml_dict(target, logger=logger)
 
