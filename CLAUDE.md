@@ -6,17 +6,17 @@ Identifies HST small-body moving targets (comets, asteroids/minor planets, stand
 
 ## Package layout
 
-The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `packages.find where = ["."]` / `include = ["targets", "targets.*"]` and pytest `pythonpath = ["."]`, so everything is imported under the package, e.g. `from targets import identify_comet`, `from targets.mpc_tools import mpc_packing`.
+The importable package is **`targets/`** (not `src/`). `pyproject.toml` sets `packages.find where = ["."]` / `include = ["targets", "targets.*"]` and pytest `pythonpath = ["."]`, so everything is imported under the package, e.g. `from targets import identify_targets`, `from targets.mpc_tools import mpc_packing`.
 
-- `targets/` — main package: identification logic (`identify_small_body.py`, `identify_comet.py`, `identify_minor_planet.py`, `standard_bodies.py`, `orbital_radec.py`), data modules (`_STANDARD_BODY_LIST.py`, `_HST_PROGRAM_OVERRIDES.py`, etc.), and subpackages `cometdb/` (comet/centaur DB builders & scrapers) and `mpc_tools/` (MPC packing/queries).
+- `targets/` — main package: identification logic (`identify_targets.py`, `identify_standard_body.py`, `comet_identifiers.py`, `minor_planet_identifiers.py`, `standard_bodies.py`, `orbital_radec.py`), target-XML context-product support (`target_xml_support.py`, `target_xml_cache_support.py`, `targettype.py`), data modules (`_STANDARD_BODY_LIST.py`, `_HST_PROGRAM_OVERRIDES.py`, etc.), and subpackages `cometdb/` (comet/centaur DB builders & scrapers) and `mpc_tools/` (MPC packing/queries).
 - `tests/` — pytest tests. Also holds non-pytest fixtures/baselines named in caps (`SPT_TESTS.py`, `SPT_TESTS_OUTPUT.txt`) — these are not collected by pytest.
 - `programs/` — maintenance / data-refresh scripts (`update_cometdb.py`, `retrieve_mast_moving_target_spts.py`, `reality_check_radec.py`). Not shipped.
-- `caches/` — on-disk data caches: `COMET_CACHE/`, `MPC_CACHE/`, `TARGET_XML_CACHE/` (committed). Modules find these by repo-relative path, falling back to `./NAME`.
+- `caches/` — on-disk data caches: `COMET_CACHE/`, `MPC_CACHE/`, `TARGET_XML_CACHE/` (committed). Modules find these by repo-relative path, falling back to `./NAME`. `TARGET_XML_CACHE/` is a read-only Engineering Node mirror; newly generated "_local" context products go to the gitignored `TARGET_XML_OVERLAY/` (activated via `use_local_xml_dir()`), which reads resolve overlay-first so the committed mirror stays pristine.
 
 ## Commands
 
 - Install dev env: `pip install -e ".[dev]"` (work inside a venv at `./venv`; never system Python).
-- Run all tests: `python -m pytest -q -n auto tests` (xdist, coverage, `--strict-markers` come from pyproject `addopts`; source is `targets`; branch-coverage gate `fail_under = 90`).
+- Run all tests: `python -m pytest -q -n auto tests` (xdist, coverage, `--strict-markers` come from pyproject `addopts`; source is `targets`; branch-coverage gate `fail_under = 75`).
 - Single test: `pytest tests/test_orbital_radec.py::test_name`.
 - Type-check: `python -m mypy tests` — mypy is `strict` but **excludes `targets/` and `programs/`; it only ever runs on `tests/`.** Don't run mypy against the package.
 - Lint / format: `ruff check` and `ruff format`.

@@ -83,14 +83,15 @@ def _make_logger(level: str) -> pdslogger.PdsLogger:
 
     logger = pdslogger.PdsLogger(
         'pds.identify_visit', lognames=False, indent=True, timestamps=True, digits=3,
-        level=level
+        level=level, blanklines=False
     )
     logger.add_handler(pdslogger.NULL_HANDLER)  # suppress the default stdout handler
     logger.add_handler(pdslogger.STDOUT_HANDLER)
     return logger
 
 
-def identify_visit(visit: str, logger: pdslogger.PdsLogger) -> list[pathlib.Path]:
+def identify_visit(visit: str,  logger: pdslogger.PdsLogger,
+                   by_visit: bool = False) -> list[pathlib.Path]:
     """Identify the targets of one SPT_TESTS visit and return their context-product paths.
 
     The identification narrative is logged. Returns an empty list if no target can be
@@ -98,20 +99,24 @@ def identify_visit(visit: str, logger: pdslogger.PdsLogger) -> list[pathlib.Path
 
     Parameters:
         visit: The six-character visit key.
+        by_visit: True to print the XML file list after each visit.
         logger: The logger receiving the narrative.
     """
 
     headers = _load_spt_tests()[visit]
     logger.blankline()
-    logger.info(f'Identifying visit {visit} ({len(headers)} header(s))')
     try:
         paths = identify_targets(headers, logger=logger)
     except TargetIdentificationFailure as err:
-        logger.info(f'No target identified: {err}')
+        print('**** TargetIdentificationFailure')
         return []
 
-    logger.info(f'{visit}: {len(paths)} target(s) identified')
-    return [p for p in paths if p is not None]
+    if by_visit:
+        for path in paths:
+            print(f'  {path}')
+        return []
+
+    return paths
 
 
 def _open_in_editor(paths: list[pathlib.Path]) -> None:
@@ -148,12 +153,17 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         '--edit', action='store_true', help='open the identified XML files in $EDITOR'
     )
+    parser.add_argument(
+        '--by-visit', action='store_true',
+        help='print out XML file paths visit by visit.'
+    )
     args = parser.parse_args(argv)
 
     if args.edit and not os.environ.get('EDITOR'):
         parser.error('--edit requires the $EDITOR environment variable to be set')
 
-    visits, unmatched = _resolve_visits(args.visits)
+    visits = [v.lower() for v in args.visits]
+    visits, unmatched = _resolve_visits(visits)
     for pattern in unmatched:
         print(f'Warning: no visit in the SPT_TESTS corpus matches {pattern!r}',
               file=sys.stderr)
@@ -168,17 +178,21 @@ def main(argv: list[str] | None = None) -> None:
     seen: set[pathlib.Path] = set()
     with use_local_xml_dir():
         for visit in visits:
-            for path in identify_visit(visit, logger):
+            for path in identify_visit(visit, logger, args.by_visit):
                 if path not in seen:
                     seen.add(path)
                     paths.append(path)
 
-    print(f'\nIdentified {len(paths)} XML file(s):')
-    for path in paths:
-        print(f'  {path}')
+    if not args.by_visit:
+        print(f'Identified {len(paths)} XML file(s):')
+        for path in paths:
+            print(f'  {path}')
 
     if args.edit and paths:
-        _open_in_editor(paths)
+        if len(paths) <= 10:
+            _open_in_editor(paths)
+        else:
+            print(f'Editing option suspended for {len(paths)} files')
 
 
 ############################################

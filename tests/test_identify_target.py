@@ -313,7 +313,7 @@ def test_nh_survey_field_override() -> None:
                  '12887/ibzx01g4q_spt.fits'):    # 12887_1
         bodies = identify_target_dicts([_header(spec)])
         assert len(bodies) == 1
-        assert bodies[0]['name'] == 'New Horizons survey field'
+        assert bodies[0]['full_name'] == 'New Horizons survey field'
         assert bodies[0]['ttype'] == 'T'
 
 
@@ -322,7 +322,7 @@ def test_wildcard_override() -> None:
     header = {'FILENAME': 'x.fits', 'TARG_ID': '13633_5', 'TARGNAME': 'ANY'}
     bodies = identify_target_dicts([header])
     assert len(bodies) == 1
-    assert bodies[0]['name'] == 'New Horizons survey field'
+    assert bodies[0]['full_name'] == 'New Horizons survey field'
 
 
 def test_nicknamed_targets_resolved_by_override() -> None:
@@ -348,18 +348,18 @@ def test_occultation_adds_occulted_star() -> None:
     # Occultation overrides record the occulting body plus the occulted star (an added
     # 'dict'), exercising both the standard-body and small-body extra-body paths.
     def _names(visit: str) -> list[str]:
-        return [b['name'] for b in identify_target_dicts([dict(h) for h in _SPT[visit]])]
+        return [b['full_name'] for b in identify_target_dicts([dict(h) for h in _SPT[visit]])]
 
     saturn = _names('v0qj04')          # 2771: Saturn-rings occultation (standard body)
     assert 'Saturn Rings' in saturn
     assert 'GSC 06323-01466' in saturn
 
     pluto = _names('f5br01')           # 8105: FGS Pluto occultation (standard body)
-    assert 'Pluto' in pluto
+    assert '134340 Pluto' in pluto
     assert '2MASS J16324364-1038237' in pluto
 
     arrokoth = _names('fdfm01')        # 15003: Arrokoth occultation (small-body + dict)
-    assert 'Arrokoth' in arrokoth
+    assert '486958 Arrokoth' in arrokoth
     assert '2MASS J19000829-2039378' in arrokoth
 
 

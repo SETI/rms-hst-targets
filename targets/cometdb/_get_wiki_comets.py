@@ -171,13 +171,17 @@ _NP_NAME_N_FRAG2 = re.compile(r'.*\(\s*' + _NP_NAME_N_FRAG.pattern[:-1] + r'\s*\
                               re.DOTALL)
 
 # Extracted from https://en.wikipedia.org/wiki/Halley%27s_Comet#List_of_apparitions
-_HALLEY_DESIGS = ['P/-239 K1', 'P/-163 U1', 'P/-86 Q1', 'P/-11 Q1', 'P/66 B1',
-                  'P/141 F1', 'P/218 H1', 'P/295 J1', 'P/374 E1', 'P/451 L1',
-                  'P/530 Q1', 'P/607 H1', 'P/684 R1', 'P/760 K1', 'P/837 F1',
-                  'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
+# _HALLEY_DESIGS = ['P/-239 K1', 'P/-163 U1', 'P/-86 Q1', 'P/-11 Q1', 'P/66 B1',
+#                   'P/141 F1', 'P/218 H1', 'P/295 J1', 'P/374 E1', 'P/451 L1',
+#                   'P/530 Q1', 'P/607 H1', 'P/684 R1', 'P/760 K1', 'P/837 F1',
+#                   'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
+#                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
+#                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
+# _HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1909c', '1986 III', '1982i']
+_HALLEY_DESIGS = ['P/1066 G1', 'P/1145 G1', 'P/1222 R1',
                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
-_HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1909c', '1986 III', '1982i']
+_HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1986 III']
 
 
 def _get_wiki_numbered_comets(

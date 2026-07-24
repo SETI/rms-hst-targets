@@ -111,7 +111,7 @@ def _complete_target(target):
     # description (a list of strings, one per line; an empty list means "none")
     if 'description' not in target:
         desc = []
-        if target['ttype'] in (TargetType.SATELLITE, TargetType.RING):
+        if target['ttype'] == TargetType.SATELLITE:
             desc.append(f'{target["type_name"]} of: {parent["full_name"]};')
             desc.append(f'Type of primary: {TargetType.NAME[parent["ttype"]]};')
             desc.append(f'LID of primary: {_lid_tail(parent)};')

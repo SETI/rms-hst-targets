@@ -265,8 +265,7 @@ def _merge_comets(
             comet['fragment'] = alt_fragment
 
     # Merge lists
-    # for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes', 'old_desigs'):
-    for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes'):
+    for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes', 'old_desigs'):
         list_ = comet.setdefault(field, [])
         list_ += alt.get(field, [])
 
@@ -374,9 +373,8 @@ def _complete_comets(
 
         # Fill in year
         years = [-9999]  # if no year is found
-        # desigs = (comet.get('alt_desigs', []) + [comet.get('desig', '')]
-        #           + comet.get('old_desigs', []))
-        desigs = comet.get('alt_desigs', []) + [comet.get('desig', '')]
+        desigs = (comet.get('alt_desigs', []) + [comet.get('desig', '')]
+                  + comet.get('old_desigs', []))
         for desig in desigs:
             after_slash = desig.rpartition('/')[-1]
             match = _INT_MATCH.match(after_slash)
@@ -521,7 +519,7 @@ def _fill_comet_aliases(
 
     # Append all remaining designations
     aliases += comet.get('alt_desigs', [])
-    # aliases += comet.get('old_desigs', [])
+    aliases += comet.get('old_desigs', [])
 
     aliases = _clean_list(aliases)
     comet['full_name'] = aliases[0]

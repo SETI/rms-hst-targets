@@ -394,7 +394,15 @@ def identify_target_dicts(
     if len(header_lists) > 1:
         raise ValueError('Multiple visits among headers provided')
 
+    visit = headers[0]['FILENAME'][:6].upper()
     unique_headers = _unique_targets(headers)
+    plural = 's' if len(unique_headers) > 1 else ''
+    if len(unique_headers) == len(headers):
+        logger and logger.info(f'Identifying targets for visit {visit} '
+                               f'({len(headers)} header{plural})')
+    else:
+        logger and logger.info(f'Identifying targets for visit {visit} '
+                               f'({len(unique_headers)} unique header{plural})')
 
     # Apply repairs
     repaired_headers = []
@@ -406,7 +414,13 @@ def identify_target_dicts(
         for key in keys:
             if key in _HST_PROGRAM_OVERRIDES:
                 repair = _HST_PROGRAM_OVERRIDES[key]
-                logger and logger.info(f'Target repair applied: {repair}')
+                filename = header['FILENAME'].upper()
+                logger and logger.info(f'Override applied to {filename}')
+                subdict = {k: v for k, v in repair.items() if k.isupper()}
+                if subdict:
+                    logger and logger.info(f'Header replacements: {subdict}')
+                if 'dict' in repair:
+                    logger and logger.info(f'Target added: {repair["dict"]["full_name"]}')
                 header = dict(header)
                 header.update(repair)
 
@@ -433,7 +447,7 @@ def identify_target_dicts(
 
     headers = repaired_headers + unrepaired_headers
 
-    # A standard-body observation is identified entirely from the header
+    # A standard body observation is identified entirely from the header
     bodies = identify_standard_body(headers, logger=logger)
     if bodies is not None:
         return bodies + extra_dicts
@@ -444,8 +458,8 @@ def identify_target_dicts(
     unique_elements = []
     ttype_lookup = {}       # filename -> ttype string
     for header in headers:
-        logger and logger.blankline()
-        logger and logger.info(f'{header["FILENAME"]}...')
+        filename = header['FILENAME'].upper()
+        logger and logger.info(f'Identifying {filename}...')
 
         strings = _collect_strings(header, std=True)
         strings, ttypes = hst_repairs(strings, logger=logger)
@@ -594,7 +608,7 @@ def identify_target_dicts(
         for header in headers:
             test_elements = _parse_mt_lv(header, 'MT_LV1')
             if test_elements == elements:
-                message = (f'Target could not be determined: file = {header["FILENAME"]};'
+                message = (f'Target could not be determined for {header["FILENAME"]};'
                            f' TARGNAME={header.get("TARGNAME")}')
                 logger and logger.error(message)
                 raise TargetIdentificationFailure(message)
@@ -603,7 +617,7 @@ def identify_target_dicts(
     # valid return value.
     if not results:
         header = headers[0]
-        message = (f'No target could be identified: file = {header["FILENAME"]}; '
+        message = (f'No target could be identified for {header["FILENAME"]}; '
                    f'TARGNAME={header.get("TARGNAME")}')
         logger and logger.error(message)
         raise TargetIdentificationFailure(message)
@@ -623,8 +637,8 @@ def identify_targets(
     Identical to `identify_target_dicts` in its inputs and in how it identifies bodies,
     but each identified body dictionary is resolved to the path of its PDS4 target context
     product rather than returned directly. The dictionary is first completed with its PDS
-    fields (`_complete_target`), then `get_target_xml_path` returns the path of the matching
-    context product, generating a new "_local" product when none exists.
+    fields (`_complete_target`), then `get_target_xml_path` returns the path of the
+    matching context product, generating a new "_local" product when none exists.
 
     Parameters:
         headers: The SPT/SHF headers of a single visit; see `identify_target_dicts`.

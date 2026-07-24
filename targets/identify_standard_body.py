@@ -64,8 +64,8 @@ def _identify_standard_names(header, *, logger=None):
         return []
 
     # Log value found
-    logger and logger.blankline()
-    logger and logger.info(f'{header["FILENAME"]}: STD={stdval}')
+    filename = header['FILENAME'].upper()
+    logger and logger.info(f'Identifying {filename}: STD={stdval}')
 
     # Search for additional strings
     strings = _collect_strings(header, std=False)
@@ -179,7 +179,6 @@ def identify_standard_body(headers, *, logger=None):
     if not name_tuples:
         return None
 
-    logger and logger.blankline()
     for filename in filenames_unused:
         logger and logger.info(f'{filename}: No STD body')
 

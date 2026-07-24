@@ -135,7 +135,7 @@ def test_complete_target_ring() -> None:
     assert target['type_name'] == 'Ring'
     assert target['lid_tail'] == 'ring.saturn.saturn_rings'
     assert target['parent']['name'] == 'Saturn'
-    assert target['description'][0] == 'Ring of: Saturn;'
+    assert target['description'] == []
 
 
 def test_complete_target_trans_neptunian_object() -> None:
