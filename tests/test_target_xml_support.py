@@ -133,7 +133,7 @@ def test_complete_target_satellite() -> None:
 def test_complete_target_ring() -> None:
     target = _complete_target(_body('Saturn Rings'))
     assert target['type_name'] == 'Ring'
-    assert target['lid_tail'] == 'ring.saturn.saturn_rings'
+    assert target['lid_tail'] == 'ring.saturn.rings'
     assert target['parent']['name'] == 'Saturn'
     assert target['description'] == []
 

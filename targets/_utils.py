@@ -171,17 +171,22 @@ def categorize_minor_planet(body, ttypes, *, logger=None):
     if body['ttype'] != TargetType.MINOR_PLANET:
         return
 
-    name = body.get('full_name') or body.get('name') or body.get('desig')
-    key = body.get('mnum') or name
-    key = key.upper()
+    name = body.get('full_name') or body.get('name') or body.get('desig')  # for messages
+    keys = [body.get('full_name'), body.get('desig'), body.get('mnum')]
+    keys = [k.upper() for k in keys if k]
+    # Don't include ['name'] here because 106 Dione -> ['ttype'] == "S"
+    for key in keys:
+        if key in STANDARD_BODY_LOOKUP:  # handles all dwarf planets, a few others
+            body['ttype'] = STANDARD_BODY_LOOKUP[key]['ttype']
+            return
 
-    if key in STANDARD_BODY_LOOKUP:  # handles all dwarf planets, a few others
-        body['ttype'] = STANDARD_BODY_LOOKUP[key]['ttype']
-        return
-
-    if key in centaur_lookup():
-        body['ttype'] = TargetType.CENTAUR
-        return
+    # For Centaur check, include ['name']
+    if 'name' in body:
+        keys.append(body['name'].upper())
+    for key in keys:
+        if key in centaur_lookup():
+            body['ttype'] = TargetType.CENTAUR
+            return
 
     # Categorize based on orbit
     a = body.get('A')
@@ -197,31 +202,31 @@ def categorize_minor_planet(body, ttypes, *, logger=None):
         test = set(ttypes) - {TargetType.DWARF_PLANET, TargetType.CENTAUR}
         if test == {TargetType.TRANS_NEPTUNIAN_OBJECT}:
             body['ttype'] = TargetType.TRANS_NEPTUNIAN_OBJECT
-            logger and logger.debug(f'{name} is a TNO from SPT file')
+            logger and logger.debug(f'"{name}" is a TNO from SPT file')
         elif test == {TargetType.ASTEROID}:
             body['ttype'] = TargetType.ASTEROID
-            logger and logger.debug(f'{name} is an asteroid from SPT file')
+            logger and logger.debug(f'"{name}" is an asteroid from SPT file')
         else:
             body['ttype'] = TargetType.ASTEROID
-            logger and logger.warning(f'Unable to categorize {name}; '
+            logger and logger.warning(f'Unable to categorize "{name}"; '
                                       'defaulting to asteroid')
 
     elif a >= _TNO_BOUNDARY_AU:
         body['ttype'] = TargetType.TRANS_NEPTUNIAN_OBJECT
-        logger and logger.debug(f'{name} is a TNO (a = {a:.2f} AU)')
+        logger and logger.debug(f'"{name}" is a TNO (a = {a:.2f} AU)')
     elif q is None and a < _CENTAUR_PERIHELION_AU:
         body['ttype'] = TargetType.ASTEROID
-        logger and logger.debug(f'{name} is an asteroid (a = {a:.2f} AU)')
+        logger and logger.debug(f'"{name}" is an asteroid (a = {a:.2f} AU)')
     elif q is None:
-        logger and logger.error(f'{name} cannot be categorized')
-        raise ValueError(f'{name} cannot be categorized')
+        logger and logger.error(f'"{name}" cannot be categorized')
+        raise ValueError(f'"{name}" cannot be categorized')
     elif q > _CENTAUR_PERIHELION_AU:
         body['ttype'] = TargetType.CENTAUR
-        logger and logger.debug(f'{name} is a Centaur '
+        logger and logger.debug(f'"{name}" is a Centaur '
                                 f'(a = {a:.2f} AU; q = {q:.2f} AU)')
     else:
         body['ttype'] = TargetType.ASTEROID
-        logger and logger.debug(f'{name} is an asteroid '
+        logger and logger.debug(f'"{name}" is an asteroid '
                                 f'(a = {a:.2f} AU; q = {q:.2f} AU)')
 
 

@@ -30,14 +30,13 @@ def minor_planet_identifiers(strings, *, logger=None):
     formatted, unused, _confidence = _select_minor_planet_identifiers(strings)
 
     # A bare 1-3 digit number is a weak identifier: in HST target strings it is often a
-    # field/aperture index or a mistaken minor-planet number (e.g. the "1" in the STD field
-    # "1 (VESTA)", where the body is really 4 Vesta). When the strings also provide a name
-    # or full designation, trust that and drop the bare short numbers; keep them only when
-    # nothing else identifies the body (e.g. TARGNAME "624" for 624 Hektor).
+    # field/aperture index or a mistaken minor-planet number (e.g. the "1" in the STD
+    # field "1 (VESTA)", where the body is really 4 Vesta). When the strings also provide
+    # a name or full designation, trust that and drop the bare short numbers; keep them
+    # only when nothing else identifies the body (e.g. TARGNAME "624" for 624 Hektor).
     if any(not _BARE_NUMBER_REGEX.match(s) for s in formatted):
         dropped = {s for s in formatted if _BARE_NUMBER_REGEX.match(s)}
         if dropped:
-            logger and logger.info(f'Ignoring bare numeric identifiers: {sorted(dropped)}')
             formatted = formatted - dropped
 
     used = {}  # string -> mpc result as a dict
@@ -68,11 +67,27 @@ def minor_planet_identifiers(strings, *, logger=None):
         except RuntimeError:
             unused.append(string)
 
+    # Now that we have candidates, check again using full strings against body lookups
+    formatted, unused, _confidence = _select_minor_planet_identifiers(strings,
+                                                                      longmatch=True)
+
+    used = {}  # string -> mpc result as a dict
+    unused = []
+    for string in formatted:
+        found = False
+        for mpc_dict in mpc_dicts:
+            if string in mpc_dict['lookups']:
+                used[string] = mpc_dict
+                found = True
+        if not found and string not in unused:
+            unused.append(string)
+
     # Log the result
     if len(mpc_dicts) == 1:
-        logger and logger.info(f'Minor planet identified: {mpc_dicts[0]["name"]!r}')
+        name = mpc_dicts[0]["full_name"]
+        logger and logger.info(f'Minor planet identified: "{name}"')
     else:
-        names = [m['name'] for m in mpc_dicts]
+        names = [m['full_name'] for m in mpc_dicts]
         logger and logger.info(f'Multiple minor planets identified: {names}')
     if unused:
         logger and logger.info(f'Unused strings: {unused}')
@@ -115,7 +130,7 @@ _DESIG = rf'(?:{_YEAR} [A-HJ-Y][A-HJ-Z]{_NUM}?)'
 
 # Confidence > 5 means this pattern most likely defines a minor planet.
 # If minor planet confidence exceeds comet confidence, comets will be checked second.
-_PATTERNS = [
+_SHORT_PATTERNS = [
     (rf'({_DESIG})'                 , 7),
     (rf'\(?({_NUM})\)? ({_NAME})'   , 9),
     (rf'({_NUM}) \(({_NAME})\)'     , 9),
@@ -125,14 +140,28 @@ _PATTERNS = [
     (rf'\(?({_NAME})\)?'            , 2),
 ]
 
-_REGEXES = [(re.compile(pattern, re.I), conf) for pattern, conf in _PATTERNS]
+# Same as above but number + name and number + designation remain together
+_LONG_PATTERNS = [
+    (rf'(\(?{_NUM}\)? {_NAME})'     , 9),
+    (rf'({_NUM} \({_NAME}\))'       , 9),
+    (rf'(\({_NUM}\) {_DESIG})'      , 9),
+    (rf'(\({_NUM}\))'               , 8),
+]
+
+# Negative lookahead ensures that the next character, if any, is not a letter or digit
+_SHORT_REGEXES = [(re.compile(pattern + r'(?![A-Z0-9])(.*)', re.I), conf)
+                  for pattern, conf in _SHORT_PATTERNS]
+_LONG_REGEXES = [(re.compile(pattern + r'(?![A-Z0-9])(.*)', re.I), conf)
+                 for pattern, conf in _LONG_PATTERNS]
 
 
-def _select_minor_planet_identifiers(strings):
+def _select_minor_planet_identifiers(strings, longmatch=False):
     """Interpret one or more strings as minor planet identifiers.
 
     Parameters:
         strings (str or list[str]): One or more potential identifiers for a minor planet.
+        longmatch (bool, optional): True to keep number+name and number+designation
+            together
 
     Returns:
         tuple: `(formatted, unused, confidence)`:
@@ -148,14 +177,20 @@ def _select_minor_planet_identifiers(strings):
     if isinstance(strings, str):
         strings = [strings]
 
+    regexes = _LONG_REGEXES if longmatch else _SHORT_REGEXES
+
     formatted = set()
     unused = []
     confidence = 0
     for string in strings:
-        for regex, conf in _REGEXES:
+        for regex, conf in regexes:
             match = regex.match(string)
             if match:
-                formatted |= set(match.groups())
+                matches = match.groups()
+                formatted |= set(matches[:-1])
+                tail = matches[-1].strip()
+                if tail:
+                    unused.append(tail)
                 confidence = max(confidence, conf)
                 break
         if not match:

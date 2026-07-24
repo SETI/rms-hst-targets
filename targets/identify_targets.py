@@ -287,7 +287,8 @@ def minor_planet_by_radec(
             continue
         offset, gap, delta = info
         candidates.append((offset, gap, delta, body, rms))
-        logger and logger.info(f'Candidate {body["full_name"]}: element rms '
+        name = body['full_name']
+        logger and logger.info(f'Candidate "{name}": element RMS '
                                f'{rms:.4f}, sky offset {offset:.1f}"')
 
     if not candidates:
@@ -299,7 +300,8 @@ def minor_planet_by_radec(
 
     tol = _position_tolerance(_FALLBACK_RADEC_TOLERANCE, gap, delta)
     if offset > tol:
-        logger and logger.info(f'Nearest candidate {body["full_name"]} is {offset:.1f}" '
+        name = body['full_name']
+        logger and logger.info(f'Nearest candidate "{name}" is {offset:.1f}" '
                                f'from RA_TARG/DEC_TARG, beyond tolerance {tol:.1f}"')
         return None
     if len(candidates) > 1 and offset > candidates[1][0] / 2.:
@@ -308,7 +310,8 @@ def minor_planet_by_radec(
                                'RA_TARG/DEC_TARG')
         return None
 
-    logger and logger.info(f'Minor planet selected by sky position: {body["full_name"]} '
+    name = body['full_name']
+    logger and logger.info(f'Minor planet "{name}" selected by sky position: '
                            f'({offset:.1f}" from RA_TARG/DEC_TARG)')
     return (body, rms)
 
@@ -524,19 +527,19 @@ def identify_target_dicts(
             # a bare "Shoemaker-Levy" matches many comets and cannot be confirmed without
             # corroborating elements.
             if single:
-                logger and logger.info(f'Comet {key} confirmed by name; '
+                logger and logger.info(f'Comet "{key}" confirmed by name; '
                                        'no orbital elements to test')
                 results.append(cdict)
                 unique_elements = [e for e in unique_elements if e != elements]
             else:
-                logger and logger.info(f'Comet {key} rejected; ambiguous name and '
+                logger and logger.info(f'Comet "{key}" rejected; ambiguous name and '
                                        'no orbital elements to test')
         elif rms > comet_rms:
-            logger and logger.debug(f'Comet {key} rejected; '
+            logger and logger.debug(f'Comet "{key}" rejected; '
                                     f'element RMS {rms:.3f} > {comet_rms}')
         else:
-            logger and logger.info(f'Comet {key} confirmed; '
-                                   f'element RMS {rms:.3f} <= {comet_rms}')
+            logger and logger.info(f'Comet "{key}" elements confirmed; '
+                                   f'RMS {rms:.3f} <= {comet_rms}')
             results.append(cdict)
             unique_elements = [e for e in unique_elements if e != elements]
 
@@ -546,8 +549,8 @@ def identify_target_dicts(
 
         # The element test is quick and easy and does not produce false positives
         if rms <= mp_rms:
-            logger and logger.info(f'Minor planet {key} confirmed; '
-                                   f'element RMS {rms:.3f} <= {mp_rms}')
+            logger and logger.info(f'"{key}" elements confirmed; '
+                                   f'RMS {rms:.3f} <= {mp_rms}')
             results.append(mdict)
             unique_elements = [e for e in unique_elements if e != elements]
             continue
@@ -558,8 +561,8 @@ def identify_target_dicts(
             info = radec_offset(mdict, obs_time, ra_targ, dec_targ, logger=logger)
             offset = info[0] if info is not None else None
             if offset is not None and offset <= radec_delta:
-                logger and logger.info(f'Minor planet {key} confirmed; RA/dec offset '
-                                       f'{offset:.1f} <= {radec_delta} arcsec')
+                logger and logger.info(f'"{key}" RA/dec confirmed; offset '
+                                       f'{offset:.1f}" <= {radec_delta}"')
                 results.append(mdict)
                 unique_elements = [e for e in unique_elements if e != elements]
                 continue
@@ -570,13 +573,13 @@ def identify_target_dicts(
         # trustworthy, so reject it now.
         if single:
             mismatch = (f'RA/dec offset {offset:.1f} arcsec' if offset is not None
-                        else f'element RMS {rms:.03}')
+                        else f'element RMS {rms:0.3}')
             deferred_singles.append((key, mdict, elements, mismatch))
         elif offset is not None:
-            logger and logger.info(f'Minor planet {key} rejected; RA/dec offset '
+            logger and logger.info(f'Minor planet "{key}" rejected; RA/dec offset '
                                    f'{offset:.1f} > {radec_delta} arcsec')
         else:
-            logger and logger.info(f'Minor planet {key} rejected; '
+            logger and logger.info(f'Minor planet "{key}" rejected; '
                                    f'element RMS {rms:.03} > {mp_rms}; '
                                    'RA/dec testing unavailable')
 
@@ -586,8 +589,9 @@ def identify_target_dicts(
         result = cometdb.query_comet_by_elements(elements, logger=logger)
         if result and result[1] <= comet_rms:
             cdict, rms = result
-            logger and logger.info(f'Comet {cdict["full_name"]} identified by elements; '
-                                   f'{rms:.03} <= {comet_rms}')
+            name = cdict['full_name']
+            logger and logger.info(f'Comet "{name}" confirmed by elements; '
+                                   f'{rms:.3f} <= {comet_rms}')
             results.append(cdict)
             indices.append(k)
     for k in indices[::-1]:
@@ -600,8 +604,8 @@ def identify_target_dicts(
         if result is not None:
             mdict, _ = result
             categorize_minor_planet(mdict, ttypes, logger=logger)
-            logger and logger.info(f'Minor planet {mdict["full_name"]} identified by '
-                                   'RA/dec')
+            name = mdict['full_name']
+            logger and logger.info(f'Minor planet "{name}" confirmed by RA/dec')
             results.append(mdict)
             indices.append(k)
     for k in indices[::-1]:
@@ -614,8 +618,8 @@ def identify_target_dicts(
     for key, mdict, elements, mismatch in deferred_singles:
         if elements in unique_elements:
             logger and logger.warning(
-                f'Minor planet {key} identified by name, but its orbital elements do not '
-                f'match the catalog ({mismatch}); accepting the unambiguous name')
+                f'Minor planet "{key}" identified by name, but its orbital elements do '
+                f'not match the catalog ({mismatch}); accepting the unambiguous name')
             results.append(mdict)
             unique_elements = [e for e in unique_elements if e != elements]
 
@@ -625,7 +629,8 @@ def identify_target_dicts(
         for header in headers:
             test_elements = _parse_mt_lv(header, 'MT_LV1')
             if test_elements == elements:
-                message = (f'Target could not be determined for {header["FILENAME"]};'
+                filename = header["FILENAME"].upper()
+                message = (f'Target could not be identified for {filename};'
                            f' TARGNAME={header.get("TARGNAME")}')
                 logger and logger.error(message)
                 raise TargetIdentificationFailure(message)
@@ -634,7 +639,8 @@ def identify_target_dicts(
     # valid return value.
     if not results:
         header = headers[0]
-        message = (f'No target could be identified for {header["FILENAME"]}; '
+        filename = header["FILENAME"].upper()
+        message = (f'Target could not be identified for {filename}; '
                    f'TARGNAME={header.get("TARGNAME")}')
         logger and logger.error(message)
         raise TargetIdentificationFailure(message)

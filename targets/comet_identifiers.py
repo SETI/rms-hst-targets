@@ -98,9 +98,9 @@ def comet_identifiers(strings, *, logger=None):
     comets = list(comets.values())
 
     # Log the results
-    names = [c['name'] for c in comets]
+    names = [c['full_name'] for c in comets]
     if len(comets) == 1:
-        logger and logger.info(f'Comet identified: {names[0]!r}')
+        logger and logger.info(f'Comet identified: "{names[0]}"')
     else:
         logger and logger.info(f'Multiple comets identified: {names}')
     if unused:
@@ -130,7 +130,9 @@ _PATTERNS = [
     (rf'({_NAME})'                                                  , 1),
 ]
 
-_REGEXES = [(re.compile(pattern, re.I), conf) for pattern, conf in _PATTERNS]
+# Negative lookahead ensures that the next character, if any, is not a letter or digit
+_REGEXES = [(re.compile(pattern + r'(?![A-Z0-9])(.*)', re.I), conf)
+            for pattern, conf in _PATTERNS]
 
 
 def _select_comet_identifiers(strings):
@@ -160,7 +162,11 @@ def _select_comet_identifiers(strings):
         for regex, conf in _REGEXES:
             match = regex.match(string)
             if match:
-                formatted |= set(match.groups())
+                matches = match.groups()
+                formatted |= set(matches[:-1])
+                tail = matches[-1].strip()
+                if tail:
+                    unused.append(tail)
                 confidence = max(confidence, conf)
                 break
         if not match:

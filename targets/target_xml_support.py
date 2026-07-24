@@ -31,8 +31,10 @@ def _lid_tail(target):
         else:
             name = name.replace('/', ' ')                   # 1P/Halley -> 1P Halley
 
-    if target['ttype'] in {TargetType.SATELLITE, TargetType.RING, TargetType.TORUS}:
+    if target['ttype'] in {TargetType.SATELLITE, TargetType.TORUS}:
         name = target['parent']['full_name'] + '.' + name
+    elif target['ttype'] == TargetType.RING:
+        name = target['parent']['full_name'] + '.rings'
 
     tail = TargetType.NAME[target['ttype']] + '.' + name
     tail = tail.replace(' ', '_').lower()

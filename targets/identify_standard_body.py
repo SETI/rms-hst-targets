@@ -15,14 +15,6 @@ from targets.targettype      import TargetType
 _STD_REGEX = re.compile(r'STD *= *([^,]+)')
 _TARDESCR_REGEX = re.compile(r'SOLAR SYSTEM;(?:PLANET|SATELLITE|FEATURE|OFFSET) (\w+)')
 
-_PLANET_RADII = {
-    'MARS'   :  3500.,
-    'JUPITER': 73000.,
-    'SATURN' : 62000.,
-    'URANUS' : 26000.,
-    'NEPTUNE': 26000.,
-}
-
 
 def _identify_standard_names(header, *, logger=None):
     """Identify the standard bodies (bodies, rings, systems, Io torus) of an HST
@@ -76,15 +68,18 @@ def _identify_standard_names(header, *, logger=None):
     mt_lv2 = header.get('MT_LV2_1', '').replace(' ', '')
     if mt_lv2.startswith('TYPE=TORUS'):
         torus = _parse_mt_lv(header, 'MT_LV2', logger=logger)
-        planet_radius = _PLANET_RADII.get(stdval, 0)
 
         if stdval == 'JUPITER' and TargetType.PLASMA_CLOUD in ttypes and 'IO' in strings:
             stdval = 'IO TORUS'
         elif (TargetType.RING in ttypes and TargetType.PLASMA_CLOUD not in ttypes
               and torus.get('POLE_LAT', 90) == 90
               and torus.get('LAT', 0) == 0
-              and torus.get('LONG', 90) in {90, 270}
-              and planet_radius < torus['RAD'] < 10.*planet_radius):
+              and torus.get('LONG', 90) in {90, 270}):
+            # An explicit RING/RPX keyword (TargetType.RING) on an equatorial-plane torus
+            # (pole-on, zero latitude, viewed at an ansa) identifies the ring system. The
+            # torus RAD is not tested: proposers set it to a nominal aperture-centering
+            # value (e.g. 50000 for Saturn's F-ring ansae) that need not fall in the ring
+            # zone, and non-ring atmosphere/limb tori carry no RING keyword to begin with.
             test = stdval + ' RINGS'
             if test in STANDARD_BODY_LOOKUP:
                 stdval = test

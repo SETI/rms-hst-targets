@@ -151,6 +151,17 @@ def test_std_io_torus_named_by_targname() -> None:
     assert [(b['full_name'], b['ttype']) for b in bodies] == [('Io Torus', 't'), ('Io', 'S')]
 
 
+def test_std_saturn_rings_from_equatorial_torus() -> None:
+    # Program 8802: TARKEY "RING" + MT_LV2 "TYPE=TORUS" in the equatorial plane (POLE_LAT
+    # 90, LAT 0, LONG 90) identifies Saturn's rings. The torus RAD=50000 sits below Saturn's
+    # radius -- a nominal aperture-centering value for the F-ring ansa, not the ring radius
+    # -- so RAD must not gate the identification. Pandora and Prometheus come from TARGNAME.
+    bodies = identify_target_dicts([_header('8802/u6ema001m_shm.fits')])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [
+        ('Saturn Rings', 'R'), ('Saturn', 'P'), ('Pandora', 'S'), ('Prometheus', 'S'),
+        ('Saturn System', 'p')]
+
+
 ##########################################################################################
 # Comets
 ##########################################################################################
@@ -178,7 +189,7 @@ def test_comet_incompatible_elements_raises() -> None:
     header = _header('2231/w0sb0101t_shf.fits')
     assert 'Q = 1.5933855' in header['MT_LV1_1']
     header['MT_LV1_1'] = header['MT_LV1_1'].replace('Q = 1.5933855', 'Q = 4.78')
-    with pytest.raises(TargetIdentificationFailure, match='could not be determined'):
+    with pytest.raises(TargetIdentificationFailure, match='could not be identified'):
         identify_target_dicts([header])
 
 
@@ -225,7 +236,7 @@ def test_ambiguous_comet_name_without_elements_raises() -> None:
     header['TARDESCR'] = 'COMET SHOEMAKER-LEVY'
     header['TARKEY1'] = 'COMET SHOEMAKER-LEVY'
     header['TARGNAME'] = 'SHOEMAKER-LEVY'
-    with pytest.raises(TargetIdentificationFailure, match='No target could be identified'):
+    with pytest.raises(TargetIdentificationFailure, match='could not be identified'):
         identify_target_dicts([header])
 
 
@@ -415,7 +426,7 @@ def test_internal_calibration_targnames() -> None:
 def test_unidentifiable_raises() -> None:
     header = {'FILENAME': 'x.fits', 'TARG_ID': '9999_1', 'TARGNAME': 'XYZZYQ'}
     with pytest.raises(TargetIdentificationFailure,
-                       match='No target could be identified'):
+                       match='could not be identified'):
         identify_target_dicts([header])
 
 

@@ -4,6 +4,7 @@
 
 import pathlib
 
+from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets.targettype import TargetType
 
 _MPC_CACHE = pathlib.Path(__file__).parent.parent.parent / 'caches/MPC_CACHE'
@@ -46,6 +47,8 @@ def _mpc_body_dict(aliases, elements):
             * "naif_id (int): The NAIF ID of the body, e.g, 2050000.
             * "desig" (str): The body designation, e.g., "2002 LM60".
             * "alt_desigs" (str): Alternative designations.
+            * "full_name" (str): The full name to be used in the LID.
+            * "aliases" (str): The complete list of aliases.
             * "mpc_key" (str): A string suitable for looking up the body at the MPC.
             * "ttype" (str): The body TargetType character, always "M" for minor planet.
               This can be updated later for a more specific value ("A" = asteroid; "H" =
@@ -60,22 +63,27 @@ def _mpc_body_dict(aliases, elements):
 
     # Minor planet number, if any
     if aliases[0].isdigit():
-        body['mnum'] = aliases[0]
+        mnum = aliases[0]
         body['naif_id'] = 2000000 + int(aliases[0])
         aliases = aliases[1:]
     else:
-        body['mnum'] = ''
+        mnum = ''
+    body['mnum'] = mnum
 
     # Name, if any
     if aliases[0].replace(' ', '').isalpha():
-        body['name'] = aliases[0]
+        name = aliases[0]
         aliases = aliases[1:]
     else:
-        body['name'] = ''
+        name = ''
+    body['name'] = name
 
     # Designations...
     if aliases:
         aliases.sort()
+        for k, alias in enumerate(aliases):
+            if alias[:4].isdigit() and alias[4] != ' ':
+                aliases[k] = alias[:4] + ' ' + alias[4:]
         body['desig'] = aliases[0]
         body['alt_desigs'] = aliases[1:]
     else:
@@ -84,13 +92,44 @@ def _mpc_body_dict(aliases, elements):
 
     body['mpc_key'] = body['mnum'] if body['mnum'] else body['desig']
 
-    if body['name']:
-        full_name = body['mnum'] + ' ' + body['name']
-    elif body['mnum']:
-        full_name = '(' + body['mnum'] + ') ' + body['desig']
+    # full_name
+    if name:
+        full_name = f'{mnum} {name}'
+    elif mnum:
+        full_name = f'({mnum}) {aliases[0]}'
     else:
         full_name = body['desig']
     body['full_name'] = full_name
+
+    # aliases
+    names = []              # All formal aliases
+    lookups = {full_name}   # Alternative names to support identification
+    if name:
+        names.append(f'({mnum}) {name}')
+        lookups.add(f'{mnum} ({name})')
+        if name in _DISALLOWED_MINOR_PLANET_NAMES:
+            lookups.add(name)
+        else:
+            names.append(name)
+    if mnum:
+        for desig in aliases:
+            names.append(f'({mnum}) {desig}')
+        names.append(f'({mnum})')
+        lookups.add(mnum)
+    names += aliases
+
+    # Make the aliases unique; omit full_name
+    aliases = []
+    for name in names:
+        if name not in aliases and name != full_name:
+            aliases.append(name)
+    names += aliases
+    body['aliases'] = aliases
+
+    # Lookups include aliases and names in uppercase
+    lookups |= set(aliases)
+    lookups |= {n.upper() for n in lookups}
+    body['lookups'] = lookups
 
     body['ttype'] = TargetType.MINOR_PLANET
     body.update(elements)
