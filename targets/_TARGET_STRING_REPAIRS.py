@@ -22,6 +22,7 @@ the splitting is by dashes. The underscores are replaced at the end of the proce
 _TARGET_STRING_REPAIRS = [
     (r'SOLAR SYSTEM',                           ''),
     (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (HYAKUTAKE)|[C]'),
+    (r'COMET SHOEMAKER-LEVY 1993E.*',           r'D/1993 F2 (SHOEMAKER-LEVY 9)|[C]'),
     (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\D)([A-Z]1?)(-\W+|)',
                                                 r'SHOEMAKER_LEVY|\1\2|[C]'),
     (r'SL',                                     r'SHOEMAKER_LEVY'),

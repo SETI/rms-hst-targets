@@ -453,7 +453,7 @@ def identify_target_dicts(
         return bodies + extra_dicts
 
     # Handle each unique header
-    cdict_lookup = {}       # name -> (body dict, mt_lv1 elements)
+    cdict_lookup = {}       # name -> (body dict, mt_lv1 elements, unambiguous name?)
     mdict_lookup = {}
     unique_elements = []
     ttype_lookup = {}       # filename -> ttype string
@@ -474,8 +474,9 @@ def identify_target_dicts(
 
         # Test for comet if selected
         cdicts = {}
+        csingle = False
         if ctest:
-            cdicts, _, _, _ = comet_identifiers(strings, logger=logger)
+            cdicts, _, _, csingle = comet_identifiers(strings, logger=logger)
 
         # Test for minor planet if selected
         mdicts = {}
@@ -485,7 +486,7 @@ def identify_target_dicts(
 
         # On no minor planet results, test comets anyway
         if mtest and not mdicts and not ctest:
-            cdicts, _, _, _ = comet_identifiers(strings, logger=logger)
+            cdicts, _, _, csingle = comet_identifiers(strings, logger=logger)
 
         # On no comet results, test minor planets anyway
         if ctest and not cdicts and not mtest:
@@ -494,7 +495,10 @@ def identify_target_dicts(
         # Save every identified body along with elements for further validation
         elements = _parse_mt_lv(header, 'MT_LV1', logger=logger)
         for cdict in cdicts:
-            cdict_lookup[cdict['full_name']] = (cdict, elements)
+            full_name = cdict['full_name']
+            prev_single = (cdict_lookup[full_name][2] if full_name in cdict_lookup
+                           else False)
+            cdict_lookup[full_name] = (cdict, elements, csingle or prev_single)
         for mdict in mdicts:
             categorize_minor_planet(mdict, ttypes, logger=logger)
             full_name = mdict['full_name']
@@ -512,9 +516,22 @@ def identify_target_dicts(
     radec_testable = obs_time is not None and ra_targ is not None and dec_targ is not None
 
     results = []
-    for key, (cdict, elements) in cdict_lookup.items():
-        rms, _ = mpc_tools.element_resid(elements, cdict)
-        if rms > comet_rms:
+    for key, (cdict, elements, single) in cdict_lookup.items():
+        rms, count = mpc_tools.element_resid(elements, cdict)
+        if count == 0:
+            # No orbital elements in the header to test against (e.g. a FILE ephemeris).
+            # Trust the name match only if it was unambiguous; an ambiguous name such as
+            # a bare "Shoemaker-Levy" matches many comets and cannot be confirmed without
+            # corroborating elements.
+            if single:
+                logger and logger.info(f'Comet {key} confirmed by name; '
+                                       'no orbital elements to test')
+                results.append(cdict)
+                unique_elements = [e for e in unique_elements if e != elements]
+            else:
+                logger and logger.info(f'Comet {key} rejected; ambiguous name and '
+                                       'no orbital elements to test')
+        elif rms > comet_rms:
             logger and logger.debug(f'Comet {key} rejected; '
                                     f'element RMS {rms:.3f} > {comet_rms}')
         else:

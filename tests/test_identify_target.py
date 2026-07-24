@@ -143,6 +143,14 @@ def test_std_comet() -> None:
     assert bodies[0]['ttype'] == 'C'
 
 
+def test_std_io_torus_named_by_targname() -> None:
+    # Program 5218: TARGNAME "IO-TORUS-WEST" names the Io plasma torus directly (no MT_LV2
+    # "TYPE=TORUS" geometry, and the STD body is Io rather than Jupiter). The plasma-cloud
+    # marker from hst_repairs must still yield the Io Torus, alongside Io itself.
+    bodies = identify_target_dicts([_header('5218/u2bn0101t_shm.fits')])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [('Io Torus', 't'), ('Io', 'S')]
+
+
 ##########################################################################################
 # Comets
 ##########################################################################################
@@ -198,6 +206,27 @@ def test_element_typo_fixed_by_override() -> None:
     # Program 6841 header had Q=.05320503 (10x too small); the override repairs it
     bodies = identify_target_dicts([_header('6841/u33k0201t_shm.fits')])
     assert bodies[0]['full_name'] == '45P/Honda-Mrkos-Pajdusakova'
+
+
+def test_comet_confirmed_by_name_without_elements() -> None:
+    # Program 5590: "COMET SHOEMAKER-LEVY 1993E-15" repairs to the unambiguous old-style
+    # designation D/1993 F2 (Shoemaker-Levy 9). MT_LV1 is a FILE ephemeris with no orbital
+    # elements, so the comet is confirmed on the strength of the unambiguous name alone.
+    bodies = identify_target_dicts([_header('5590/u2640401t_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == 'D/1993 F2 (Shoemaker-Levy 9)'
+
+
+def test_ambiguous_comet_name_without_elements_raises() -> None:
+    # The bare name "Shoemaker-Levy" is ambiguous across 13 comets, and a FILE ephemeris
+    # carries no orbital elements to disambiguate. No comet may be confirmed -- the element
+    # test must not treat "no elements to compare" as a perfect (RMS 0.0) match.
+    header = _header('5590/u2640401t_shm.fits')
+    header['TARDESCR'] = 'COMET SHOEMAKER-LEVY'
+    header['TARKEY1'] = 'COMET SHOEMAKER-LEVY'
+    header['TARGNAME'] = 'SHOEMAKER-LEVY'
+    with pytest.raises(TargetIdentificationFailure, match='No target could be identified'):
+        identify_target_dicts([header])
 
 
 ##########################################################################################

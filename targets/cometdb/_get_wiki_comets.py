@@ -177,11 +177,10 @@ _NP_NAME_N_FRAG2 = re.compile(r'.*\(\s*' + _NP_NAME_N_FRAG.pattern[:-1] + r'\s*\
 #                   'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
 #                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
 #                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
-# _HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1909c', '1986 III', '1982i']
 _HALLEY_DESIGS = ['P/1066 G1', 'P/1145 G1', 'P/1222 R1',
                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
-_HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1986 III']
+_HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1909c', '1986 III', '1982i']
 
 
 def _get_wiki_numbered_comets(

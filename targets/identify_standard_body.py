@@ -142,6 +142,15 @@ def _identify_standard_names(header, *, logger=None):
                     names.append(key)
                     break
 
+    # The Io plasma torus can be named directly (e.g. TARGNAME "IO-TORUS-WEST") without the
+    # MT_LV2 "TYPE=TORUS" geometry that the block above keys on; hst_repairs flags such a
+    # name with the plasma-cloud target type. When that marker is present and the torus is
+    # not already a target, record it as the primary target alongside Io. This runs after
+    # the system-target step so the torus does not count as a second body of Jupiter.
+    if (TargetType.PLASMA_CLOUD in ttypes and 'IO' in strings
+            and 'IO TORUS' not in names):
+        names.insert(0, 'IO TORUS')
+
     # Log the result
     logger and logger.info(f'Standard targets: {names}')
     if unused:

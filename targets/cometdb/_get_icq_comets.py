@@ -77,7 +77,7 @@ def _get_icq_comets(
         old_desig = rec[49:57].rstrip()
         if old_desig:
             years.append(old_desig[:4])
-        #     old_desigs.append(old_desig)
+            old_desigs.append(old_desig)
 
         # Handle old designations like "1993 XIII"
         old_desig = rec[59:].rstrip()
