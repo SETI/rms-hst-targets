@@ -2,6 +2,9 @@
 # _HST_PROGRAM_OVERRIDES.py
 ##########################################################################################
 
+import copy  # noqa: I001  (keep the hand-aligned import wrapping below)
+
+from targets.cometdb   import query_comet_by_name
 from targets.targettype import TargetType as TT
 
 _NH_SURVEY_DICT = {
@@ -10,6 +13,15 @@ _NH_SURVEY_DICT = {
     'description': ['KBO survey field from the search for a New Horizons flyby '
                     'candidate.']
 }
+
+# The parent comet D/1993 F2 (Shoemaker-Levy 9), co-observed with Jupiter throughout the
+# impact campaign (see '5642_*' below). Deep-copied from the comet database so the override
+# target is identical to what a normal Shoemaker-Levy 9 identification yields -- including
+# the 21 fragment keys that build its fragment-list description -- rather than a stub that
+# would drift or produce a poorer context product. The copy is required because
+# query_comet_by_name returns the shared cached object, which the identification core
+# mutates in place while completing the target.
+_SL9_DICT = copy.deepcopy(query_comet_by_name('D/1993 F2'))
 
 _HST_PROGRAM_OVERRIDES = {
 
@@ -220,6 +232,17 @@ _HST_PROGRAM_OVERRIDES = {
                           'naif_id'    : 1003228,
                           'aliases'    : ['C/2013 A1'],
                           'parent_key' : ''}},
+
+    # Program 5642 (Storrs), "Observations of the Impact of Comet Shoemaker-Levy (1993E)
+    # and Jupiter", is the HST campaign that monitored Jupiter (STD=JUPITER) before, during,
+    # and after the 1994 July 16-22 fragment impacts. The comet is never named in these
+    # headers, so the standard-body path returns only Jupiter. Add the parent comet
+    # D/1993 F2 (Shoemaker-Levy 9) as an extra 'dict' (no 'done' flag) across the whole
+    # program -- all 14 targets, the Jupiter-disk pointings and the two Io-torus visits
+    # alike -- so Jupiter (and, for the torus visits, the Io torus) is still identified and
+    # the comet appended. The 'WAVE' wavelength-calibration exposures also carry STD=JUPITER
+    # and already resolve to Jupiter, so they receive the comet consistently.
+    '5642_*'  : {'dict': _SL9_DICT},
 }
 
 __all__ = ['_HST_PROGRAM_OVERRIDES']

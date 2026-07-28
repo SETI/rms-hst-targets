@@ -449,6 +449,28 @@ def test_standard_body_plus_co_observed_comet_via_override() -> None:
     assert [b['full_name'] for b in mars] == ['Mars']
 
 
+def test_shoemaker_levy_9_added_to_jupiter_impact_program() -> None:
+    # Program 5642 (Storrs) monitored Jupiter (STD=JUPITER) through the 1994 Shoemaker-Levy
+    # 9 impacts without naming the comet in its headers. A '5642_*' override adds the parent
+    # comet D/1993 F2 (Shoemaker-Levy 9) to every target in the program.
+    disk = identify_target_dicts([_header('5642/u2fi0c01t_shm.fits')])   # JUPITER-WF
+    assert [(b['full_name'], b['ttype']) for b in disk] == [
+        ('Jupiter', 'P'), ('D/1993 F2 (Shoemaker-Levy 9)', 'C')]
+
+    # The comet is appended even on the campaign's Io-torus visits (target 5642_11), after
+    # Jupiter and its torus/satellite/system bodies. The full visit is needed for the torus
+    # geometry to resolve.
+    torus = identify_target_dicts([dict(h) for h in _SPT['z2fi1x']])     # IO-TORUS-W1
+    names = [b['full_name'] for b in torus]
+    assert names[0] == 'Jupiter'
+    assert 'Io Torus' in names
+    assert names[-1] == 'D/1993 F2 (Shoemaker-Levy 9)'
+
+    # A concurrent, unrelated Jupiter program (5217, aurora/airglow) must not pick up SL9.
+    aurora = identify_target_dicts([_header('5217/u2eq0101t_shm.fits')])
+    assert [b['full_name'] for b in aurora] == ['Jupiter']
+
+
 def test_no_target_sentinels() -> None:
     # Anti-solar pointings, slew tests, and parallel fields have no identifiable target
     for spec in ('1431/w0aqxp01t_shf.fits',     # ANTISUN (reject)
