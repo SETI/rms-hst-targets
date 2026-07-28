@@ -435,6 +435,20 @@ def test_occultation_adds_occulted_star() -> None:
     assert '2MASS J19000829-2039378' in arrokoth
 
 
+def test_standard_body_plus_co_observed_comet_via_override() -> None:
+    # Program 13936 target 13936_1 is "Mars during the Comet Siding Spring encounter"
+    # (STD=MARS); the comet C/2013 A1 is named only in TARDESCR. A '13936_1' override adds
+    # it as an extra 'dict', so Mars is still identified and the comet appended.
+    bodies = identify_target_dicts([_header('13936/icpe22biq_spt.fits')])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [
+        ('Mars', 'P'), ('C/2013 A1 (Siding Spring)', 'C')]
+
+    # The override is scoped to 13936_1, not the whole program: target 13936_3 is plain
+    # Mars and must not pick up the comet.
+    mars = identify_target_dicts([_header('13936/jcpea2011_spt.fits')])
+    assert [b['full_name'] for b in mars] == ['Mars']
+
+
 def test_no_target_sentinels() -> None:
     # Anti-solar pointings, slew tests, and parallel fields have no identifiable target
     for spec in ('1431/w0aqxp01t_shf.fits',     # ANTISUN (reject)

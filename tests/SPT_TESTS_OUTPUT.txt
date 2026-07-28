@@ -5774,7 +5774,7 @@
 'icpg20nwq_spt.fits' --- (['C/2013 A1', 'Siding Spring'], 'CCC')
 'jcpg16011_spt.fits' --- (['Mars', 'MARS-SBC'], '')
 'jcpg18011_spt.fits' --- (['Mars', 'MARS-SBC'], '')
-'icpe22biq_spt.fits' --- (['MARS', 'SIDING-SPRING', 'C/2013-A1'], 'CP')
+'icpe22biq_spt.fits' --- (['Mars', 'Siding Spring'], 'C')
 'jcpea2011_spt.fits' --- (['Mars', 'MARS-SBC'], '')
 'icpf05sfq_spt.fits' --- (['Uranus'], '')
 'icpf06teq_spt.fits' --- (['Uranus'], '')

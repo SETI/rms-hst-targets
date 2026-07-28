@@ -205,6 +205,21 @@ _HST_PROGRAM_OVERRIDES = {
                                           '19 hours 00 minutes 08.2914738 seconds',
                                           'Declination, ICRS coord, ep=J2000: '
                                           '-20 degrees 39 minutes 37.975240 seconds']}},
+
+    # Co-observed small body named only in free text. Target 13936_1 is "Mars during the
+    # Comet Siding Spring encounter" (STD=MARS); the comet C/2013 A1 (Siding Spring) is the
+    # science target but appears only in TARDESCR, where the general identification path
+    # cannot safely recover it. Supplied as an added 'dict' (no 'done' flag) so Mars is
+    # still identified and the comet is appended, matching the context product produced when
+    # C/2013 A1 is identified normally in program 13936's dedicated comet visits. Scoped to
+    # 13936_1, not '13936_*', so the program's plain-Mars target (13936_3) stays Mars only.
+    '13936_1' : {'dict': {'ttype'      : TT.COMET,
+                          'full_name'  : 'C/2013 A1 (Siding Spring)',
+                          'name'       : 'Siding Spring',
+                          'desig'      : 'C/2013 A1',
+                          'naif_id'    : 1003228,
+                          'aliases'    : ['C/2013 A1'],
+                          'parent_key' : ''}},
 }
 
 __all__ = ['_HST_PROGRAM_OVERRIDES']

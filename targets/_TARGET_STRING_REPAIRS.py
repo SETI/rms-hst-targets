@@ -34,7 +34,6 @@ _TARGET_STRING_REPAIRS = [
     (r'SCHWASSMANW3-?([A-Z]|)[AB]?',            r'\1SCHWASSMANN_WACHMANN 3_\2'),
     (r'SCHWASSMAN-WACHMAN-1',                   r'SCHWASSMANN_WACHMANN 1'),
     (r'WKI ?1?',                                r'76P/WEST_KOHOUTEK_IKEMURA|[C]'),
-    (r'(MARS).*(SIDING SPRING).*',              r'[P]|MARS|[C]|SIDING_SPRING|C/2013_A1'),
     (r'288P',                                   r'288P|[C]|(300163) 2006 VW139|[A]'),
     (r'SANTA',                                  r'HAUMEA'),
     (r'(?:2I|I2)?-?BOROSOV',                    r'2I/BORISOV'),
