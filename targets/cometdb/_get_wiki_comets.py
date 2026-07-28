@@ -15,8 +15,7 @@ from ._utils import _compare_content, _fetch, _read_content
 _WIKI_URLS = [('https://en.wikipedia.org/wiki/List_of_periodic_comets', 12),
               ('https://en.wikipedia.org/wiki/List_of_Halley-type_comets', 12),
               ('https://en.wikipedia.org/wiki/List_of_long-period_comets', 11),
-              ('https://en.wikipedia.org/wiki/List_of_near-parabolic_comets', 11),
-]
+              ('https://en.wikipedia.org/wiki/List_of_near-parabolic_comets', 11)]
 _WIKI_HEADERS = {
     'User-Agent': 'update_cometdb/0.9 (https://pds-rings.seti.org/; pds-rings@seti.org)'
 }
@@ -53,7 +52,8 @@ def _get_wiki_comets(
 
 _DESIG_FRAG_SPLITTER = re.compile(r'([CPDXI])\s*/\s*(-?\d*)\s*([A-Z][A-Z]?)\s*(\d*)'
                                   r'\s*(?P<dash>-)?(?(dash)(?P<fragment>[A-Z][A-Z]?\d?))')
-_NAME_N = re.compile(r"(?P<name>[A-Za-z'][A-Za-z' -]*[A-Za-z]) *(?P<cnum>\d*).*")
+_NAME_N = re.compile(r"(?P<name>[A-Za-z'][A-Za-z' -]*[A-Za-z]) *(?P<alt_cnum>\d*).*")
+
 
 def _get_wiki_comet_list(
     url: str,
@@ -99,9 +99,13 @@ def _get_wiki_comet_list(
             match = _NAME_N.fullmatch(name)
             if match:
                 comet = match.groupdict()
-                if comet['name'].endswith(' of'):
-                    comet['name'] += ' ' + comet['cnum']
-                    comet['cnum'] = ''
+                if comet['alt_cnum']:
+                    name_num = comet['name'] + ' ' + comet['alt_cnum']
+                    if comet['name'].endswith(' of'):
+                        comet['name'] = name_num
+                    else:
+                        comet['alt_names'] = [name_num]
+                del comet['alt_cnum']
             else:
                 logger and logger.error(f'Failed to match Wikipedia row "{name}"')
                 continue
@@ -147,6 +151,7 @@ def _get_wiki_comet_list(
 
     return changed, comets
 
+
 ##########################################################################################
 
 _WIKI_NUMBERED_URL = 'https://en.wikipedia.org/wiki/List_of_numbered_comets'
@@ -156,9 +161,16 @@ _DESIG_SPLITTER = re.compile(r'([CPDXI])\s*/\s*(-?\d*)\s*([A-Z][A-Z]?)\s*(\d*)')
 _NP_NAME_NAME_N = re.compile(r'(?P<prefix>\d+[CPDXI])/'
                              r"(?P<name>[A-Za-z'`][A-Za-z'` -]*[A-Za-z])\s*"
                              r'\(\2\s+(?P<cnum>\d+)', re.DOTALL)
-_NP_DESIG_MNUM = re.compile(r'(?P<prefix>\d+[CPDXI])/'
-                            r'(?P<desig1>[12]\d\d\d [A-Z][A-Z]?)\s*'
-                            r'(?P<desig2>\d*)\s.*=\s*\((?P<mnum>\d+)', re.DOTALL)
+_NP_NAME_MNUM = re.compile(r'(?P<prefix>\d+[CPDXI])/'
+                           r"(?P<name>[A-Za-z'`][A-Za-z'` -]*[A-Za-z])\s*"
+                           r'\((?P<mnum>\d+)\s+.*?\)', re.DOTALL)
+# _NP_DESIG_MNUM = re.compile(r'(?P<prefix>\d+[CPDXI])/'
+#                             r'(?P<desig1>[12]\d\d\d [A-Z][A-Z]?)\s*'
+#                             r'(?P<desig2>\d*)\s.*=\s*\((?P<mnum>\d+)', re.DOTALL)
+_NP_UNNAMED_MNUM = re.compile(r'(?P<prefix>\d+[CPDXI])/(?P<name>)'
+                              r'(?:[12]\d\d\d [A-Z][A-Z]?\d*)\s*'
+                              r'(?:\(?[A-Za-z]*\)?)\s*=\s*'
+                              r'\(?(?P<mnum>\d+)\)?.*', re.DOTALL)
 _NP_NAME = re.compile(r'(?P<prefix>\d+[CPDXI])/'
                       r"(?P<name>[A-Za-z'`][A-Za-z`' -]*[A-Za-z])",
                       re.UNICODE)
@@ -171,13 +183,10 @@ _NP_NAME_N_FRAG2 = re.compile(r'.*\(\s*' + _NP_NAME_N_FRAG.pattern[:-1] + r'\s*\
                               re.DOTALL)
 
 # Extracted from https://en.wikipedia.org/wiki/Halley%27s_Comet#List_of_apparitions
-# _HALLEY_DESIGS = ['P/-239 K1', 'P/-163 U1', 'P/-86 Q1', 'P/-11 Q1', 'P/66 B1',
-#                   'P/141 F1', 'P/218 H1', 'P/295 J1', 'P/374 E1', 'P/451 L1',
-#                   'P/530 Q1', 'P/607 H1', 'P/684 R1', 'P/760 K1', 'P/837 F1',
-#                   'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
-#                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
-#                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
-_HALLEY_DESIGS = ['P/1066 G1', 'P/1145 G1', 'P/1222 R1',
+_HALLEY_DESIGS = ['P/-239 K1', 'P/-163 U1', 'P/-86 Q1', 'P/-11 Q1', 'P/66 B1',
+                  'P/141 F1', 'P/218 H1', 'P/295 J1', 'P/374 E1', 'P/451 L1',
+                  'P/530 Q1', 'P/607 H1', 'P/684 R1', 'P/760 K1', 'P/837 F1',
+                  'P/912 J1', 'P/989 N1', 'P/1066 G1', 'P/1145 G1', 'P/1222 R1',
                   'P/1301 R1', 'P/1378 S1', 'P/1456 K1', 'P/1531 P1', 'P/1607 S1',
                   'P/1682 Q1', 'P/1758 Y1', 'P/1835 P1', 'P/1909 R1', 'P/1982 U1']
 _HALLEY_OLD_DESIGS = ['1759 I', '1835 III', '1909c', '1986 III', '1982i']
@@ -220,7 +229,7 @@ def _get_wiki_numbered_comets(
 
         name = anyascii.anyascii(cells[0].text).strip()
         year = '9999'
-        for regex in (_NP_NAME_NAME_N, _NP_DESIG_MNUM, _NP_NAME):
+        for regex in (_NP_NAME_NAME_N, _NP_NAME_MNUM, _NP_UNNAMED_MNUM, _NP_NAME):
             match = regex.match(name)
             if match:
                 comet = match.groupdict()
@@ -228,12 +237,6 @@ def _get_wiki_numbered_comets(
         if not match:
             logger and logger.error(f'Failed to match Wikipedia row "{name}"')
             continue
-
-        if 'desig1' in comet:
-            year = comet['desig1'][:4]
-            comet['desig'] = comet['prefix'][-1] + '/' + comet['desig1'] + comet['desig2']
-            del comet['desig1']
-            del comet['desig2']
 
         text = anyascii.anyascii(cells[1].text)
         parts = _DESIG_SPLITTER.split(text)
@@ -298,6 +301,7 @@ def _get_wiki_numbered_comets(
 
     return changed, comets
 
+
 ##########################################################################################
 
 _WIKI_INTERSTELLAR_URL = 'https://en.wikipedia.org/wiki/Interstellar_object'
@@ -309,6 +313,7 @@ _I_DESIG_NAME = re.compile(r'(?P<prefix>\d+[CPDXI])/'
 _I_DESIG = re.compile(r'(?P<prefix>\d+[CPDXI])/(?P<desig>[12]\d\d\d [A-Z][A-Z]?\d*)$')
 _I_NAME = re.compile(r"(?P<prefix>\d+[CPDXI])/(?P<name>[A-Za-z'`][A-Za-z'` -]*[A-Za-z])"
                      r' *(?P<cnum>\d*)$')
+
 
 def _get_wiki_interstellar_comets(
     update: bool = False,

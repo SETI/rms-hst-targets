@@ -70,20 +70,19 @@ def _get_sbn_comets(
 
         desig, _, fragment = desig.partition('-')
         comet = {'prefix': prefix, 'desig': desig, 'year': year, 'fragment': fragment}
+        alt_names = []
         if name_num:
             if name_num[-1].isdigit():
                 name, _, num = name_num.rpartition(' ')
                 comet['name'] = name
-                comet['cnum'] = num
+                alt_names.append(name_num)
             elif name_num[0] == '(':
                 comet['mnum'] = name_num[1:-1]
             else:
                 comet['name'] = name_num
-                comet['cnum'] = num
 
-        # Construct list of alt_desigs and alt_names
+        # Construct list of alt_desigs and augment the list of alt_names
         alt_desigs = []
-        alt_names = []
         if len(prefix) > 1 and 'name' in comet:  # no desig for a named, numbered comet
             alt_desigs.append(desig)
             del comet['desig']
@@ -103,25 +102,12 @@ def _get_sbn_comets(
             if '/' in extra:
                 alt_desigs.append(extra)
             else:
+                extra = extra.rstrip(' 0123456789')  # ignore any cnum here
                 alt_names.append(extra)
 
         comet['alt_desigs'] = alt_desigs
         comet['alt_names'] = alt_names
-
         comets.append(comet)
-
-    # Remove extraneous cnums
-    by_name = {}
-    for comet in comets:
-        if 'name' in comet:
-            by_name.setdefault(comet['name'], []).append(comet)
-
-    for name, comet_list in by_name.items():
-        if len(comet_list) == 1 and comet_list[0]['cnum'] == '1':
-            comet = comet_list[0]
-            alt_names = comet.setdefault('alt_names', [])
-            comet['alt_names'].append(name + ' 1')
-            comet['cnum'] = ''
 
     if update:
         changed = _compare_content(content, _SBN_BASENAME, logger=logger)

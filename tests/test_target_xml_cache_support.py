@@ -242,7 +242,9 @@ def test_update_target_xml_dict_produces_valid_label(
         assert parsed['description'] == []  # Target description stays "none"
 
         raw = path.read_text()
-        assert "<description>RMS Node's HST pipeline added alternate_title.</description>" in raw
+        assert ("<description>\n"
+                "          Updated by the RMS Node's HST pipeline: additional alt_title.\n"
+                "        </description>") in raw
         assert '<alternate_title>2001 XY99</alternate_title>' in raw
 
 

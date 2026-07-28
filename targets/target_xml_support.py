@@ -178,23 +178,7 @@ def get_target_xml_path(target, logger=None):
     if xml_path is None:
         return new_target_xml_dict(target, logger=logger)
 
-    # Check for a conflict
-    xml_dict = _read_target_xml_dict(xml_path)
-    for field in ('lid_tail', 'title', 'ttype'):
-        if xml_dict[field] != target[field]:
-            logger and logger.warning(f'Target context XML mismatch at "{field}" in '
-                                      f'{xml_dict["xml_path"].name}: '
-                                      f'{target[field]!r}, {xml_dict[field]!r}')
-            logger and logger.warning('Pre-existing target XML file used', xml_path)
-
-    # Update the file only if this target adds aliases or a description it lacks;
-    # otherwise the existing file already covers it.
-    missing_aliases = _missing_aliases(target, xml_dict)
-    needs_desc = _new_desc(target, xml_dict)
-    if missing_aliases or needs_desc:
-        return update_target_xml_dict(target, logger=logger)
-
-    return xml_path
+    return update_target_xml_dict(target, logger=logger)
 
 
 ##########################################################################################

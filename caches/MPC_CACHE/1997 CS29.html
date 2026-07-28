@@ -40,7 +40,8 @@
               <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/about">About</a></li>
-                <li><a href="/contact">Contact</a></li>
+		<li><a href="/mpcops/contact/">Contact</a></li>
+                <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
               </ul>
             </nav>
             <!-- search-form -->
@@ -73,6 +74,9 @@
                 <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
                 <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
                 <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>				
+                <li><a href="https://data.minorplanetcenter.net/explorer">MPC Explorer</a></li>
                 <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
                   <ul>
                     <li><a href="/iau/MPCORB.html">MPCORB</a></li>
@@ -88,27 +92,46 @@
                     <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
                     <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
                     <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
-                    <li><a href="/cgi-bin/checkneo.cgi">NEOChecker</a></li>
-                    <li><a href="/cgi-bin/checkneocmt.cgi">NEOCMTChecker</a></li>
                     <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
                     <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
                     <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                    <li><a href="/mpcops/neocp/neocp_plots/">NEOCP Plots</a></li>		    
+                    <li><a href="/iau/recovery/recovery.html">NEO Recovery</a></li>
                   </ul>
                 </li>
+
+                <li><a href="" class="nested">Observations</a>
+                  <ul>
+                    <li><a href="/wamo/">WAMO</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/mpcops/orbits/" class="nested">Orbits</a>
+                  <ul>
+                    <li><a href="https://data.minorplanetcenter.net/comparison/index.html">Orbit Comparison Tool</a></li>
+                    <li><a href="/mpcops/orbits/no-orbits-astrometry/">Request for archival astrometry</a></li>
+                  </ul>
+                </li>
+
                 <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
                   <ul>
                     <li><a href="/whatsup">Observing Target List</a></li>
                     <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
                     <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
                     <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
-                    <li><a href="/cgi-bin/checkcmt.cgi">CMTChecker</a></li>
-                    <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li>
+<!-- THIS PAGE IS NO LONGER SUPPORTED   <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li> -->
                     <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                    <li><a href="/iau/delays/neocp_delay.html">Processing Times</a></li>		    
                   </ul>
                 </li>
-                <li><a href="/db_search">Orbits/Observations Database</a></li>
-
-                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+		
+		<li><a href="/" class="nested">Identifications</a>
+		  <ul>
+		    <li><a href="/mpcops/documentation/identifications/">Documentation</a></li>		    
+		    <li><a href="/mpcops/documentation/identifications/submission-format/">Submission Format</a></li>
+                    <li><a href="/mpcops/submissions/identifications/">Submit</a></li>
+		  </ul>
+		</li>
 
                 <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
                 <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
@@ -116,7 +139,10 @@
                   <ul>
                     <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
                     <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
-                    <li><a href="/iau/WhatsNew.html">What's New</a></li>
+                    <li><a href="/mpcops/documentation/artificial-satellites/">Artificial Satellites</a></li>
+                    <li><a href="/submit_action_code">Submit Action Code</a></li>		    
+                    <li><a href="/mpcops/documentation/">Other</a></li>		    
+                    <!-- <li><a href="/iau/WhatsNew.html">What's New</a></li> -->
                   </ul>                
                 </li>
                 <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
@@ -143,22 +169,68 @@
                     <li><a href="/iau/Animations/Animations.html">Animations</a></li>
                   </ul>                
                 </li>
-                <li><a href="/iau/MPCStatus.html">MPC Status</a></li>
-                <!--<li><a href="/summary">Summary</a></li>-->
-                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
                 <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+                <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
               </ul>
             </li>
-            <li><a href="/data"><span>DATA</span></a>
-            </li>
-            <li><a href="http://iawn.net/" target="_blank"><span>IAWN</span></a>
-            </li>
-            <li><a href="https://minorplanetcenter.net/mpcops/beta/"><span>BETA</span></a></li>
-            <li><a href="/iau/MPCStatus.html"><span style="color:GoldenRod">STATUS</a></li>
-            <li><a href="https://sbnmpc.astro.umd.edu/"><span>SBN ANNEX</span></a></li>
+            <li><a href="/data"><span>DATA</span></a></li>
+	    
+            <li><a href="https://buttondown.com/MPC_newsletter"><span>NEWSLETTER</span></a>
+	    </li>
+	    
+            <li><a href="/iau/MPCStatus.html"><span style="color:Green">STATUS</a></li>
+
+	    <li><a href="/mpcops/documentation/"><span>DOCUMENTATION</span></a>
+
+            <li><a href="/"><span>EXTERNAL</span></a>
+	      <ul id="external">
+	      	<li><a href="https://mpcmug.astro.umd.edu/" target="_blank">MPC User Group (MUG)</a></li>
+		<li><a href="http://iawn.net/" target="_blank">IAWN</a></li>
+		<li><a href="https://sbnmpc.astro.umd.edu/" target="_blank">SBN Annex</a></li>
+		<li><a href="https://www.wgsbn-iau.org/" target="_blank">WGSBN</a></li>
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+	      </ul>
+	    </li>
+	    
           </ul>
         </nav>
       </header>
+
+   <script type="text/javascript">
+          // After the page loads, we style each top-level menu bar item based on the word length.
+          document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#nav li ');
+            function getDirectTextContent(element) {
+                /* 
+                Get the menu bar item's text with leading- and trailing-whitespace removed.
+
+                The forEach accounts for multiple child nodes of the li (list item). 
+                */
+                let directTextContent = '';
+                element.childNodes.forEach(node => {
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEWSLETTER') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                        directTextContent += node.textContent.trim();
+                    }
+                });
+                return directTextContent;
+            }
+
+            listItems.forEach(function (li) {
+                const directText = getDirectTextContent(li);
+                const textLength = directText.length;  
+
+                // Apply class based on length
+                // This is used to style each menu item based on the word length.
+                if (textLength <= 5) {
+                    li.classList.add('short-word');
+                } else if (textLength <= 10) {
+                    li.classList.add('medium-word');
+                } else {
+                    li.classList.add('long-word');
+                }
+            });
+        });
+    </script>
 
       <!-- main -->
       <div id="main">
@@ -197,13 +269,13 @@
         <input id="number" name="number" type="hidden" value="79360" />
         <input id="designation" name="designation" type="hidden" />
         <input id="name" name="name" type="hidden" value="Sila-Nunam" />
-        <input id="epoch" name="epoch" type="hidden" value="2020-05-31.0" />
-        <input id="peri" name="peri" type="hidden" value="256.604799" />
-        <input id="m" name="m" type="hidden" value="303.2083" />
-        <input id="node" name="node" type="hidden" value="304.4596786" />
-        <input id="incl" name="incl" type="hidden" value="2.2572089" />
-        <input id="e" name="e" type="hidden" value="0.008588725" />
-        <input id="a" name="a" type="hidden" value="43.6431022" />
+        <input id="epoch" name="epoch" type="hidden" value="2025-11-21.0" />
+        <input id="peri" name="peri" type="hidden" value="214.8934395" />
+        <input id="m" name="m" type="hidden" value="351.45146" />
+        <input id="node" name="node" type="hidden" value="304.2560162" />
+        <input id="incl" name="incl" type="hidden" value="2.2382999" />
+        <input id="e" name="e" type="hidden" value="0.014109498" />
+        <input id="a" name="a" type="hidden" value="44.0361464198384" />
         <input name="commit" type="submit" value="Interactive Orbit Sketch" />
 </form>    </div>
     <div>
@@ -218,33 +290,33 @@
     <tr>
       <td valign="top" class="nb">
         <table>
-          <tr><td>epoch</td><td class="rj">2020-05-31.0</td></tr>
-          <tr><td>epoch JD</td><td class="rj">2459000.5</td></tr>
-          <tr><td>perihelion date</td><td class="rj">2065-11-24.24420</td></tr>
-          <tr><td>perihelion JD</td><td class="rj">2475613.74420</td></tr>
-          <tr><td>argument of perihelion (°)</td><td class="rj">256.60480</td></tr>
-          <tr><td>ascending node (°)</td><td class="rj">304.45968</td></tr>
-          <tr><td>inclination (°)</td><td class="rj">2.25721</td></tr>
-          <tr><td>eccentricity</td><td class="rj">0.0085887</td></tr>
-          <tr><td>perihelion distance (AU)</td><td class="rj">43.2682636</td></tr>
+          <tr><td>epoch</td><td class="rj">2025-11-21.0</td></tr>
+          <tr><td>epoch JD</td><td class="rj">2461000.5</td></tr>
+          <tr><td>perihelion date</td><td class="rj">2032-10-29.55690</td></tr>
+          <tr><td>perihelion JD</td><td class="rj">2463535.05690</td></tr>
+          <tr><td>argument of perihelion (°)</td><td class="rj">214.89344</td></tr>
+          <tr><td>ascending node (°)</td><td class="rj">304.25602</td></tr>
+          <tr><td>inclination (°)</td><td class="rj">2.23830</td></tr>
+          <tr><td>eccentricity</td><td class="rj">0.0141095</td></tr>
+          <tr><td>perihelion distance (AU)</td><td class="rj">43.4148185</td></tr>
           <tr><td>Tisserand w.r.t. Jupiter</td><td class="rj">5.9</td></tr>
           <tr><td>&Delta;V w.r.t. Earth (km/sec)</td><td class="rj">12.5</td></tr>
         </table>
       </td>
       <td valign="top" class="nb">
         <table>
-          <tr><td>semimajor axis (AU)</td><td class="rj">43.6431022</td></tr>
-          <tr><td>mean anomaly (°)</td><td class="rj">303.20830</td></tr>
-          <tr><td>mean daily motion (°/day)</td><td class="rj">0.00341850</td></tr>
-          <tr><td>aphelion distance (AU)</td><td class="rj">44.018</td></tr>
-          <tr><td>period (years)</td><td class="rj">288</td></tr>
-          <tr><td>P-vector [x]</td><td class="rj">-0.93255419</td></tr>
-          <tr><td>P-vector [y]</td><td class="rj">-0.31412756</td></tr>
-          <tr><td>P-vector [z]</td><td class="rj">-0.17795098</td></tr>
-          <tr><td>Q-vector [x]</td><td class="rj">0.35956653</td></tr>
-          <tr><td>Q-vector [y]</td><td class="rj">-0.85244999</td></tr>
-          <tr><td>Q-vector [z]</td><td class="rj">-0.37952724</td></tr>
-          <tr><td>absolute magnitude</td><td class="rj">5.3</td></tr>
+          <tr><td>semimajor axis (AU)</td><td class="rj">44.0361464</td></tr>
+          <tr><td>mean anomaly (°)</td><td class="rj">351.45146</td></tr>
+          <tr><td>mean daily motion (°/day)</td><td class="rj">0.00337280</td></tr>
+          <tr><td>aphelion distance (AU)</td><td class="rj">44.657</td></tr>
+          <tr><td>period (years)</td><td class="rj">292</td></tr>
+          <tr><td>P-vector [x]</td><td class="rj">-0.93415130</td></tr>
+          <tr><td>P-vector [y]</td><td class="rj">0.33567328</td></tr>
+          <tr><td>P-vector [z]</td><td class="rj">0.12118082</td></tr>
+          <tr><td>Q-vector [x]</td><td class="rj">-0.35541425</td></tr>
+          <tr><td>Q-vector [y]</td><td class="rj">-0.84433237</td></tr>
+          <tr><td>Q-vector [z]</td><td class="rj">-0.40097825</td></tr>
+          <tr><td>absolute magnitude</td><td class="rj">5.26</td></tr>
           <tr><td>phase slope</td><td class="rj">0.15</td></tr>
         </table>
       </td>
@@ -253,18 +325,18 @@
 
             <tr><td><a href="/iau/info/UValue.html">uncertainty</a></td><td class="rj">2</td></tr>
 
-          <tr><td>reference</td><td class="rj">MPEC 2020-Q229</td></tr>
-          <tr><td>observations used</td><td class="rj">466</td></tr>
-          <tr><td>oppositions</td><td class="rj">23</td></tr>
-          <tr><td>arc length (days)</td><td class="rj">8474</td></tr>
+          <tr><td>reference</td><td class="rj">MPO 981579</td></tr>
+          <tr><td>observations used</td><td class="rj">528</td></tr>
+          <tr><td>oppositions</td><td class="rj">29</td></tr>
+          <tr><td>arc length (days)</td><td class="rj">10654</td></tr>
           <tr><td>first opposition used</td><td class="rj">1997</td></tr>
-          <tr><td>last opposition used</td><td class="rj">2020</td></tr>
-          <tr><td>residual rms (arc-secs)</td><td class="rj">0.48</td></tr>
+          <tr><td>last opposition used</td><td class="rj">2026</td></tr>
+          <tr><td>residual rms (arc-secs)</td><td class="rj">0.83</td></tr>
           <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
           <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">003Ek</td></tr>
           <tr><td>first observation date used</td><td class="rj">1997-02-03.0</td></tr>
-          <tr><td>last observation date used</td><td class="rj">2020-04-17.0</td></tr>
-          <tr><td>computer name</td><td class="rj">Pan</td></tr>
+          <tr><td>last observation date used</td><td class="rj">2026-04-06.0</td></tr>
+          <tr><td>computer name</td><td class="rj">MPCORBFIT</td></tr>
         </table>
       </td>
     </tr>
@@ -273,29 +345,20 @@
   <table class="nb">
     <tr>
       <td valign="top" class="nb">
-          <table>
-            <tr><td>JD of orbit computation</td><td class="rj">2456700.270851</td></tr>
-            <tr><td>perihelion JD uncertainty (days)</td><td class="rj">2.4611E+01</td></tr>
-            <tr><td>argument of perihelion uncertainty (°)</td><td class="rj">8.5718E-02</td></tr>
-            <tr><td>ascending node uncertainty (°)</td><td class="rj">1.7166E-04</td></tr>
-            <tr><td>inclination uncertainty (°)</td><td class="rj">4.5474E-05</td></tr>
-            <tr><td>eccentricity uncertainty </td><td class="rj">2.3052E-05</td></tr>
-            <tr><td>perihelion distance uncertainty (AU)</td><td class="rj">8.5729E-04</td></tr>
-          </table>    
       </td>
       <td width=100px> </td>
 
       <td valign="top" class="nb">
-    Minimum Orbit Intersection Distances (in AU)<br>for orbit epoch: 2459000.5, reference: E2020-QM9<br>
+    Minimum Orbit Intersection Distances (in AU)<br>for orbit epoch: 2461000.5, reference: E2026-G26<br>
           <table>
-            <tr><td>Mercury</td><td>42.837</td></tr>
-            <tr><td>Venus</td><td>42.5494</td></tr>
-            <tr><td>Earth</td><td>42.2662</td></tr>
-            <tr><td>Mars</td><td>41.6378</td></tr>
-            <tr><td>Jupiter</td><td>37.8237</td></tr>
-            <tr><td>Saturn</td><td>33.3808</td></tr>
-            <tr><td>Uranus</td><td>23.8947</td></tr>
-            <tr><td>Neptune</td><td>12.9179</td></tr>
+            <tr><td>Mercury</td><td>43.0455</td></tr>
+            <tr><td>Venus</td><td>42.6982</td></tr>
+            <tr><td>Earth</td><td>42.4234</td></tr>
+            <tr><td>Mars</td><td>41.7513</td></tr>
+            <tr><td>Jupiter</td><td>38.0024</td></tr>
+            <tr><td>Saturn</td><td>33.8965</td></tr>
+            <tr><td>Uranus</td><td>24.4943</td></tr>
+            <tr><td>Neptune</td><td>13.2283</td></tr>
           </table>    
           <br>
       </td>
@@ -304,11 +367,11 @@
 
 
 <h2>Observations</h2>
-  480 total observations over interval:
-  1997 02 03.25090 &ndash; 2020 10 23.62689
+  547 total observations over interval:
+  1997 02 03.25090 &ndash; 2026 04 06.288125
   <br>
   These data are available for
-  <a href="../tmp/79360.txt" target="_blank">download</a>
+  <a href="../tmp2/79360.txt" target="_blank">download</a>
   (<a href="/iau/info/OpticalObs.html" target="_blank">format description</a>).
   <br>
   <br>
@@ -326,23 +389,25 @@
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/about">About</a></li>
-          <li><a href="/contact">Contact</a></li>
-          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li>
+	  <!-- Contact link changed to Jira and name changed to helpdesk.
+	       Should be consistent with top right of banner -->
+          <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+<!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
         </ul>
       </nav>
-      
+
       <a href="https://www.cfa.harvard.edu">
       <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
       <p>
       <p>
       <p>
-      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div>
   </footer>
 
 <script type="text/javascript">
   $(window).on('load', (function() {
     $("table").tablesorter();
-  })); 
+  }));
 </script>
 
 <script type="text/javascript">

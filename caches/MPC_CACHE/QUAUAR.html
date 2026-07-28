@@ -25,7 +25,8 @@
   <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
 
 </head>
-  <body>
+  
+<body>
   <!-- wrapper -->
   <div id="wrapper">
     <div class="w1">
@@ -76,7 +77,6 @@
                 <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
                 <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
                 <li><a href="/db_search">Orbits/Observations Database</a></li>				
-                <li><a href="https://data.minorplanetcenter.net/explorer">MPC Explorer</a></li>
                 <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
                   <ul>
                     <li><a href="/iau/MPCORB.html">MPCORB</a></li>
@@ -169,13 +169,21 @@
                     <li><a href="/iau/Animations/Animations.html">Animations</a></li>
                   </ul>                
                 </li>
+                <!--<li><a href="/summary">Summary</a></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
                 <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
                 <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
               </ul>
             </li>
             <li><a href="/data"><span>DATA</span></a></li>
 	    
-            <li><a href="https://buttondown.com/MPC_newsletter"><span>NEWSLETTER</span></a>
+            <li><a href="/"><span>NEW</span></a>
+	      <ul>
+		<li><a href="/mpcops/new/developments/">Developments</a></li>
+<!--		<li><a href="/mpcops/new/releases/">New Releases</a></li> -->
+		<li><a href="/mpcops/new/existing-upgrades/">Existing Upgrades</a></li>
+		<li><a href="/mpcops/new/newsletters/">Newsletters</a></li>
+	      </ul>
 	    </li>
 	    
             <li><a href="/iau/MPCStatus.html"><span style="color:Green">STATUS</a></li>
@@ -197,18 +205,12 @@
       </header>
 
    <script type="text/javascript">
-          // After the page loads, we style each top-level menu bar item based on the word length.
           document.addEventListener('DOMContentLoaded', function () {
             const listItems = document.querySelectorAll('#nav li ');
             function getDirectTextContent(element) {
-                /* 
-                Get the menu bar item's text with leading- and trailing-whitespace removed.
-
-                The forEach accounts for multiple child nodes of the li (list item). 
-                */
                 let directTextContent = '';
                 element.childNodes.forEach(node => {
-                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEWSLETTER') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEW') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
                         directTextContent += node.textContent.trim();
                     }
                 });
@@ -219,8 +221,10 @@
                 const directText = getDirectTextContent(li);
                 const textLength = directText.length;  
 
+                // Log the length of each item to the console
+                //console.log(`Text: "${li.textContent.trim()}", Length: ${textLength}`);
+
                 // Apply class based on length
-                // This is used to style each menu item based on the word length.
                 if (textLength <= 5) {
                     li.classList.add('short-word');
                 } else if (textLength <= 10) {
@@ -235,148 +239,11 @@
       <!-- main -->
       <div id="main">
 
-  <h3>
-   (2060) 
-  
-  
-   Chiron 
-    = 1977 UB  = 95P 
-  
-</h3>
+  <h2>MPC Database search by name</h2>
 
-    Discovered at Palomar
-  on 1977-10-18
-
-  by  C. T. Kowal.
-
-
-  <div id="citation">
-    (2060) Chiron<br><br>The name is that of the wisest and most just of the Centaurs, son of Kronos and the ocean nymph Philyra.  Beloved by Apollo and Diana, he learned from them botany, music, astronomy, divination and medicine and served in turn as instructor of the Greek heroes.
-      [Ref: <em>Minor Planet Circ.</em> 4359]
-  </div>
-
-<br>
-<h2>Orbit</h2>
-
-    Orbit type: Distant object
-  <br>
-
-
-
-    <br>
-    <div class="show-orbit-button">
-      <form accept-charset="UTF-8" action="/db_search/show_orbit" method="get"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /></div>
-        <input id="number" name="number" type="hidden" value="2060" />
-        <input id="designation" name="designation" type="hidden" />
-        <input id="name" name="name" type="hidden" value="Chiron" />
-        <input id="epoch" name="epoch" type="hidden" value="2026-06-09.0" />
-        <input id="peri" name="peri" type="hidden" value="339.2877227" />
-        <input id="m" name="m" type="hidden" value="216.71991" />
-        <input id="node" name="node" type="hidden" value="209.2962314" />
-        <input id="incl" name="incl" type="hidden" value="6.9305728" />
-        <input id="e" name="e" type="hidden" value="0.379765657" />
-        <input id="a" name="a" type="hidden" value="13.6842671448137" />
-        <input name="commit" type="submit" value="Interactive Orbit Sketch" />
-</form>    </div>
-    <div>
-       Note: WebGL enabled browser required.
-    </div>
-
-    
-
-
-  <br>
-  <table class="nb">
-    <tr>
-      <td valign="top" class="nb">
-        <table>
-          <tr><td>epoch</td><td class="rj">2026-06-09.0</td></tr>
-          <tr><td>epoch JD</td><td class="rj">2461200.5</td></tr>
-          <tr><td>perihelion date</td><td class="rj">2046-08-01.92021</td></tr>
-          <tr><td>perihelion JD</td><td class="rj">2468559.42022</td></tr>
-          <tr><td>argument of perihelion (°)</td><td class="rj">339.28772</td></tr>
-          <tr><td>ascending node (°)</td><td class="rj">209.29623</td></tr>
-          <tr><td>inclination (°)</td><td class="rj">6.93057</td></tr>
-          <tr><td>eccentricity</td><td class="rj">0.3797657</td></tr>
-          <tr><td>perihelion distance (AU)</td><td class="rj">8.4874524</td></tr>
-          <tr><td>Tisserand w.r.t. Jupiter</td><td class="rj">3.4</td></tr>
-          <tr><td>&Delta;V w.r.t. Earth (km/sec)</td><td class="rj">11.9</td></tr>
-        </table>
-      </td>
-      <td valign="top" class="nb">
-        <table>
-          <tr><td>semimajor axis (AU)</td><td class="rj">13.6842671</td></tr>
-          <tr><td>mean anomaly (°)</td><td class="rj">216.71991</td></tr>
-          <tr><td>mean daily motion (°/day)</td><td class="rj">0.01947030</td></tr>
-          <tr><td>aphelion distance (AU)</td><td class="rj">18.881</td></tr>
-          <tr><td>period (years)</td><td class="rj">50.62</td></tr>
-          <tr><td>P-vector [x]</td><td class="rj">-0.98753367</td></tr>
-          <tr><td>P-vector [y]</td><td class="rj">-0.12203386</td></tr>
-          <tr><td>P-vector [z]</td><td class="rj">-0.09942326</td></tr>
-          <tr><td>Q-vector [x]</td><td class="rj">0.14591407</td></tr>
-          <tr><td>Q-vector [y]</td><td class="rj">-0.94663215</td></tr>
-          <tr><td>Q-vector [z]</td><td class="rj">-0.28739633</td></tr>
-          <tr><td>absolute magnitude</td><td class="rj">5.54</td></tr>
-          <tr><td>phase slope</td><td class="rj">0.15</td></tr>
-        </table>
-      </td>
-      <td valign="top" class="nb">
-        <table>
-
-            <tr><td><a href="/iau/info/UValue.html">uncertainty</a></td><td class="rj">0</td></tr>
-
-          <tr><td>reference</td><td class="rj">E2026-O23</td></tr>
-          <tr><td>observations used</td><td class="rj">5551</td></tr>
-          <tr><td>oppositions</td><td class="rj">58</td></tr>
-          <tr><td>arc length (days)</td><td class="rj">47932</td></tr>
-          <tr><td>first opposition used</td><td class="rj">1895</td></tr>
-          <tr><td>last opposition used</td><td class="rj">2026</td></tr>
-          <tr><td>residual rms (arc-secs)</td><td class="rj">0.69</td></tr>
-          <tr><td><a href="/iau/info/Perturbers.html">perturbers coarse indicator</a></td><td class="rj">M-v</td></tr>
-          <tr><td><a href="/iau/info/Perturbers.html">perturbers precise indicator</a></td><td class="rj">003Ek</td></tr>
-          <tr><td>first observation date used</td><td class="rj">1895-04-24.0</td></tr>
-          <tr><td>last observation date used</td><td class="rj">2026-07-18.0</td></tr>
-          <tr><td>computer name</td><td class="rj">MPCORBFIT</td></tr>
-        </table>
-      </td>
-    </tr>
-  </table>    
-
-  <table class="nb">
-    <tr>
-      <td valign="top" class="nb">
-      </td>
-      <td width=100px> </td>
-
-      <td valign="top" class="nb">
-    Minimum Orbit Intersection Distances (in AU)<br>for orbit epoch: 2461200.5, reference: E2026-O23<br>
-          <table>
-            <tr><td>Mercury</td><td>8.07992</td></tr>
-            <tr><td>Venus</td><td>7.77048</td></tr>
-            <tr><td>Earth</td><td>7.49001</td></tr>
-            <tr><td>Mars</td><td>6.84969</td></tr>
-            <tr><td>Jupiter</td><td>3.06412</td></tr>
-            <tr><td>Saturn</td><td>0.48212</td></tr>
-            <tr><td>Uranus</td><td>1.468</td></tr>
-            <tr><td>Neptune</td><td>11.0814</td></tr>
-          </table>    
-          <br>
-      </td>
-    </tr>
-  </table>
-
-
-<h2>Observations</h2>
-  5629 total observations over interval:
-  1895 04 24.14750 &ndash; 2026 02 06.290799
-  <br>
-  These data are available for
-  <a href="../tmp2/2060.txt" target="_blank">download</a>
-  (<a href="/iau/info/OpticalObs.html" target="_blank">format description</a>).
-  <br>
-  <br>
-  
-
+Exact match for <strong>QUAUAR</strong> not found.
+  Vaguely similar sounding possible matches:<br>
+    <a href='https://www.minorplanetcenter.net/db_search/show_object?object_id=Quaoar'>Quaoar</a><br>  
 
         </div>
     </div>
@@ -395,19 +262,19 @@
 <!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
         </ul>
       </nav>
-
+      
       <a href="https://www.cfa.harvard.edu">
       <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
       <p>
       <p>
       <p>
-      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
   </footer>
 
 <script type="text/javascript">
   $(window).on('load', (function() {
     $("table").tablesorter();
-  }));
+  })); 
 </script>
 
 <script type="text/javascript">

@@ -5,7 +5,7 @@
 header.
 """
 
-import re
+import re  # noqa: I001  (keep the hand-aligned import wrapping below)
 
 from targets._utils          import _collect_strings, _parse_mt_lv, _unique_targets
 from targets.hst_repairs     import hst_repairs
@@ -25,7 +25,7 @@ def _identify_standard_names(header, *, logger=None):
         logger (Logger, optional): A Logger for messages.
 
     Returns:
-        list[str]: The body names identified.
+        tuple[list[str], list[str]]: The body names identified and the unused strings.
     """
 
     # Find the last STD value
@@ -51,9 +51,9 @@ def _identify_standard_names(header, *, logger=None):
 
     # If this is not a standard standard value, return None
     if not stdval:
-        return []
+        return [], []
     if stdval not in STANDARD_BODY_LOOKUP:
-        return []
+        return [], []
 
     # Log value found
     filename = header['FILENAME'].upper()
@@ -64,12 +64,17 @@ def _identify_standard_names(header, *, logger=None):
     strings, ttypes = hst_repairs(strings, logger=logger)
     strings = [s.upper() for s in strings]
 
+    # "IO" may be a bare string or a hyphen/space-separated token within a compound name
+    # (e.g. TARGNAME "IO-T1-C23"), so test it against the tokens, mirroring how the
+    # augmentation loop below recovers body names from such strings.
+    io_present = any(part == 'IO' for s in strings for part in re.split(r'[ -]', s))
+
     # Look for TYPE=TORUS, interpret as planet, ring, or torus
     mt_lv2 = header.get('MT_LV2_1', '').replace(' ', '')
     if mt_lv2.startswith('TYPE=TORUS'):
         torus = _parse_mt_lv(header, 'MT_LV2', logger=logger)
 
-        if stdval == 'JUPITER' and TargetType.PLASMA_CLOUD in ttypes and 'IO' in strings:
+        if stdval == 'JUPITER' and TargetType.PLASMA_CLOUD in ttypes and io_present:
             stdval = 'IO TORUS'
         elif (TargetType.RING in ttypes and TargetType.PLASMA_CLOUD not in ttypes
               and torus.get('POLE_LAT', 90) == 90
@@ -137,12 +142,13 @@ def _identify_standard_names(header, *, logger=None):
                     names.append(key)
                     break
 
-    # The Io plasma torus can be named directly (e.g. TARGNAME "IO-TORUS-WEST") without the
-    # MT_LV2 "TYPE=TORUS" geometry that the block above keys on; hst_repairs flags such a
-    # name with the plasma-cloud target type. When that marker is present and the torus is
-    # not already a target, record it as the primary target alongside Io. This runs after
-    # the system-target step so the torus does not count as a second body of Jupiter.
-    if (TargetType.PLASMA_CLOUD in ttypes and 'IO' in strings
+    # The Io plasma torus can be named directly (e.g. TARGNAME "IO-TORUS-WEST") without
+    # the MT_LV2 "TYPE=TORUS" geometry that the block above keys on; hst_repairs flags
+    # such a name with the plasma-cloud target type. When that marker is present and the
+    # torus is not already a target, record it as the primary target alongside Io. This
+    # runs after the system-target step so the torus does not count as a second body of
+    # Jupiter.
+    if (TargetType.PLASMA_CLOUD in ttypes and io_present
             and 'IO TORUS' not in names):
         names.insert(0, 'IO TORUS')
 
@@ -151,7 +157,7 @@ def _identify_standard_names(header, *, logger=None):
     if unused:
         logger and logger.info(f'Unused strings: {unused}')
 
-    return names
+    return names, unused
 
 
 def identify_standard_body(headers, *, logger=None):
@@ -162,7 +168,7 @@ def identify_standard_body(headers, *, logger=None):
         logger (Logger, optional): A Logger for messages.
 
     Returns:
-        list[str]: The body names identified.
+        tuple[list[str], list[str]]: The body names identified and the unused words.
     """
 
     unique_headers = _unique_targets(headers)
@@ -170,9 +176,11 @@ def identify_standard_body(headers, *, logger=None):
     # An order-preserving list (not a set) so the merged result is deterministic; the
     # order follows the visit's files, which is stable across runs.
     name_tuples = []
+    unused_words = []
     filenames_unused = []
     for header in unique_headers:
-        names = _identify_standard_names(header, logger=logger)
+        names, more_unused_words = _identify_standard_names(header, logger=logger)
+        unused_words += more_unused_words
         if not names:
             filenames_unused.append(header['FILENAME'])
         else:
@@ -181,7 +189,7 @@ def identify_standard_body(headers, *, logger=None):
                 name_tuples.append(name_tuple)
 
     if not name_tuples:
-        return None
+        return ([], unused_words)
 
     for filename in filenames_unused:
         logger and logger.info(f'{filename}: No STD body')
@@ -216,7 +224,7 @@ def identify_standard_body(headers, *, logger=None):
             seen.add(body['name'])
             bodies.append(body)
 
-    return bodies
+    return (bodies, unused_words)
 
 
 __all__ = ['identify_standard_body']

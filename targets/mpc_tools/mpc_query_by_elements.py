@@ -77,7 +77,7 @@ def mpc_query_by_elements(elements, delta=0.04, *, count=1, bodies=None, logger=
             return body, rms
 
         rms_list = ', '.join([f'{resid[0]:.4f}' for resid in resids[1:count]])
-        logger and logger.info(f'Next-best orbit residuals: [{rms_list}]')
+        logger and logger.info(f'Next-best orbit residuals: [{rms_list[:5]}]')
         pairs = []
         for resid in resids[:count]:
             rms, body = resid
@@ -116,7 +116,7 @@ def mpc_query_by_elements(elements, delta=0.04, *, count=1, bodies=None, logger=
         return (mpc_query_by_name(key), rms)
 
     rms_list = ', '.join([f'{resid[0]:.4f}' for resid in resids[1:count]])
-    logger and logger.debug(f'Next-best orbit residuals: [{rms_list}]')
+    logger and logger.debug(f'Next-best orbit residuals: [{rms_list[:5]}]')
 
     return [(mpc_query_by_name(key), rms) for rms, key in resids[:count]]
 

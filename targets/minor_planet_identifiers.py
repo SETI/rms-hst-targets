@@ -20,7 +20,7 @@ def minor_planet_identifiers(strings, *, logger=None):
     Returns:
         tuple: `(mp_dicts, used, unused, single)`:
 
-        * mp_dicts (list[dict]): Dictionaries of zxero or more identified minor planets.
+        * mp_dicts (list[dict]): Dictionaries of zero or more identified minor planets.
         * used (dict[str, dict]): The list of strings that were recognized as identifiers.
         * unused (list[str]): The list of string that were not recognized as identifiers.
         * single (bool): True if a single, unambiguous body was identified.

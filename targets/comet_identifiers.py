@@ -4,8 +4,8 @@
 
 import re
 
-from targets import cometdb
-from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
+from targets.cometdb import query_comet_by_name
+from targets.roman   import ROMAN_PATTERN_99 as _ROMAN_99
 
 
 def comet_identifiers(strings, *, logger=None):
@@ -27,6 +27,9 @@ def comet_identifiers(strings, *, logger=None):
         * `unused` (list[str]): The list of input strings that were not recognized as
           comet identifiers.
         * `single` (bool): True if a single, unambiguous commet was identified.
+        * `strong` (set[str]): The keys of the comets that were pinned down by a formal
+          designation (e.g. "C/1984 K1", "1985 XII"), as opposed to a discoverer surname
+          that several comets may share.
     """
 
     if isinstance(strings, str):
@@ -40,7 +43,7 @@ def comet_identifiers(strings, *, logger=None):
     ambigs = {}     # string -> ambiguous list of comets
     used = {}       # string -> any associated list of comets
     for string in strings:
-        test = cometdb.query_comet_by_name(string, logger=logger, ambiguous=True)
+        test = query_comet_by_name(string, logger=logger, ambiguous=True)
         if test:
             used[string] = test if isinstance(test, list) else [test]
             if isinstance(test, dict):
@@ -58,14 +61,14 @@ def comet_identifiers(strings, *, logger=None):
                 ambig_dict[comet['key']] = comet
 
         if ambig_dict:
-            names = [c['name'] for c in ambig_dict.values()]
+            names = [c['full_name'] for c in ambig_dict.values()]
             logger and logger.info(f'Ambiguous comets: {names}')
         else:
             logger and logger.info('No comets identified')
         if unused:
             logger and logger.info(f'Unused strings: {unused}')
 
-        return list(ambig_dict.values()), used, unused, False
+        return list(ambig_dict.values()), used, unused, False, set()
 
     # If a comet or parent is in an ambiguous list, that list is superfluous
 
@@ -97,6 +100,21 @@ def comet_identifiers(strings, *, logger=None):
 
     comets = list(comets.values())
 
+    # A comet is trusted over a conflicting header orbit only when two independent kinds
+    # of identifier agree on it: a formal designation (resolved unambiguously) AND a
+    # discoverer name. That agreement is what makes visit U31501's "C/1984 K1" +
+    # "SHOEMAKER" unimpeachable, while it withholds trust from a lone old designation that
+    # collides with an unrelated comet (e.g. the 97P designation shared by C/1991 T2).
+    by_desig = set()        # keys pinned by an unambiguous formal designation
+    by_name = set()         # keys named by a discoverer name (possibly ambiguous)
+    for string, matches in used.items():
+        if _DESIGNATION_REGEX.match(string):
+            if len(matches) == 1:
+                by_desig.add(matches[0]['key'])
+        else:
+            by_name |= {comet['key'] for comet in matches}
+    strong = by_desig & by_name
+
     # Log the results
     names = [c['full_name'] for c in comets]
     if len(comets) == 1:
@@ -107,7 +125,7 @@ def comet_identifiers(strings, *, logger=None):
         logger and logger.info(f'Unused strings: {unused}')
 
     # Return the list of matches
-    return comets, used, unused, True
+    return comets, used, unused, True, strong
 
 
 _NUM   = r'(?:[1-9]\d*)'
@@ -133,6 +151,16 @@ _PATTERNS = [
 # Negative lookahead ensures that the next character, if any, is not a letter or digit
 _REGEXES = [(re.compile(pattern + r'(?![A-Z0-9])(.*)', re.I), conf)
             for pattern, conf in _PATTERNS]
+
+# A formal designation pins down one specific comet by its catalog code -- e.g.
+# "C/1984 K1", the periodic-comet number "73P", or the old-style "1985 XII" / "1984f" --
+# as opposed to a discoverer surname that several comets may share. Such a designation is
+# trusted even when the header's orbital elements disagree with the catalog.
+_DESIGNATION_REGEX = re.compile(
+    rf'(?:[PCXDAI]/{_DESIG}{_FRAG}?'     # C/1984 K1, D/1993 F2-A
+    rf'|[1-9]\d*[PCXDAI]{_FRAG}?'        # 73P, 73P-C
+    rf'|{_YEAR} {_ROMAN_99}'             # 1985 XII
+    rf'|{_YEAR}[a-z]\d?)$', re.I)        # 1984f
 
 
 def _select_comet_identifiers(strings):

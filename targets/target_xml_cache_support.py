@@ -23,6 +23,7 @@ import datetime
 import pathlib
 import pickle
 import re
+import textwrap
 from xml.sax.saxutils import escape
 
 import anyascii
@@ -506,6 +507,12 @@ def new_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None) -> pat
     return xml_path
 
 
+_TARGET_TITLE = re.compile(r'(.*<title>)'
+                           r'(.*?)'
+                           r'(</title>.*<Target>.*<name>)'
+                           r'(.*?)'
+                           r'(</name>.*)', re.DOTALL)
+
 _ALT_TITLE = re.compile(r'(.*\n)'
                         r'(\s*<Alias>\s*<alternate_title>)'
                         r'(.*?)'
@@ -516,22 +523,25 @@ _ALT_TITLE2 = re.compile(r'(.*?</product_class>\s*\n)'  # if Alias_List is absen
                          r'(\s*?)'
                          r'(<Modification_History>.*)', re.DOTALL)
 
+_TARGET_TYPE = re.compile(r'(.*<Target>.*<type>)'
+                          r'(.*?)'
+                          r'(</type>.*)', re.DOTALL)
+
+_DESCRIPTION = re.compile(r'(.*\s<Target>.*\n)'
+                          r'(\s*)<description>'  # indent = the spaces before <desc>
+                          r'(.*?)'
+                          r'(</description>.*)', re.DOTALL)
+
 _MOD_DETAIL = re.compile(r'(.*?\n)'
                          r'(\s*<Modification_Detail>\s*<modification_date>)'
                          r'(.*?)'
                          r'(</modification_date>\s*<version_id>)'
                          r'(\d+)\.(\d+)'
-                         r'(</version_id>\s*<description>)'
+                         r'(</version_id>\s*\n)'
+                         r'(\s*)<description>'  # indent = the spaces before <desc>
                          r'(.*?)'
-                         r'(\s*</description>\s*</Modification_Detail>\s*\n)'
+                         r'(</description>\s*</Modification_Detail>\s*\n)'
                          r'(.*)', re.DOTALL)
-
-_DESCRIPTION = re.compile(r'(.*\s<Target>.*\n)'
-                          r'(\s*)'
-                          r'<description>'
-                          r'(.*)'
-                          r'</description>\s*\n'
-                          r'(.*)', re.DOTALL)
 
 _VERSION_ID = re.compile(r'(.*?\n\s*<version_id>)'
                          r'(\d+)\.(\d+)'
@@ -539,37 +549,64 @@ _VERSION_ID = re.compile(r'(.*?\n\s*<version_id>)'
 
 
 def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
-    """Write a new local XML file with and augmented list of aliases, possibly a new
-    description, and an updated modification history.
+    """Write a new local XML file with updated information, if any.
 
-    Returns the Path to the new file.
+    Parameters:
+        body_dict: The new body dictionary.
+        logger: Logger to use.
 
-    This function is designed to preserve the format and prior content of the existing
-    file. The version number is incremented by 0.1.
+    Returns:
+        pathlib.Path or None: The Path to the new file if it was modified, with a version
+        number incremented by 0.1. If no change is required, the path to the pre-existing
+        XML file is returned.
+
+    Raises:
+        FileNotFoundError: If the XML file does not exist.
+        FileExistsError: Upon attempting to write an XML file that already exists.
     """
 
     # Get the current body content
-    for key in [body_dict['lid_tail'], body_dict['title']] + body_dict['alt_titles']:
-        xml_path = target_xml_path(key)
-        if xml_path is not None:
-            break
-
+    xml_path = find_xml_path(body_dict)
     if xml_path is None:
         raise FileNotFoundError(f'XML file not found for {body_dict["lid_tail"]}')
 
     content = xml_path.read_text()
     xml_dict = _read_target_xml_dict(xml_path)
+    changes = []
 
-    # Insert the new Aliases
+    # Warn about a LID change
+    new_lid = body_dict['lid_tail']
+    old_lid = xml_dict['lid_tail']
+    if new_lid != old_lid:
+        logger and logger.warning(f'LID mismatch: new="{new_lid}"; '
+                                  f'original="{old_lid}" (retained)')
+
+    # Update the title
+    new_test = body_dict['title'].replace('(', '').replace(')', '').upper()
+    old_test = xml_dict['title'].replace('(', '').replace(')', '').upper()
     new_aliases = _missing_aliases(body_dict, xml_dict)
+    if new_test != old_test:
+        title = body_dict['title']
+        logger and logger.info(f'Replacing title: "{title}"')
+        match = _TARGET_TITLE.match(content)
+        (before, old_title, mid1, _, mid2) = match.groups()
+        new_content = [before, title, mid1, title, mid2]
+        content = ''.join(new_content)
+        if old_title not in new_aliases:
+            new_aliases = [old_title] + new_aliases
+        if title in new_aliases:
+            new_aliases.remove(title)
+        changes.append(f'revised title (was "{old_title}")')
+
+    # Insert the new alt_titles
     if new_aliases:
         logger and logger.info(f'Inserting new aliases: {new_aliases}')
         match = _ALT_TITLE.match(content)
         if match:
-            (before, temp1, last_alt_title, temp2, after) = match.groups()
-            new_content = [before, temp1, last_alt_title, temp2]
+            (before, mid1, last_alt_title, mid2, after) = match.groups()
+            new_content = [before, mid1, last_alt_title, mid2]
             for alt in new_aliases:
-                new_content += [temp1, escape(alt), temp2]
+                new_content += [mid1, escape(alt), mid2]
             new_content += [after]
         else:
             match = _ALT_TITLE2.match(content)
@@ -581,39 +618,61 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
                                 '  </Alias>\n']
             new_content += [indent, '</Alias_List>\n', indent, after]
         content = ''.join(new_content)
+        plural = 's' if len(new_aliases) > 1 else ''
+        changes.append(f'additional alt_title{plural}')
 
-    # Fill in the Target description if the body has one and the file's is absent
+    # Update the target type
+    if body_dict['ttype'] != xml_dict['ttype']:
+        logger and logger.info(f'Replacing type: {body_dict["type_name"]}')
+        match = _TARGET_TYPE.match(content)
+        (before, old_type, after) = match.groups()
+        new_content = [before, body_dict['type_name'], after]
+        content = ''.join(new_content)
+        changes.append(f'revised type (was "{old_type}")')
+
+    # Fill in or expand the Target description
     new_desc = _new_desc(body_dict, xml_dict)
     if new_desc:
         match = _DESCRIPTION.match(content)
         (before, indent, old_desc, after) = match.groups()
-        logger and logger.info('Inserting new description')
+        preserve_old = old_desc.lower().strip() not in ('', 'none', 'none.')
+        logger and logger.info(('Expanding' if preserve_old else 'Inserting')
+                               + ' target description')
         new_content = [before, indent, '<description>\n']
-        if old_desc.lower() not in ('', 'none', 'none.'):
-            new_content += [old_desc, '\n']
-        for text in body_dict['description']:
-            new_content += [indent, '  ', escape(text), '\n']
-        new_content += [indent, '</description>\n', after]
+        if preserve_old:
+            desc = [line.strip() for line in old_desc.split()]
+        else:
+            desc = []
+        desc += body_dict['description']
+        for line in desc:
+            new_content += [indent, '  ', escape(line), '\n']
+        new_content += [indent, after]
         content = ''.join(new_content)
+        changes.append(('expanded' if preserve_old else 'new') + ' description')
 
-    # Insert the new Modification_Detail describing exactly what changed
-    parts = []
-    if new_aliases:
-        parts.append(f'alternate_title{"s" if len(new_aliases) > 1 else ""}')
-    if new_desc:
-        parts.append('description')
-    change = ("RMS Node's HST pipeline added " + ' and '.join(parts) + '.' if parts
-              else "Metadata update by the RMS Node's HST pipeline.")
+    # If nothing has changed, return the path to the exiting file
+    if not changes:
+        return xml_path
+
+    # Modification_Detail description
+    new_desc = "Updated by the RMS Node's HST pipeline: " + ', '.join(changes) + '.'
+    if new_lid != old_lid:
+        new_desc += ' Note that the logical_identifier has not been modified.'
 
     match = _MOD_DETAIL.match(content)
-    (before, temp1, mod_date, temp2, v1, v2, temp3, desc, temp4, after) = match.groups()
+    (before, mid1, mod_date, mid2,
+     v1, v2, mid3, indent, old_desc, mid4, after) = match.groups()
     new_version = f'{v1}.{int(v2) + 1}'
+    new_desc = '\n'.join(textwrap.wrap(new_desc, width=(90 - len(indent) - 2),
+                                       initial_indent=indent + '  ',
+                                       subsequent_indent=indent + '  '))
     new_content = [before,
-                   temp1, datetime.date.today().isoformat(),
-                   temp2, new_version,
-                   temp3, change,
-                   temp4,
-                   temp1, mod_date, temp2, v1, '.', v2, temp3, desc, temp4, after]
+                   mid1, datetime.date.today().isoformat(),
+                   mid2, new_version,
+                   mid3, indent, '<description>\n', new_desc, '\n', indent,
+                   mid4,
+                   mid1, mod_date, mid2, v1, '.', v2, mid3, indent, '<description>',
+                   old_desc, mid4, after]
     content = ''.join(new_content)
 
     # Update the version_id
@@ -623,7 +682,7 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     content = ''.join(new_content)
 
     # Write the new file into the overlay (or the committed cache when no overlay is
-    # active)
+    # active). Note that this reuses the existing LID, even if the LID has changed.
     new_basename = xml_path.name.replace('_local.xml', '.xml')
     new_basename = new_basename.replace(f'{v1}.{v2}.xml', f'{new_version}_local.xml')
     new_path = _write_dir() / new_basename
@@ -644,13 +703,12 @@ def _missing_aliases(new_body, old_body):
 
     new_names = [new_body['title']] + new_body['alt_titles']
     old_names = set([old_body['title']] + old_body['alt_titles'])
-
     extras = []
     for name in new_names:
         if name in old_names:
             continue
 
-        # Omit a name entirely inside another
+        # Omit a new name entirely inside an old name
         inside = False
         for test in old_names:
             if name in test:

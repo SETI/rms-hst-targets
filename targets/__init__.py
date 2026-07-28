@@ -13,7 +13,7 @@ their own modules.
 
 from targets.cometdb import (centaur_dict, centaur_lookup, comet_dict, comet_lookup,  # noqa: I001
                              query_centaur_by_name, query_comet_by_elements,
-                             query_comet_by_name, repair_comet)
+                             query_comet_by_name)
 from targets.comet_identifiers import comet_identifiers
 from targets.hst_repairs import hst_repairs
 from targets.identify_standard_body import identify_standard_body
@@ -46,7 +46,6 @@ __all__ = [
     'query_centaur_by_name',
     'query_comet_by_elements',
     'query_comet_by_name',
-    'repair_comet',
 ]
 
 if _HAS_ORBITAL_RADEC:

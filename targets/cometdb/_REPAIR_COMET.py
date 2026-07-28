@@ -1,10 +1,10 @@
 ##########################################################################################
-# targets/cometdb/repair_comet.py
+# targets/cometdb/_REPAIR_COMET.py
 ##########################################################################################
 """
----------------
-repair_comet.py
----------------
+----------------
+_REPAIR_COMET.py
+----------------
 
 This function "repairs" any comet dictionary that contains out-of-date or incorrect
 information about a comet, as extracted from one record in an online resource.
@@ -22,7 +22,7 @@ _DESIG_REPAIRS = [('D/1977 C1', 'D/1977 DV3'),
                   ('P/2004 V9', 'P/2010 H3')]
 
 
-def repair_comet(comet: dict) -> None:
+def _repair_comet(comet: dict) -> None:
     """Update any out-of-date or incorrect information in a comet dictionary.
 
     Parameters:
@@ -40,7 +40,10 @@ def repair_comet(comet: dict) -> None:
           the `aliases` list instead. It never includes a comet number.
         * `name` (str): The discovery name of the object, if any. This excludes a
           discovery number (e.g., "Tempel" not "Tempel 2").
-        * `cnum` (str): The comet number for the discovery name, if any and if known.
+        * `cnum` (str): The comet number for the discovery name, if any and if known. This
+          number is included by default in the full name.
+        * `alt_cnum` (str): The comet number for the discovery name, if any and if known.
+          This number is NOT included by default in the full name.
         * `fragment` (str): The fragment identifier, if any, excluding any leading dash.
         * `alt_prefixes` (list[str]): A list of alternative prefixes, e.g., ["72D"] for a
           dead comet that is primarily referenced with prefix "72P".

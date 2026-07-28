@@ -151,6 +151,16 @@ def test_std_io_torus_named_by_targname() -> None:
     assert [(b['full_name'], b['ttype']) for b in bodies] == [('Io Torus', 't'), ('Io', 'S')]
 
 
+def test_std_io_torus_from_compound_targname() -> None:
+    # Program 8169: STD=JUPITER with an MT_LV2 "TYPE=TORUS" and TARKEY "TORUS", but the
+    # TARGNAME is the compound "IO-T1-C23". "IO" is only a hyphen-separated token, not a
+    # bare string, so the Io-torus test must match it against the tokens (not by list
+    # membership) to recognize the Io plasma torus.
+    bodies = identify_target_dicts([_header('8169/o5h902010_spt.fits')])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [
+        ('Io Torus', 't'), ('Jupiter', 'P'), ('Io', 'S'), ('Jupiter System', 'p')]
+
+
 def test_std_saturn_rings_from_equatorial_torus() -> None:
     # Program 8802: TARKEY "RING" + MT_LV2 "TYPE=TORUS" in the equatorial plane (POLE_LAT
     # 90, LAT 0, LONG 90) identifies Saturn's rings. The torus RAD=50000 sits below Saturn's
@@ -184,13 +194,18 @@ def test_comet_fragment() -> None:
     assert bodies[0]['ttype'] == 'C'
 
 
-def test_comet_incompatible_elements_raises() -> None:
+def test_comet_designation_overrides_incompatible_elements() -> None:
+    # Program 2231: TARGNAME "COMET-FAYE-1984XI" names 4P/Faye two independent ways -- the
+    # discoverer name "FAYE" and the old-style designation "1984 XI". When the header
+    # orbit is corrupted so it no longer matches Faye (here Q is forced to 4.78), the
+    # agreeing designation+name is trusted over the unreliable orbit and Faye is still
+    # identified (with a logged warning), rather than the identification failing.
     pytest.importorskip('palpy')
     header = _header('2231/w0sb0101t_shf.fits')
     assert 'Q = 1.5933855' in header['MT_LV1_1']
     header['MT_LV1_1'] = header['MT_LV1_1'].replace('Q = 1.5933855', 'Q = 4.78')
-    with pytest.raises(TargetIdentificationFailure, match='could not be identified'):
-        identify_target_dicts([header])
+    bodies = identify_target_dicts([header])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [('4P/Faye', 'C')]
 
 
 def test_comet_by_elements_alone() -> None:
@@ -208,9 +223,22 @@ def test_comet_by_elements_alone() -> None:
 def test_comet_rescued_by_elements_and_name() -> None:
     # Program 2442: the TARGNAME resolves to the wrong comet (an old designation
     # shared with 97P), but the elements plus the name "SHOEMAKER-LEVY" identify
-    # C/1991 T2
+    # C/1991 T2. The 97P designation is not corroborated by the discoverer name, so it is
+    # not trusted over the elements.
     bodies = identify_target_dicts([_header('2442/w0yy0201t_shf.fits')])
     assert bodies[0]['full_name'] == 'C/1991 T2 (Shoemaker-Levy)'
+
+
+def test_comet_designation_trusted_over_corrupt_ephemeris() -> None:
+    # Visit U31501: the header names comet C/1984 K1 (Shoemaker) three ways ("C/1984 K1",
+    # "1984f", "1985 XII") plus the surname "SHOEMAKER", but its orbital elements are
+    # corrupted -- Shoemaker's perihelion distance and time are paired with the orbital
+    # angles of C/1983 O1 (Cernis). The element test therefore matches Cernis, not
+    # Shoemaker. Because a formal designation and the discoverer name agree on Shoemaker,
+    # that identification is trusted over the unreliable orbit and Cernis is not
+    # substituted.
+    bodies = identify_target_dicts([_header('5834/u3150101t_shm.fits')])
+    assert [(b['full_name'], b['ttype']) for b in bodies] == [('C/1984 K1 (Shoemaker)', 'C')]
 
 
 def test_element_typo_fixed_by_override() -> None:
@@ -291,7 +319,11 @@ def test_asteroid_position_winnow(monkeypatch: pytest.MonkeyPatch) -> None:
     assert borasisi is not None
     assert arrokoth is not None
     canned = [(borasisi, 0.02), (arrokoth, 0.03)]   # too similar to pick by elements
-    monkeypatch.setattr('targets.mpc_tools.mpc_query_by_elements',
+    # Patch the name as imported into identify_targets, where the element search is called.
+    # Use the module object (via sys.modules) rather than the dotted string, because the
+    # `targets.identify_targets` attribute is shadowed by the identify_targets function
+    # re-exported from the package.
+    monkeypatch.setattr(sys.modules['targets.identify_targets'], 'mpc_query_by_elements',
                         lambda *args, **kwargs: canned)
 
     bodies = identify_target_dicts([header])

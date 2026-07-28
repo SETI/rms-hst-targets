@@ -12,9 +12,10 @@ from ._get_mpc_comets import _get_mpc_comets
 from ._get_sbn_comets import _get_sbn_comets
 from ._get_ssd_comets import _get_ssd_comets
 from ._get_wiki_comets import _get_wiki_comets
-from .repair_comet import repair_comet
+from ._REPAIR_COMET import _repair_comet
 
 _INT_MATCH = re.compile(r'(-?\d+)')
+_FRAG_MATCH = re.compile(r'(.*)-[A-Z]\d?')
 
 
 def _build_comet_dicts(
@@ -50,7 +51,8 @@ def _build_comet_dicts(
           the `alt_desigs` list instead. It never includes a comet number.
         * `name` (str): The discovery name of the object, if any. This excludes a
           discovery number (e.g., "Tempel" not "Tempel 2").
-        * `cnum` (str): The comet number for the discovery name, if any and if known.
+        * `cnum` (str): The comet number for the discovery name, if any and if known. If
+          defined, the preferred full name of the comet includes this number.
         * `fragment` (str): The fragment identifier, if any, excluding any leading dash.
         * `alt_prefixes` (list[str]): A list of alternative prefixes, e.g., ["72D"] for a
           dead comet that is primarily referenced with prefix "72P".
@@ -58,7 +60,7 @@ def _build_comet_dicts(
           any leading dash.
         * `alt_names` (list[str]): A list of alternative discover names and optional
           numbers, e.g., "Anderson" for 148P/Anderson-Linear. Unlike `name`, each name
-          includes the `cnum` if any, e.g., "Tempel 2" for 10P/Tempel.
+          includes its `cnum` if any, e.g., "Tempel 2" for 10P/Tempel.
         * `alt_desigs` (list[str]): A list of alternative formal designations. Unlike
           the value of `desig`, these values include a fragment identifier (preceded by
           a dash) if needed.
@@ -101,13 +103,13 @@ def _build_comet_dicts(
         for comet in comet_list:
 
             # Handle known errors and inconsistencies
-            repair_comet(comet)
+            _repair_comet(comet)
 
             # Construct a unique key
             prefix = comet.get('prefix', '')
             desig = comet.get('desig', '')
             fragment = comet.get('fragment', '')
-            if len(prefix) > 1:
+            if len(prefix) > 1:  # if numbered
                 key = prefix
             else:
                 key = desig
@@ -173,39 +175,63 @@ def _build_comet_dicts(
     # Remove duplicates from internal lists, handle other cleanup
     _complete_comets(comets, logger=logger)
 
-    # Check ambiguous lists; a single occurrence is not ambiguous after all
-    by_ambiguous = {}
-    for key, comet in comets.items():
-        for key in comet['ambiguous']:
-            by_ambiguous.setdefault(key, []).append(comet)
+    # Check ambiguous lists; a name that occurs for only one comet is not ambiguous after
+    # all. Group case-insensitively so a name split across casings (e.g. "SHOEMAKER" vs
+    # "Shoemaker" from different sources) counts as one comet, keeping the result
+    # deterministic regardless of merge order.
+    test_dict = {}
+    for comet in comets.values():
+        for amb in comet['ambiguous']:
+            test_dict.setdefault(amb.upper(), []).append(comet)
 
-    for key, comet_list in by_ambiguous.items():
-        if len(comet_list) == 1:
-            comet = comet_list[0]
-            comet['lookups'].append(key)  # move from ambiguous to un-ambiguous list
-            comet['ambiguous'].remove(key)
+    for amb_uc, comet_list in test_dict.items():
+        unique_comets = {id(c): c for c in comet_list}
+        if len(unique_comets) == 1:
+            comet = next(iter(unique_comets.values()))
+            # Move every casing of this name from ambiguous to the un-ambiguous lookups.
+            for amb in [a for a in comet['ambiguous'] if a.upper() == amb_uc]:
+                comet['lookups'].append(amb)
+                comet['ambiguous'].remove(amb)
 
-    upper_dict = {k.upper():v for k,v in by_ambiguous.items()}
-    by_ambiguous.update(upper_dict)
-
-    # Assemble lookup dictionary; warn about duplicated lookup keys
-    by_lookup = {}
+    # Warn about duplicated lookup keys
+    test_dict = {}
     for key, comet in comets.items():
         for lookup in comet['lookups']:
-            if lookup in by_lookup or lookup.upper() in by_lookup:
-                alt_key = by_lookup[lookup]['key']
+            test = lookup.upper()
+            # allow "P" vs. "C" vs. "D" ambiguity
+            test = test[1:] if test[1] == '/' else test
+            if test in test_dict and test_dict[test] is not comet:
+                alt_key = test_dict[test]['key']
                 logger and logger.warn(f'Duplicated lookup key "{lookup}" for keys: '
                                        f'"{key}", "{alt_key}"')
             else:
-                by_lookup[lookup] = comet
-                by_lookup[lookup.upper()] = comet
+                test_dict[test] = comet
+
+    # Assemble the lookup dictionaries
+    by_lookup = {}
+    for key, comet in comets.items():
+        lookups = set(comet['lookups'])
+        lookups |= set(_space_dash_permutations(lookups))
+        lookups |= {key[1:] for key in lookups if key[1] == '/'}
+        lookups |= {key.upper() for key in lookups}
+        for lookup in lookups:
+            by_lookup[lookup] = comet
+
+    by_ambiguous = {}
+    for key, comet in comets.items():
+        lookups = set(comet['ambiguous'])
+        lookups |= set(_space_dash_permutations(lookups))
+        lookups |= {key[1:] for key in lookups if key[1] == '/'}
+        lookups |= {key.upper() for key in lookups}
+        for lookup in lookups:
+            by_ambiguous.setdefault(lookup, []).append(comet)
 
     return comets, by_lookup, by_ambiguous
 
 
 def _merge_comets(
     comet: dict,
-    alt: dict,
+    second: dict,
     first_elements: bool = True,
     logger: Logger | None = None
 ) -> None:
@@ -213,78 +239,78 @@ def _merge_comets(
     the same object.
 
     Parameters:
-        comet: A comet dictionary, which is modified based on the contents of `alt`.
-        alt: A second dictionary describing the same body.
+        comet: A comet dictionary, which is modified based on the contents of `second`.
+        second: A second dictionary describing the same body.
         first elements: True to give priority to any orbital elements in `comet` over
-            those in `alt`.
+            those in `second`.
         logger: Optional logger to use.
     """
 
     key = comet['key']
 
     # Handle name and cnum
-    alt_name = alt.get('name', '')
-    if alt_name:
+    second_name = second.get('name', '')
+    alt_names = comet.setdefault('alt_names', [])
+    if second_name:
         name = comet.get('name', '')
         cnum = comet.get('cnum', '')
         name_num = (name + ' ' + cnum).rstrip()
 
-        alt_cnum = alt.get('cnum', '')
-        alt_name_num = (alt_name + ' ' + alt_cnum).rstrip()
+        second_cnum = second.get('cnum', '')
+        second_name_num = (second_name + ' ' + second_cnum).rstrip()
 
-        alt_names = comet.setdefault('alt_names', [])
         if not name:
-            comet['name'] = alt_name
-            comet['cnum'] = alt_cnum
-        elif name == alt_name:
-            comet['cnum'] = cnum or alt_cnum
-        elif alt_name in name:  # e.g., "Anderson" in "Anderson-LINEAR"
-            alt_names += [alt_name, alt_name_num]
+            comet['name'] = second_name
+            comet['cnum'] = second_cnum
+        elif name == second_name:
+            comet['cnum'] = cnum or second_cnum
+        elif second_name in name:   # e.g., "Anderson" in "Anderson-LINEAR"
+            alt_names += [second_name, second_name_num]
             logger and logger.warn(f'Incomplete comet name for {key}: '
-                                   f'"{alt_name}" vs. "{name}"')
-        elif name in alt_name:
+                                   f'"{second_name}" vs. "{name}"')
+        elif name in second_name:
             alt_names += [name, name_num]
-            comet['name'] = alt_name
-            comet['cnum'] = alt_cnum
+            comet['name'] = second_name
+            comet['cnum'] = second_cnum
             logger and logger.warn(f'Incomplete comet name for {key}: '
-                                   f'"{name}" vs. "{alt_name}"')
+                                   f'"{name}" vs. "{second_name}"')
         else:
-            alt_names += [alt_name, alt_name_num]
+            alt_names += [second_name, second_name_num]
             logger and logger.warn(f'Alternate comet name for {key}: '
-                                   f'"{alt_name}" vs. "{name}"')
+                                   f'"{second_name}" vs. "{name}"')
 
     # Handle designation and fragment
-    alt_desig = alt.get('desig', '')
-    if alt_desig:
-        alt_fragment = alt.get('fragment', '')
+    second_desig = second.get('desig', '')
+    if second_desig:
+        second_fragment = second.get('fragment', '')
         if comet.get('desig', ''):
-            alt_desig_frag = alt_desig + ('-' + alt_fragment).rstrip('-')
-            comet.setdefault('alt_desigs', []).append(alt_desig_frag)
+            second_desig_frag = second_desig + ('-' + second_fragment).rstrip('-')
+            comet.setdefault('alt_desigs', []).append(second_desig_frag)
         else:
-            comet['desig'] = alt_desig
-            comet['fragment'] = alt_fragment
+            comet['desig'] = second_desig
+            comet['fragment'] = second_fragment
 
     # Merge lists
     for field in ('alt_names', 'alt_desigs', 'alt_frags', 'alt_prefixes', 'old_desigs'):
         list_ = comet.setdefault(field, [])
-        list_ += alt.get(field, [])
+        list_ += second.get(field, [])
 
     # Merge other fields
     for field in ('fragment', 'mnum', 'naif_id'):
         value = comet.get(field, '')
-        alt_value = alt.get(field, '')
-        if not alt_value or value == alt_value:
+        second_value = second.get(field, '')
+        if not second_value or value == second_value:
             continue
-        elif alt_value and not value:
-            comet[field] = alt_value
-        elif alt_value != value:
+        elif second_value and not value:
+            comet[field] = second_value
+        elif second_value != value:
             logger and logger.warn(f'Comet {field} discrepancy for {key}: '
-                                   f'"{alt_value}" vs. "{value}"')
+                                   f'"{second_value}" vs. "{value}"')
 
     for field in ('A', 'Q', 'I', 'O', 'E', 'W'):
-        if field in alt:
+        if field in second:
             if (not first_elements) or field not in comet:
-                comet[field] = alt[field]
+                comet[field] = second[field]
 
 
 def _complete_comets(
@@ -296,6 +322,18 @@ def _complete_comets(
     Added fields include `year`, `naif_id`, `full_name` (for LID), `aliases`, `lookups`,
     and `ambiguous`.
     """
+
+    # A parent comet inherits the comet number carried by its fragments. The SBDB rows
+    # supply the cnum on the fragment entries (e.g. "9" for the pieces of D/1993 F2 =
+    # Shoemaker-Levy 9), while the parent may come from a source that supplies no cnum.
+    # Do this before _clean_comet so both the bare name and the numbered name survive into
+    # the parent's full_name/aliases/lookups.
+    for key, comet in comets.items():
+        cnum = comet.get('cnum', '')
+        if comet.get('fragment', '') and cnum:
+            parent = comets.get(key.partition('-')[0])
+            if parent is not None and not parent.get('cnum', ''):
+                parent['cnum'] = cnum
 
     # Remove duplicates from lists
     for comet in comets.values():
@@ -315,24 +353,22 @@ def _complete_comets(
 
     # If parent is missing, construct it
     missing_parents.sort()
-    for key, parent_key in missing_parents:
-        comet['parent_key'] = parent_key
+    for comet_key, parent_key in missing_parents:
         if parent_key in comets:
             continue
-        comet = comets[key]
-        parent = _copy_comet(comet)
-        parent['fragment'] = ''
-        parent['alt_frags'] = []
-        del parent['naif_id']
+        comet = comets[comet_key]
+        parent = {}
+        for key in ('prefix', 'desig', 'name', 'year', 'ttype', 'cnum'):
+            if comet.get(key):
+                parent[key] = comet[key]
+        for key in ('alt_names', 'alt_desigs'):
+            parent[key] = []
+            for value in comet[key]:
+                match = _FRAG_MATCH.fullmatch(value)
+                if match:
+                    parent[key].append(match.group(1))
 
-        alt_desigs = []
-        for desig_frag in comet.get('desigs', []):
-            for fragment in [comet['fragment']] + comet.get('alt_frags', []):
-                if desig_frag.endswith('-' + fragment):
-                    desig_frag = desig_frag.rpartition('-')[0]
-                    break
-        parent['alt_desigs'] = alt_desigs
-
+        parent['key'] = comet_key.rpartition('-')[0]
         comets[parent_key] = parent
         logger and logger.info(f'Parent comet {parent_key} constructed')
 
@@ -418,7 +454,7 @@ def _clean_comet(
     alt_names = comet.setdefault('alt_names', [])
     alt_names.append(name)  # a name without a cnum is always valid
     name_num = name + (' ' + cnum).rstrip(' ')
-    comet['alt_names'] = _clean_list(alt_names, [name_num])
+    comet['alt_names'] = _clean_list(alt_names, [name_num], casefold=True)
 
     # Handle fragment, alt_frags
     fragment = comet.get('fragment', '')
@@ -447,11 +483,33 @@ def _clean_comet(
     comet['ttype'] = TargetType.COMET
 
 
-def _clean_list(list_: list[str], extras: list[str] | None = None) -> list[str]:
-    """Strip duplicates and designation "extras" from a list."""
+def _clean_list(list_: list[str], extras: list[str] | None = None,
+                casefold: bool = False) -> list[str]:
+    """Strip duplicates and designation "extras" from a list.
+
+    With `casefold`, duplicates are detected case-insensitively and the better-capitalized
+    form is kept (e.g. "PanSTARRS 134" over "PANSTARRS 134"), so only one casing survives.
+    """
 
     if extras is None:
         extras = []
+
+    if casefold:
+        extras_uc = {e.upper() for e in extras}
+        cleaned_list = []
+        index = {}      # uppercased item -> its position in cleaned_list
+        for item in list_:
+            item_uc = item.upper()
+            if item_uc in extras_uc:
+                continue
+            if item_uc in index:
+                pos = index[item_uc]
+                if cleaned_list[pos].isupper() and not item.isupper():
+                    cleaned_list[pos] = item     # prefer the better-capitalized form
+                continue
+            index[item_uc] = len(cleaned_list)
+            cleaned_list.append(item)
+        return cleaned_list
 
     cleaned_list = []
     for item in list_:
@@ -517,6 +575,11 @@ def _fill_comet_aliases(
             for df in dash_frags:
                 aliases.append(p + '/' + desig[2:] + df)
 
+    # If a comet has a name and a cnum, that's enough for an alias
+    if name and comet.get('cnum', ''):
+        for df in dash_frags:
+            aliases.append(name + ' ' + comet['cnum'] + df)
+
     # Append all remaining designations
     aliases += comet.get('alt_desigs', [])
     aliases += comet.get('old_desigs', [])
@@ -551,26 +614,16 @@ def _fill_comet_aliases(
         extras = [digits + key for key in lookups if key[1] == '/']
         lookups += extras
 
-    # Omit the letter before the slash in case the leading letter ("P" vs. "C") is wrong
-    missing_letter_keys = [key[1:] for key in lookups if key[1] == '/']
-    missing_letter_keys += [key[2:] for key in lookups if key[1] == '/']
-    lookups += missing_letter_keys
-
-    # Dashes and spaces can get confused, so allow all permutations
-    spaces_vs_dashes = _space_dash_permutations(lookups)
-    lookups += spaces_vs_dashes
-
-    spaces_vs_dashes = _space_dash_permutations(ambiguous)
-    ambiguous += spaces_vs_dashes
-
-    comet['lookups'] = _clean_list(lookups)
+    comet['lookups'] = _clean_list(lookups, casefold=True)
     comet['ambiguous'] = _clean_list(ambiguous)
 
 
 def _space_dash_permutations(
     strings: list[str],
 ) -> list[str]:
-    """A list containing every permutation of dashes and spaces."""
+    """A list containing every permutation of dashes and spaces, while also replacing
+    underscores.
+    """
 
     def _swapper(keys, locs):
         if not locs:
@@ -584,10 +637,10 @@ def _space_dash_permutations(
 
     results = []
     for string in strings:
-        locs = [i for i, c in enumerate(string) if c in ' -']
+        locs = [i for i, c in enumerate(string) if c in ' -_']
         results += _swapper([string], locs)
 
-    return results
+    return list(results)
 
 
 def _copy_comet(comet: dict) -> dict:

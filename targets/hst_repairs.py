@@ -44,10 +44,12 @@ _MSUFF = r'([A-HJ-Y][A-HJ-Z]\d*)'
 
 # A comet name can include spaces and dashes but always at least two other characters
 # surrounding them. Apostrophes count as letters.
+_CNUMP = r'([1-9]\d?\d?[PDI])'      # up to 3 digits follwed by P, D, or I
 _CNAME = r"([A-Za-z'`]{2,}(?:[- ]?[A-Z'`]{2,})*)"
 _CYEAR = r'(1[6-9]\d\d|20[0-3]\d)'
 _CSUFF = r'([A-HJ-Y][1-9]\d*)'
 _CSUFF2 = r'([A-HJ-Y][A-HJ-Z]?[1-9]\d*)'
+_CFRAG = r'([A-Z]\d?)'
 
 # Any fully-matching string is removed in favor of its replacement.
 # A vertical bar separates distinct, recognized units.
@@ -72,9 +74,13 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'C{_CYEAR}[- ]?{_CSUFF2}-{_CNAME}',                  r'C/\1 \2|[C]$\3'),
     (rf'C{_CYEAR}[- ]?{_CSUFF2}',                           r'C/\1 \2|[C]'),
 
+    # Numbered comets with fragments
+    (rf'{_CNUMP}[-/ ]{_CNAME}[- ]?(\d)[- ]{_CFRAG}',        r'\1/\2 \3-\4|[C]'),
+    (rf'{_CNUMP}[-/ ]{_CNAME}[- ]{_CFRAG}',                 r'\1/\2-\3|[C]'),
+
     # Other comet patterns only allow one letter in the designation code
-    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}(\d)',                   r'\1/\2 \3|[C]'),
-    (rf'([1-9]\d?\d?P)[- ]?{_CNAME}',                       r'\1/\2|[C]'),
+    (rf'{_CNUMP}[-/ ]?{_CNAME}(\d)',                        r'\1/\2 \3|[C]'),
+    (rf'{_CNUMP}[-/ ]?{_CNAME}',                            r'\1/\2|[C]'),
     (rf'([PCXDAI])-?{_CYEAR}[- ]?{_CSUFF}',                 r'\1/\2 \3|[C]'),
     (rf'{_CYEAR}-?{_CSUFF}-{_CNAME}',                       r'P/\1 \2|[C]$\3'),
     (rf'(?:C|C1|){_CYEAR}-?{_CSUFF}',                       r'C/\1 \2|[C]'),
@@ -91,7 +97,6 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'ASTEROID[- ]{_MYEAR}[- ]{_MSUFF}',                  r'\1 \2|[M]'),
     (rf'ASTEROID[- ]0*{_NUM}',                              r'(\1)|[M]'),
     (rf'{_NUM}[=-]?\({_MPNAME}\)',                          r'(\1) \2'),
-    (rf'{_NUM}-{_MPNAME}',                                  r'(\1) \2'),
     (rf'MP-?{_NUM}-{_MPNAME}',                              r'(\1) \2|[M]'),
     (rf'MP-?{_NUM}',                                        r'(\1)|[M]'),
     (rf'TR-?{_NUM}(\d\d)',                                  r'(\1\2)|[A]'), # 3+ digits
@@ -108,6 +113,7 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'([012]\d)[- ]?{_MSUFF}',                            r'20\1 \2'),
     (rf'[ABY]{_MYEAR}{_MSUFF}',                             r'\1 \2'),
     (r'([1-9]\d{4,})-[A-Z]',                                r'\1'),
+    (rf'{_NUM}-?{_MPNAME}',                                 r'(\1) \2'),
     (rf'({MPC_PACKED_PATTERN})',                            mpc_unpack),
 
     # Transposition of a designation
@@ -118,6 +124,7 @@ _TARGET_TRANSFORM_PATTERNS = [
     #('SAT',                                                r'SATURN|[P]'), or satellite!
     ('URA',                                                 r'URANUS|[P]'),
     ('NEP',                                                 r'NEPTUNE|[P]'),
+    ('JOVIAN',                                              r'$JUPITER'),
 
     # Planetary systems
     (r'(MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO)[ -]?SYSTEM',  r'\1 SYSTEM|[p]'),

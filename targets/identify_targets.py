@@ -27,28 +27,24 @@ import pathlib
 from datetime import datetime, timedelta
 from logging import Logger
 
-from targets                         import cometdb, mpc_tools
-from targets._utils                  import (_collect_strings, _headers_by_visit,
-                                             _parse_mt_lv, _unique_targets,
-                                             categorize_minor_planet,
-                                             TargetIdentificationFailure)
-from targets._HST_PROGRAM_OVERRIDES  import _HST_PROGRAM_OVERRIDES
-from targets.hst_repairs             import hst_repairs
-from targets.identify_standard_body  import identify_standard_body
-from targets.target_xml_support      import _complete_target, get_target_xml_path
-from targets.targettype              import TargetType
-
-__all__ = ['identify_target_dicts', 'identify_targets']
-
-
+from targets._utils                   import (_collect_strings, _headers_by_visit,
+                                              _parse_mt_lv, _unique_targets,
+                                              categorize_minor_planet,
+                                              TargetIdentificationFailure)
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
-from targets.comet_identifiers import comet_identifiers
+from targets._HST_PROGRAM_OVERRIDES   import _HST_PROGRAM_OVERRIDES
+from targets.comet_identifiers        import comet_identifiers
+from targets.cometdb                  import query_comet_by_elements
+from targets.hst_repairs              import hst_repairs
+from targets.identify_standard_body   import identify_standard_body
 from targets.minor_planet_identifiers import minor_planet_identifiers
+from targets.mpc_tools                import (element_resid, mpc_query_by_elements,
+                                              mpc_query_by_name)
+from targets.target_xml_support       import _complete_target, get_target_xml_path
+from targets.targettype               import TargetType
 
 _DISALLOWED_UC = {name.upper() for name in _DISALLOWED_MINOR_PLANET_NAMES}
-
 _MINOR_PLANET_TTYPES = set(TargetType.MCODES + TargetType.MINOR_PLANET)
-
 
 # A minor planet identified by name is confirmed if its propagated sky position falls
 # within max(radec_tolerance, _RADEC_TOLERANCE_PER_YEAR * epoch gap) of RA_TARG/DEC_TARG,
@@ -271,15 +267,14 @@ def minor_planet_by_radec(
             return None
 
     try:
-        results = mpc_tools.mpc_query_by_elements(elements,
-                                                  count=_FALLBACK_CANDIDATES,
-                                                  logger=logger)
+        results = mpc_query_by_elements(elements, count=_FALLBACK_CANDIDATES,
+                                        logger=logger)
     except Exception as e:
         logger and logger.error(f'MPC element search failed: {e}')
         return None
 
     candidates = []     # (offset, gap, delta, body, rms)
-    for body, rms in results:
+    for body, rms in results[:5]:
         if rms > mp_rms:
             continue
         info = radec_offset(body, obs_time, ra_targ, dec_targ, logger)
@@ -311,8 +306,8 @@ def minor_planet_by_radec(
         return None
 
     name = body['full_name']
-    logger and logger.info(f'Minor planet "{name}" selected by sky position: '
-                           f'({offset:.1f}" from RA_TARG/DEC_TARG)')
+    logger and logger.info(f'"{name}" identified by sky position: {offset:.1f}" from '
+                           'RA_TARG/DEC_TARG')
     return (body, rms)
 
 
@@ -402,10 +397,11 @@ def identify_target_dicts(
     plural = 's' if len(unique_headers) > 1 else ''
     if len(unique_headers) == len(headers):
         logger and logger.info(f'Identifying targets for visit {visit} '
-                               f'({len(headers)} header{plural})')
+                               f'({len(headers)} header{plural})', force=True)
     else:
         logger and logger.info(f'Identifying targets for visit {visit} '
-                               f'({len(unique_headers)} unique header{plural})')
+                               f'({len(unique_headers)} unique header{plural})',
+                               force=True)
 
     # Apply repairs
     repaired_headers = []
@@ -451,8 +447,8 @@ def identify_target_dicts(
     headers = repaired_headers + unrepaired_headers
 
     # A standard body observation is identified entirely from the header
-    bodies = identify_standard_body(headers, logger=logger)
-    if bodies is not None:
+    bodies, unused_words = identify_standard_body(headers, logger=logger)
+    if bodies:
         return bodies + extra_dicts
 
     # Handle each unique header
@@ -476,32 +472,53 @@ def identify_target_dicts(
             mtest = True
 
         # Test for comet if selected
-        cdicts = {}
+        cdicts = []
         csingle = False
+        cstrong = set()
         if ctest:
-            cdicts, _, _, csingle = comet_identifiers(strings, logger=logger)
+            cdicts, _, _, csingle, cstrong = comet_identifiers(strings, logger=logger)
 
         # Test for minor planet if selected
-        mdicts = {}
+        mdicts = []
         single = False
         if mtest:
             mdicts, _, _, single = minor_planet_identifiers(strings, logger=logger)
 
         # On no minor planet results, test comets anyway
         if mtest and not mdicts and not ctest:
-            cdicts, _, _, csingle = comet_identifiers(strings, logger=logger)
+            cdicts, _, _, csingle, cstrong = comet_identifiers(strings, logger=logger)
 
         # On no comet results, test minor planets anyway
         if ctest and not cdicts and not mtest:
             mdicts, _, _, single = minor_planet_identifiers(strings, logger=logger)
 
+        # Merge "hybrid" bodies (comet and minor planet) into the minor planet
+        removals = []
+        for k, comet in enumerate(cdicts):
+            if (comet_mnum := comet.get('mnum')):
+                mdict = mpc_query_by_name(comet_mnum)   # comet info always merged
+                found = False
+                for test in mdicts:
+                    if test.get('mnum') == comet_mnum:
+                        found = True
+                        break
+                if not found:
+                    mdicts.append(mdict)
+                removals.append(k)
+        for k in removals[::-1]:
+            cdicts.pop(k)
+
         # Save every identified body along with elements for further validation
         elements = _parse_mt_lv(header, 'MT_LV1', logger=logger)
         for cdict in cdicts:
             full_name = cdict['full_name']
-            prev_single = (cdict_lookup[full_name][2] if full_name in cdict_lookup
-                           else False)
-            cdict_lookup[full_name] = (cdict, elements, csingle or prev_single)
+            strong = cdict['key'] in cstrong
+            if full_name in cdict_lookup:
+                _, _, prev_single, prev_strong = cdict_lookup[full_name]
+                cdict_lookup[full_name] = (cdict, elements, csingle or prev_single,
+                                           strong or prev_strong)
+            else:
+                cdict_lookup[full_name] = (cdict, elements, csingle, strong)
         for mdict in mdicts:
             categorize_minor_planet(mdict, ttypes, logger=logger)
             full_name = mdict['full_name']
@@ -519,8 +536,8 @@ def identify_target_dicts(
     radec_testable = obs_time is not None and ra_targ is not None and dec_targ is not None
 
     results = []
-    for key, (cdict, elements, single) in cdict_lookup.items():
-        rms, count = mpc_tools.element_resid(elements, cdict)
+    for key, (cdict, elements, single, strong) in cdict_lookup.items():
+        rms, count = element_resid(elements, cdict)
         if count == 0:
             # No orbital elements in the header to test against (e.g. a FILE ephemeris).
             # Trust the name match only if it was unambiguous; an ambiguous name such as
@@ -534,18 +551,28 @@ def identify_target_dicts(
             else:
                 logger and logger.info(f'Comet "{key}" rejected; ambiguous name and '
                                        'no orbital elements to test')
-        elif rms > comet_rms:
-            logger and logger.debug(f'Comet "{key}" rejected; '
-                                    f'element RMS {rms:.3f} > {comet_rms}')
-        else:
+        elif rms <= comet_rms:
             logger and logger.info(f'Comet "{key}" elements confirmed; '
                                    f'RMS {rms:.3f} <= {comet_rms}')
             results.append(cdict)
             unique_elements = [e for e in unique_elements if e != elements]
+        elif strong:
+            # A formal designation names this comet, but the header orbit matches it
+            # poorly. The ephemeris is unreliable -- e.g. visit U31501 pairs comet
+            # Shoemaker's perihelion distance and time with comet Cernis's orbital angles.
+            # Trust the designation and take these elements out of play, so the element
+            # search below cannot substitute the comet the corrupted orbit resembles.
+            logger and logger.warning(f'Comet "{key}" name is unambiguous but element '
+                                      f'test failed; RMS {rms:.3f} > {comet_rms})')
+            results.append(cdict)
+            unique_elements = [e for e in unique_elements if e != elements]
+        else:
+            logger and logger.debug(f'Comet "{key}" rejected; '
+                                    f'element RMS {rms:.3f} > {comet_rms}')
 
     deferred_singles = []       # (key, mdict, elements, mismatch) awaiting a last-resort
     for key, (mdict, elements, single) in mdict_lookup.items():
-        rms, _ = mpc_tools.element_resid(elements, mdict)
+        rms, _ = element_resid(elements, mdict)
 
         # The element test is quick and easy and does not produce false positives
         if rms <= mp_rms:
@@ -572,7 +599,7 @@ def identify_target_dicts(
         # else can account for the header orbit); otherwise the name match is not
         # trustworthy, so reject it now.
         if single:
-            mismatch = (f'RA/dec offset {offset:.1f} arcsec' if offset is not None
+            mismatch = (f'RA/dec offset {offset:.1f}"' if offset is not None
                         else f'element RMS {rms:0.3}')
             deferred_singles.append((key, mdict, elements, mismatch))
         elif offset is not None:
@@ -586,7 +613,7 @@ def identify_target_dicts(
     # Try a global search for any remaining elements
     indices = []
     for k, elements in enumerate(unique_elements):
-        result = cometdb.query_comet_by_elements(elements, logger=logger)
+        result = query_comet_by_elements(elements, logger=logger)
         if result and result[1] <= comet_rms:
             cdict, rms = result
             name = cdict['full_name']
@@ -617,9 +644,8 @@ def identify_target_dicts(
     # shares its discoverer's name with the comet actually observed) and stays rejected.
     for key, mdict, elements, mismatch in deferred_singles:
         if elements in unique_elements:
-            logger and logger.warning(
-                f'Minor planet "{key}" identified by name, but its orbital elements do '
-                f'not match the catalog ({mismatch}); accepting the unambiguous name')
+            logger and logger.warning(f'"{key}" name is unambiguous, but orbital '
+                                      f'elements do not match the catalog ({mismatch})')
             results.append(mdict)
             unique_elements = [e for e in unique_elements if e != elements]
 
@@ -684,5 +710,7 @@ def identify_targets(
     return [get_target_xml_path(_complete_target(target), logger=logger)
             for target in targets]
 
+
+__all__ = ['identify_target_dicts', 'identify_targets']
 
 ##########################################################################################

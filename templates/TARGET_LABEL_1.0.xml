@@ -25,7 +25,9 @@ schematypens="http://purl.oclc.org/dsdl/schematron"?>
       <Modification_Detail>
         <modification_date>$CURRENT_TIME(date_only=True)$</modification_date>
         <version_id>1.0</version_id>
-        <description>Initial version from the RMS Node's HST pipeline.</description>
+        <description>
+          Initial version from the RMS Node's HST pipeline.
+        </description>
       </Modification_Detail>
     </Modification_History>
   </Identification_Area>

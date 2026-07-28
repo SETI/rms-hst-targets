@@ -3,12 +3,19 @@
 ##########################################################################################
 
 import pathlib
+import re
 
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
+from targets.cometdb import comet_dict
 from targets.targettype import TargetType
 
 _MPC_CACHE = pathlib.Path(__file__).parent.parent.parent / 'caches/MPC_CACHE'
 _MPC_CACHING = True
+
+# A Palomar-Leiden (e.g. "6317 P-L") or Trojan-survey (e.g. "3101 T-2") designation is the
+# principal designation for those survey objects, per MPC/JPL, even though the MPC
+# show_object page lists a later year-designation first. Prefer it as the primary desig.
+_SURVEY_DESIG = re.compile(r'\d+ (?:P-L|T-[123])$')
 
 _MPC_BY_NAME = 'https://minorplanetcenter.net/db_search/show_object?object_id='
 _MPC_BY_PROPERTIES = 'https://www.minorplanetcenter.net/db_search/show_by_properties?'
@@ -71,7 +78,7 @@ def _mpc_body_dict(aliases, elements):
     body['mnum'] = mnum
 
     # Name, if any
-    if aliases[0].replace(' ', '').isalpha():
+    if aliases[0].replace(' ', '').replace('-', '').isalpha():
         name = aliases[0]
         aliases = aliases[1:]
     else:
@@ -80,10 +87,16 @@ def _mpc_body_dict(aliases, elements):
 
     # Designations...
     if aliases:
-        aliases.sort()
+        # Keep the MPC-provided order (do not sort alphabetically), only normalizing
+        # compact designations, e.g. "1999TT69" -> "1999 TT69".
         for k, alias in enumerate(aliases):
             if alias[:4].isdigit() and alias[4] != ' ':
                 aliases[k] = alias[:4] + ' ' + alias[4:]
+        # The primary designation is a survey designation when present (the MPC/JPL
+        # principal designation), otherwise the first one the MPC lists. Move it to the
+        # front so it also leads the alt_titles, keeping the MPC order of the rest.
+        principal = next((a for a in aliases if _SURVEY_DESIG.match(a)), aliases[0])
+        aliases = [principal] + [a for a in aliases if a != principal]
         body['desig'] = aliases[0]
         body['alt_desigs'] = aliases[1:]
     else:
@@ -96,7 +109,7 @@ def _mpc_body_dict(aliases, elements):
     if name:
         full_name = f'{mnum} {name}'
     elif mnum:
-        full_name = f'({mnum}) {aliases[0]}'
+        full_name = f'({mnum}) {body["desig"]}'
     else:
         full_name = body['desig']
     body['full_name'] = full_name
@@ -113,8 +126,8 @@ def _mpc_body_dict(aliases, elements):
             names.append(name)
     if mnum:
         for desig in aliases:
-            names.append(f'({mnum}) {desig}')
-        names.append(f'({mnum})')
+            lookups.add(f'({mnum}) {desig}')
+        lookups.add(f'({mnum})')
         lookups.add(mnum)
     names += aliases
 
@@ -133,10 +146,27 @@ def _mpc_body_dict(aliases, elements):
 
     body['ttype'] = TargetType.MINOR_PLANET
     body.update(elements)
+
+    # Handle bodies that were also comets
+    for name in body['alt_desigs']:
+        if name.endswith('P') and name[:-1].isdigit() and name in comet_dict():
+            comet = comet_dict()[name]
+            for alias in [comet['prefix'], comet['full_name']] + comet['aliases']:
+                if alias not in body['aliases']:
+                    body['aliases'].append(alias)
+            for lookup in comet['lookups']:
+                if lookup not in body['lookups']:
+                    body['lookups'].add(lookup)
+
     return body
 
 
-__all__ = ['_mpc_body_dict', '_MPC_CACHE', '_MPC_CACHING', '_MPC_BY_NAME',
-           '_MPC_BY_PROPERTIES']
+__all__ = [
+    '_MPC_BY_NAME',
+    '_MPC_BY_PROPERTIES',
+    '_MPC_CACHE',
+    '_MPC_CACHING',
+    '_mpc_body_dict',
+]
 
 ##########################################################################################
