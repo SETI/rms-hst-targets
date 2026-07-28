@@ -70,6 +70,7 @@ _TARGNAME_SUFFIX_PATTERNS = [
     r'QUAD',
     r'REP',
     r'ROT',
+    r'SBC',
     r'SCAN',
     r'SLEW',
     r'SOUTH',
