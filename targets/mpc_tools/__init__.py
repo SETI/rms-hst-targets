@@ -2,7 +2,6 @@
 # mpc_tools/__init__.py
 ##########################################################################################
 
-# noqa: I001
 from .mpc_packing           import (MPC_EXTENDED_PATTERN, MPC_PACKED_PATTERN,
                                     MPC_UNPACKED_PATTERN, mpc_is_valid_packed,
                                     mpc_is_valid_unpacked, mpc_pack, mpc_unpack)

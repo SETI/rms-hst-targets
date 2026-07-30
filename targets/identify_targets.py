@@ -29,10 +29,10 @@ from logging import Logger
 
 from targets._utils                   import (_collect_strings, _headers_by_visit,
                                               _parse_mt_lv, _unique_targets,
-                                              categorize_minor_planet,
                                               TargetIdentificationFailure)
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets._HST_PROGRAM_OVERRIDES   import _HST_PROGRAM_OVERRIDES
+from targets.categorize_minor_planet  import categorize_minor_planet
 from targets.comet_identifiers        import comet_identifiers
 from targets.cometdb                  import query_comet_by_elements
 from targets.hst_repairs              import hst_repairs
@@ -420,6 +420,8 @@ def identify_target_dicts(
                     logger and logger.info(f'Header replacements: {subdict}')
                 if 'dict' in repair:
                     logger and logger.info(f'Target added: {repair["dict"]["full_name"]}')
+                if 'addition' in repair:
+                    logger and logger.info(f'Target added: {repair["addition"]}')
                 header = dict(header)
                 header.update(repair)
 
@@ -430,6 +432,7 @@ def identify_target_dicts(
 
     # Check for special overrides
     extra_dicts = []
+    extra_headers = []
     done = False
     for header in repaired_headers:
         if 'reject' in header:
@@ -438,8 +441,22 @@ def identify_target_dicts(
             raise TargetIdentificationFailure(message)
 
         if 'dict' in header:
-            extra_dicts = [header['dict']]
+            if header['dict'] not in extra_dicts:
+                extra_dicts.append(header['dict'])
+            del header['dict']
+
+        if 'addition' in header:
+            extra_headers.append({'FILENAME': header['FILENAME'],
+                                  'TARGNAME': header['addition']})
+            del header['addition']
+
         done = done or header.get('done', False)
+
+    # Identify an added body from its synthetic header via a recursive call
+    if extra_headers:
+        extra_dicts += identify_target_dicts(extra_headers, comet_rms=comet_rms,
+                                             mp_rms=mp_rms, radec_delta=radec_delta,
+                                             logger=logger)
 
     if done:
         return extra_dicts

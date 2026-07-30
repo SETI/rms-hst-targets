@@ -90,7 +90,7 @@ def minor_planet_identifiers(strings, *, logger=None):
         names = [m['full_name'] for m in mpc_dicts]
         logger and logger.info(f'Multiple minor planets identified: {names}')
     if unused:
-        logger and logger.info(f'Unused strings: {unused}')
+        logger and logger.info(f'Unused minor planet strings: {unused}')
 
     return (mpc_dicts, used, unused, len(mpc_dicts) == 1)
 

@@ -5,7 +5,7 @@
 header.
 """
 
-import re  # noqa: I001  (keep the hand-aligned import wrapping below)
+import re
 
 from targets._utils          import _collect_strings, _parse_mt_lv, _unique_targets
 from targets.hst_repairs     import hst_repairs

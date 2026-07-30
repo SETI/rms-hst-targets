@@ -22,10 +22,10 @@ import argparse
 import pdslogger
 
 from targets.cometdb._build_centaur_dicts import _build_centaur_dicts
-from targets.cometdb._build_comet_dicts import _build_comet_dicts
-from targets.cometdb._utils import _read_pickle, _write_pickle
-from targets.cometdb._utils import _COMET_CACHE, _COMET_BASENAME, _CENTAUR_BASENAME
-
+from targets.cometdb._build_comet_dicts   import _build_comet_dicts
+from targets.cometdb._utils               import (_CENTAUR_BASENAME, _COMET_BASENAME,
+                                                  _COMET_CACHE, _read_pickle,
+                                                  _write_pickle)
 
 # Set up parser
 PARSER = argparse.ArgumentParser(

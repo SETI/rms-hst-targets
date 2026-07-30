@@ -2,7 +2,7 @@
 # targets/hst_repairs.py
 ##########################################################################################
 
-import re  # noqa: I001  (keep the hand-aligned import wrapping below)
+import re
 from collections import deque
 from logging import Logger
 
@@ -10,7 +10,8 @@ from targets._TARGET_STRING_REPAIRS import _TARGET_STRING_REPAIRS
 from targets._TARGNAME_PREFIX_SUFFIX_PATTERNS import (_TARGNAME_PREFIX_PATTERNS,
                                                       _TARGNAME_SUFFIX_PATTERNS,
                                                       _TARGNAME_SUFFIX_PATTERNS_NO_TAIL)
-from targets._UNDIAGNOSTIC_TARGET_WORDS import _UNDIAGNOSTIC_SHORT_WORDS, _UNDIAGNOSTIC_TARGET_WORDS
+from targets._UNDIAGNOSTIC_TARGET_WORDS import (_UNDIAGNOSTIC_SHORT_WORDS,
+                                                _UNDIAGNOSTIC_TARGET_WORDS)
 from targets.mpc_tools import MPC_PACKED_PATTERN, mpc_unpack
 from targets.roman import ROMAN_PATTERN_99 as _ROMAN_99
 
@@ -73,6 +74,7 @@ _TARGET_TRANSFORM_PATTERNS = [
                                                             r'\1|19\2|19\3 \4|[C]'),
     (rf'C{_CYEAR}[- ]?{_CSUFF2}-{_CNAME}',                  r'C/\1 \2|[C]$\3'),
     (rf'C{_CYEAR}[- ]?{_CSUFF2}',                           r'C/\1 \2|[C]'),
+    (rf'{_CNUMP}[123]',                                     r'\1'),  # one-digit suffix
 
     # Numbered comets with fragments
     (rf'{_CNUMP}[-/ ]{_CNAME}[- ]?(\d)[- ]{_CFRAG}',        r'\1/\2 \3-\4|[C]'),
@@ -142,7 +144,6 @@ _TARGET_CATEGORIZER_PATTERNS = [
     (r'NUCLEUS',                                r'[C]'),
     (r'FRAGMENT(ED|)',                          r'[C]'),
 
-    (r'ACTIVE[- ]ASTEROID',                     r'[A]|[C]'),
     (r'ASTEROID',                               r'[A]'),
     (r'TROJAN',                                 r'[A]'),
     (r'JUPITER CROSSER',                        r'[A]'),

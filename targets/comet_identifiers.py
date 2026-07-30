@@ -66,7 +66,7 @@ def comet_identifiers(strings, *, logger=None):
         else:
             logger and logger.info('No comets identified')
         if unused:
-            logger and logger.info(f'Unused strings: {unused}')
+            logger and logger.info(f'Unused comet strings: {unused}')
 
         return list(ambig_dict.values()), used, unused, False, set()
 

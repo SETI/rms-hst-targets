@@ -2,46 +2,13 @@
 # targets/target_xml_support.py
 ##########################################################################################
 
-import anyascii
-
 from targets.cometdb         import comet_lookup
-from targets.roman           import int_to_roman
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
-from targets.target_xml_cache_support import (_missing_aliases, _new_desc,
-                                              _read_target_xml_dict,
-                                              find_xml_dict, find_xml_path,
+from targets.target_xml_cache_support import (_lid_tail, find_xml_dict, find_xml_path,
                                               new_target_xml_dict, update_target_xml_dict)
 from targets.targettype      import TargetType
 
 _LID_PREFIX = 'urn:nasa:pds:context:target:'
-
-
-def _lid_tail(target):
-    """The LID of the target following the colon, depending on `full_name` and `ttype`."""
-
-    name = anyascii.anyascii(target['full_name']).lower()
-
-    # Slashes and spaces are handled inconsistently!
-    if target['ttype'] == TargetType.SATELLITE:
-        if name[1] == '/':
-            name = name.replace('/', '').replace(' ', '')   # S/2003 J 5 -> S2003J5
-    elif target['ttype'] == TargetType.COMET:
-        if name[1] == '/':
-            name = name.replace('/', '')                    # C/2007 N3 -> C2007 N3
-        else:
-            name = name.replace('/', ' ')                   # 1P/Halley -> 1P Halley
-
-    if target['ttype'] in {TargetType.SATELLITE, TargetType.TORUS}:
-        name = target['parent']['full_name'] + '.' + name
-    elif target['ttype'] == TargetType.RING:
-        name = target['parent']['full_name'] + '.rings'
-
-    tail = TargetType.NAME[target['ttype']] + '.' + name
-    tail = tail.replace(' ', '_').lower()
-
-    # Filter out disallowed characters
-    tail = ''.join(c for c in tail if c in 'abcdefghijklmnopqrstuvwxyz0123456789_-.:')
-    return tail
 
 
 def _complete_target(target):
@@ -95,15 +62,8 @@ def _complete_target(target):
         parent = None
     target['parent'] = parent
 
-    # title
-    if (target['ttype'] == TargetType.SATELLITE and parent['ttype'] != TargetType.PLANET
-            and target.get('satnum')):
-        target['title'] = (parent['full_name'] + ' ' + int_to_roman(target['satnum'])
-                           + ' (' + target['name'] + ')')
-        if target['name'] not in target['alt_titles']:
-            target['alt_titles'] = [target['name']] + target['alt_titles']
-    else:
-        target['title'] = target['full_name']
+    # title is already prepared as `full_name` for every target type
+    target['title'] = target['full_name']
 
     # lid_tail and lid
     lid_tail = _lid_tail(target)

@@ -5,6 +5,8 @@
 import pathlib
 import re
 
+import anyascii
+
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets.cometdb import comet_dict
 from targets.targettype import TargetType
@@ -36,11 +38,11 @@ def _mpc_date_to_str(text):
             f'{hh:02d}:{mm:02d}:{ss:02d}')
 
 
-def _mpc_body_dict(aliases, elements):
+def _mpc_body_dict(names, elements):
     """Get aliases and orbital elements for a body in the MPC database.
 
     Parameters:
-        aliases (list[str]): The possible number, name, and designations of a body. The
+        names (list[str]): The possible number, name, and designations of a body. The
             number if any must come first; the assigned name if any must come second.
             Other designations can follow.
         elements (dict[str, float]): The orbital elements keyed by element name: "A",
@@ -69,74 +71,75 @@ def _mpc_body_dict(aliases, elements):
     body = {}
 
     # Minor planet number, if any
-    if aliases[0].isdigit():
-        mnum = aliases[0]
-        body['naif_id'] = 2000000 + int(aliases[0])
-        aliases = aliases[1:]
+    if names[0].isdigit():
+        mnum = names[0]
+        body['naif_id'] = 2000000 + int(names[0])
+        names = names[1:]
     else:
         mnum = ''
     body['mnum'] = mnum
 
     # Name, if any
-    if aliases[0].replace(' ', '').replace('-', '').isalpha():
-        name = aliases[0]
-        aliases = aliases[1:]
+    if anyascii.anyascii(names[0].replace(' ', '').replace('-', '')).isalpha():
+        name = names[0]
+        names = names[1:]
     else:
         name = ''
     body['name'] = name
+    body_name = name
 
     # Designations...
-    if aliases:
-        # Keep the MPC-provided order (do not sort alphabetically), only normalizing
-        # compact designations, e.g. "1999TT69" -> "1999 TT69".
-        for k, alias in enumerate(aliases):
-            if alias[:4].isdigit() and alias[4] != ' ':
-                aliases[k] = alias[:4] + ' ' + alias[4:]
-        # The primary designation is a survey designation when present (the MPC/JPL
-        # principal designation), otherwise the first one the MPC lists. Move it to the
-        # front so it also leads the alt_titles, keeping the MPC order of the rest.
-        principal = next((a for a in aliases if _SURVEY_DESIG.match(a)), aliases[0])
-        aliases = [principal] + [a for a in aliases if a != principal]
-        body['desig'] = aliases[0]
-        body['alt_desigs'] = aliases[1:]
+    if names:
+        # Fix missing spaces
+        for k, name in enumerate(names):
+            if name[:4].isdigit() and name[4] != ' ':
+                names[k] = name[:4] + ' ' + name[4:]
+        desig = names[0]
+        alt_desigs = names[1:]
     else:
-        body['desig'] = ''
-        body['alt_desigs'] = []
+        desig = ''
+        alt_desigs = []
+    body['desig'] = desig
+    body['alt_desigs'] = alt_desigs
+    desigs = names
 
-    body['mpc_key'] = body['mnum'] if body['mnum'] else body['desig']
+    body['mpc_key'] = mnum if mnum else desig
 
     # full_name
-    if name:
-        full_name = f'{mnum} {name}'
+    if body_name:
+        full_name = f'{mnum} {body_name}'
     elif mnum:
-        full_name = f'({mnum}) {body["desig"]}'
+        full_name = f'({mnum}) {desig}'
     else:
-        full_name = body['desig']
+        full_name = desig
     body['full_name'] = full_name
 
     # aliases
-    names = []              # All formal aliases
-    lookups = {full_name}   # Alternative names to support identification
-    if name:
-        names.append(f'({mnum}) {name}')
-        lookups.add(f'{mnum} ({name})')
+    aliases = list(desigs)      # All formal aliases, full_name first
+    lookups = set()             # Alternative names to support identification
+    if body_name:
         if name in _DISALLOWED_MINOR_PLANET_NAMES:
-            lookups.add(name)
+            lookups.add(body_name)
         else:
-            names.append(name)
+            aliases.append(body_name)
     if mnum:
-        for desig in aliases:
+        for desig in desigs:
             lookups.add(f'({mnum}) {desig}')
         lookups.add(f'({mnum})')
         lookups.add(mnum)
-    names += aliases
+
+    # Add ASCII versions of non-ASCII names
+    for name in [full_name, body_name]:
+        ascii_name = anyascii.anyascii(name)
+        if name != ascii_name:
+            aliases.append(ascii_name)
 
     # Make the aliases unique; omit full_name
-    aliases = []
-    for name in names:
-        if name not in aliases and name != full_name:
-            aliases.append(name)
-    names += aliases
+    aliases2 = []
+    for name in aliases:
+        if name not in aliases2 and name != full_name:
+            aliases2.append(name)
+    aliases = aliases2
     body['aliases'] = aliases
 
     # Lookups include aliases and names in uppercase

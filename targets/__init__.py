@@ -11,25 +11,30 @@ Lower-level helpers (``mpc_tools``, ``roman``, ``remote_listdir``) remain import
 their own modules.
 """
 
-from targets.cometdb import (centaur_dict, centaur_lookup, comet_dict, comet_lookup,  # noqa: I001
-                             query_centaur_by_name, query_comet_by_elements,
-                             query_comet_by_name)
-from targets.comet_identifiers import comet_identifiers
-from targets.hst_repairs import hst_repairs
-from targets.identify_standard_body import identify_standard_body
-from targets.identify_targets import identify_target_dicts, identify_targets
+from targets._utils                   import (TargetCategorizationFailure,
+                                              TargetIdentificationFailure)
+from targets.categorize_minor_planet  import categorize_minor_planet
+from targets.cometdb                  import (centaur_dict, centaur_lookup, comet_dict,
+                                              comet_lookup, query_centaur_by_name,
+                                              query_comet_by_elements,
+                                              query_comet_by_name)
+from targets.comet_identifiers        import comet_identifiers
+from targets.hst_repairs              import hst_repairs
+from targets.identify_standard_body   import identify_standard_body
+from targets.identify_targets         import identify_target_dicts, identify_targets
 from targets.minor_planet_identifiers import minor_planet_identifiers
-from targets.targettype import TargetType
-from targets._utils import TargetIdentificationFailure, categorize_minor_planet
+from targets.targettype               import TargetType
 
 try:
-    from targets.orbital_radec import RaDec, asteroid_radec, comet_radec, rotate_elements_to_j2000
+    from targets.orbital_radec import (RaDec, asteroid_radec, comet_radec,
+                                       rotate_elements_to_j2000)
 except ImportError:
     _HAS_ORBITAL_RADEC = False
 else:
     _HAS_ORBITAL_RADEC = True
 
 __all__ = [
+    'TargetCategorizationFailure',
     'TargetIdentificationFailure',
     'TargetType',
     'categorize_minor_planet',

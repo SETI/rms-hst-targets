@@ -25,9 +25,9 @@ def query_comet_by_name(name, *, ambiguous=True, logger=None):
     comet = None
     if key in by_lookup:
         comet = by_lookup[key]
-    elif len(key) > 1 and key[1] == '/' and key[1:] in by_lookup:
+    elif len(key) > 1 and key[1] == '/' and key[2:] in by_lookup:
         # works if leading letter is wrong
-        comet = by_lookup[key[1:]]
+        comet = by_lookup[key[2:]]
 
     if comet:
         comet_key = comet['key']

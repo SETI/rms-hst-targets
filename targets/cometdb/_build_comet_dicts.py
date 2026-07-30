@@ -199,7 +199,7 @@ def _build_comet_dicts(
         for lookup in comet['lookups']:
             test = lookup.upper()
             # allow "P" vs. "C" vs. "D" ambiguity
-            test = test[1:] if test[1] == '/' else test
+            test = test[2:] if test[1] == '/' else test
             if test in test_dict and test_dict[test] is not comet:
                 alt_key = test_dict[test]['key']
                 logger and logger.warn(f'Duplicated lookup key "{lookup}" for keys: '
@@ -212,7 +212,7 @@ def _build_comet_dicts(
     for key, comet in comets.items():
         lookups = set(comet['lookups'])
         lookups |= set(_space_dash_permutations(lookups))
-        lookups |= {key[1:] for key in lookups if key[1] == '/'}
+        lookups |= {key[2:] for key in lookups if key[1] == '/'}
         lookups |= {key.upper() for key in lookups}
         for lookup in lookups:
             by_lookup[lookup] = comet
@@ -221,7 +221,7 @@ def _build_comet_dicts(
     for key, comet in comets.items():
         lookups = set(comet['ambiguous'])
         lookups |= set(_space_dash_permutations(lookups))
-        lookups |= {key[1:] for key in lookups if key[1] == '/'}
+        lookups |= {key[2:] for key in lookups if key[1] == '/'}
         lookups |= {key.upper() for key in lookups}
         for lookup in lookups:
             by_ambiguous.setdefault(lookup, []).append(comet)

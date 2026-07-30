@@ -111,8 +111,8 @@ def use_local_xml_dir(path: str | pathlib.Path | None = _TARGET_XML_OVERLAY):
     "_local.xml" files into `path`, `_update_target_cache` writes the merged
     `$LOOKUP.pickle` there, and reads resolve overlay-first; the committed
     `TARGET_XML_CACHE` is never modified. The previous configuration and cached lookup are
-    restored on exit, so the context nests cleanly and is safe per-test under
-    `pytest -n auto`.
+    restored on exit, so the context nests cleanly and is safe per-test under `pytest -n
+    auto`.
 
     Parameters:
         path: The overlay directory (created if necessary); defaults to the hard-wired,
@@ -215,6 +215,7 @@ def _read_target_xml_dict(xml_path: str | pathlib.Path) -> dict | None:
         'xml_path': xml_path,
     }
 
+    target_dict['full_name'] = target_dict['title']
     target_dict['lid_tail'] = target_dict['lid'].rpartition(':')[-1]
     target_dict['ttype'] = TargetType.LOOKUP[target_dict['type_name']]
 
@@ -367,13 +368,13 @@ def _update_target_cache(*, logger: PdsLogger | None = None,
     duplicates = set()
     for basename in _latest_basenames(list(paths)):
         body_dict = _read_target_xml_dict(paths[basename])
-        keys = _lookup_keys(body_dict)
+        keys = _lookup_keys(body_dict, logger=logger)
         for key in keys:
             if key in lookup:
                 duplicates.add(key)
                 if warn_on_duplicates:
-                    logger.warning(f'Duplicate key "{key}" ignored: {lookup[key]}, '
-                                   f'{basename}')
+                    logger and logger.warning(f'Duplicate key "{key}" ignored: '
+                                              f'{lookup[key]}, {basename}')
             else:
                 lookup[key] = basename
 
@@ -430,8 +431,10 @@ _MP_NUMBER_NAME = re.compile(rf'\(?(\d+)\)? ({_MPNAME})$')
 _C_PREFIX_NAME_FRAG = re.compile(rf'(\d+[CPDXI])/{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
 _C_NAME = re.compile(rf'{_CNAME}(?: \d+|)(-[A-Z][A-Z]?\d*)$')
 
+_INVALID_STAR = re.compile(r'[JSUN]\d+', re.I)
 
-def _lookup_keys(body_dict: dict) -> list[str]:
+
+def _lookup_keys(body_dict: dict, logger: PdsLogger | None = None) -> set[str]:
 
     old_keys = set([body_dict['title'], body_dict['lid_tail']] + body_dict['alt_titles'])
     new_keys = old_keys.copy()
@@ -455,6 +458,18 @@ def _lookup_keys(body_dict: dict) -> list[str]:
                 new_keys.add(match.group(1) + '-' + match.group(2))
 
     new_keys |= {anyascii.anyascii(key).replace('`', "'") for key in new_keys}
+
+    # Deconflict star "U28" from moon "U28"
+    if body_dict['ttype'] not in TargetType.PLANETARY_CODES:
+        alt_new_keys = set()
+        for key in new_keys:
+            if _INVALID_STAR.fullmatch(key):
+                type_name = TargetType.NAME[body_dict['ttype']]
+                logger and logger.debug(f'Ignoring {type_name} alias {key}')
+            else:
+                alt_new_keys.add(key)
+        new_keys = alt_new_keys
+
     return new_keys
 
 
@@ -574,12 +589,18 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     xml_dict = _read_target_xml_dict(xml_path)
     changes = []
 
-    # Warn about a LID change
+    # Warn about a LID change, but only if the old LID is not an option among the new
+    # aliases.
+    compatible = _compatible_lids(body_dict, xml_dict)  # might update body_dict's LID
     new_lid = body_dict['lid_tail']
     old_lid = xml_dict['lid_tail']
     if new_lid != old_lid:
-        logger and logger.warning(f'LID mismatch: new="{new_lid}"; '
-                                  f'original="{old_lid}" (retained)')
+        if compatible:
+            logger and logger.info(f'Deprecated LID: new="{new_lid}"; '
+                                   f'original="{old_lid}" (retained)')
+        else:
+            logger and logger.warning(f'LID mismatch: new="{new_lid}"; '
+                                      f'original="{old_lid}" (retained)')
 
     # Update the title
     new_test = body_dict['title'].replace('(', '').replace(')', '').upper()
@@ -692,6 +713,113 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     new_path.write_text(content)
     _update_target_cache(offline=True, warn_on_duplicates=False)    # update the lookup
     return new_path
+
+
+# Pattern that matches any minor planet or comet LID name that is based on a designation,
+# ignoring any target type, planet name, or minor planet number.
+_LID_DESIG = re.compile(r'(?:.*\.)?(?:\d+_)?'
+                        r'((?:[pcdxa])?\d\d\d\d_(?:[a-z][a-z]?\d*|p-l|t-\d))$')
+
+
+def _compatible_lids(target, reference):
+    """True if one of the various possible target LIDs for the given `target` is
+    consistent with the LID of the `reference`.
+
+    As a side effect, if `target`'s LID is based on a temporary designation, select the
+    `title` among its `alt_title`s that use the same designation as `reference`'s LID.
+
+    Parameters:
+        target (dict): Target body dictionary.
+        reference (dict): Reference body dictionary.
+
+    Returns:
+        True if the LIDs are the compatible, even if not exactly the same.
+    """
+
+    def lid_desig(lid):
+        """The part of the LID that is based on a temporary designation, if any."""
+        match = _LID_DESIG.fullmatch(lid)
+        return match.group(1) if match else ''
+
+    target_lid = target['lid_tail']
+    reference_lid = reference['lid_tail']
+
+    # Match must be exact if `target` is not a small body
+    if target['ttype'] not in TargetType.SMALL_BODY_CODES:
+        return target_lid == reference_lid
+
+    # Target type must be an exact match
+    if target['ttype'] != reference['ttype']:
+        return False
+
+    # If the name is the same except for a leading mnum, it's a match
+    mnum = target.get('mnum')
+    if mnum and target_lid.endswith(reference_lid.partition('.')[-1]):
+        return True
+
+    # If the reference LID involves a designation and the target uses the same designation
+    # as a title or alt_title, they are compatible
+    reference_desig = lid_desig(reference_lid)
+    if reference_desig:
+        test_titles = [target['title']] + target['alt_titles']
+        for k, test_title in enumerate(test_titles):
+            test_desig = lid_desig(_lid_name(target, alt_title=test_title))
+            if test_desig == reference_desig:
+
+                # Favor this LID if the new target is also using a temporary designation
+                target_desig = lid_desig(target_lid)
+                if target_desig and k > 0:
+                    title = target['title']
+                    target['alt_titles'].pop(k-1)
+                    # Shuffle the minor planet numbers between the titles
+                    if mnum:
+                        prefix = f'({mnum}) '
+                        if not test_title.startswith(prefix):
+                            test_title = prefix + test_title
+                        if title.startswith(prefix):
+                            title = title.replace(prefix, '')
+
+                    if title not in target['alt_titles']:
+                        target['alt_titles'].append(title)
+                    target['title'] = test_title
+                    target['lid_tail'] = _lid_tail(target, alt_title=test_title)
+
+                return True
+
+    return False
+
+
+def _lid_tail(target, *, alt_title=''):
+    """The LID of the target following the colon, depending on `title` and `ttype`.
+
+    Specify `alt_title` to override the target's `title`.
+    """
+
+    lid_name = _lid_name(target, alt_title=alt_title)
+    type_name = TargetType.NAME[target['ttype']].replace(' ', '_').lower()
+    return type_name + '.' + lid_name
+
+
+def _lid_name(target, *, alt_title=''):
+    """The LID of the target following the target's type.
+
+    Specify `alt_title` to build the LID from a different name than the default.
+    """
+
+    name = alt_title or target.get('lid_name') or target['full_name']
+    name = anyascii.anyascii(name).lower()
+
+    # Slashes are handled inconsistently in comets!
+    if target['ttype'] == TargetType.COMET:
+        if name[1] == '/':
+            name = name.replace('/', '')    # C/2007 N3 -> C2007 N3
+        else:
+            name = name.replace('/', ' ')   # 1P/Halley -> 1P Halley
+
+    # Filter out disallowed characters
+    name = name.replace(' ', '_').lower()
+    name = ''.join(c for c in name if c in 'abcdefghijklmnopqrstuvwxyz0123456789_-.:')
+    return name
 
 
 def _missing_aliases(new_body, old_body):

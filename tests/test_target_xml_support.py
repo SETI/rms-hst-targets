@@ -257,9 +257,13 @@ def test_lid_tail_comet_variants() -> None:
 
 
 def test_lid_tail_provisional_satellite() -> None:
-    # "S/2003 J 5" -> slashes and spaces stripped, prefixed by the parent planet.
-    target = {'full_name': 'S/2003 J 5', 'ttype': TargetType.SATELLITE,
-              'parent': {'full_name': 'Jupiter'}}
-    assert _lid_tail(target) == 'satellite.jupiter.s2003j5'
+    # A satellite's LID comes from the "lid_name" that `standard_bodies` composes, which
+    # carries the primary's prefix; "S/2003 J 5" has its slashes and spaces stripped.
+    target = STANDARD_BODY_DICT['S/2010 J 1']
+    assert target['lid_name'] == 'Jupiter.S2010J1'
+    assert _lid_tail(target) == 'satellite.jupiter.s2010j1'
+
+    # A moon of a minor planet is prefixed by the primary's full_name, number included.
+    assert _lid_tail(STANDARD_BODY_DICT['Charon']) == 'satellite.134340_pluto.charon'
 
 ##########################################################################################
