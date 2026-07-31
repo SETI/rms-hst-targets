@@ -155,7 +155,7 @@ def _identify_standard_names(header, *, logger=None):
     # Log the result
     logger and logger.info(f'Standard targets: {names}')
     if unused:
-        logger and logger.info(f'Unused strings: {unused}')
+        logger and logger.info(f'Unused standard target strings: {unused}')
 
     return names, unused
 

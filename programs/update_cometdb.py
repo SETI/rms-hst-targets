@@ -21,16 +21,17 @@ import argparse
 
 import pdslogger
 
-from targets.cometdb._build_centaur_dicts import _build_centaur_dicts
-from targets.cometdb._build_comet_dicts   import _build_comet_dicts
-from targets.cometdb._utils               import (_CENTAUR_BASENAME, _COMET_BASENAME,
-                                                  _COMET_CACHE, _read_pickle,
-                                                  _write_pickle)
+from targets.cometdb._build_centaur_dicts   import _build_centaur_dicts
+from targets.cometdb._build_comet_dicts     import _build_comet_dicts
+from targets.cometdb._build_damocloid_dicts import _build_damocloid_dicts
+from targets.cometdb._utils                 import (_CENTAUR_BASENAME, _COMET_BASENAME,
+                                                    _COMET_CACHE, _DAMOCLOID_BASENAME,
+                                                    _read_pickle, _write_pickle)
 
 # Set up parser
 PARSER = argparse.ArgumentParser(
-    description='Update the databases of comet and centaur information, which are found '
-                'inside the `COMET_CACHE` subdirectory.')
+    description='Update the databases of comet, centaur, and damocloid information, '
+                'which are found inside the `COMET_CACHE` subdirectory.')
 
 PARSER.add_argument('--debug', '-d', action='store_true',
                     help='see additional messages in the log.')
@@ -47,6 +48,9 @@ PARSER.add_argument('--comets', action='store_true',
 
 PARSER.add_argument('--centaurs', action='store_true',
                     help='only update the centaurs database.')
+
+PARSER.add_argument('--damocloids', action='store_true',
+                    help='only update the damocloids database.')
 
 PARSER.add_argument('--quiet', '-q', action='store_true',
                     help='Do not log to the terminal.')
@@ -89,13 +93,20 @@ def main():
     if args.log:
         logger.add_handler(pdslogger.file_handler(args.log, rotation='none'))
 
+    all_three = not(args.comets or args.centaurs or args.damocloids)
+
     # Update the comet database if necessary
-    if args.comets or not args.centaurs:
+    if args.comets or all_three:
         db_updater(_COMET_BASENAME, _build_comet_dicts)
 
     # Update the centaur database if necessary
-    if args.centaurs or not args.comets:
+    if args.centaurs or all_three:
         db_updater(_CENTAUR_BASENAME, _build_centaur_dicts)
+
+    # Update the damocloid database if necessary
+    if args.damocloids or all_three:
+        db_updater(_DAMOCLOID_BASENAME, _build_damocloid_dicts)
+
 
 ############################################
 

@@ -62,6 +62,7 @@ class TargetType:
                        + PLASMA_STREAM + RING + SATELLITE + SMALL_BODY_CODES)
 
     TORUS = PLASMA_CLOUD
+    TNO = TRANS_NEPTUNIAN_OBJECT
 
 
 TargetType.LOOKUP = {name: key for key, name in TargetType.NAME.items()}

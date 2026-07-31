@@ -43,6 +43,11 @@ _MPNAME = r"([A-Za-z'`]{2,}(?:[- ]?[A-Z'`]{2,})*)"  # allows for "Purple Mountai
 _MYEAR = r'(1[89]\d\d|20[0-3]\d)'
 _MSUFF = r'([A-HJ-Y][A-HJ-Z]\d*)'
 
+# A two-digit year followed by "ST", "ND", "RD", or "TH" is an English ordinal such as
+# "10TH", not a century-less designation such as "2010 TH". The four-digit forms are
+# unaffected, so a designation written out in full is still recognized.
+_NOT_ORDINAL = r'(?!(?:ST|ND|RD|TH)$)'
+
 # A comet name can include spaces and dashes but always at least two other characters
 # surrounding them. Apostrophes count as letters.
 _CNUMP = r'([1-9]\d?\d?[PDI])'      # up to 3 digits follwed by P, D, or I
@@ -111,11 +116,11 @@ _TARGET_TRANSFORM_PATTERNS = [
     (rf'KBO{_NUM}(\d\d\d)',                                 r'(\1\2)|[T]'),
     (rf'[AB]{_NUM}(\d\d\d)',                                r'(\1\2)'),
     (rf'(?:MP|){_MYEAR}[- ]?{_MSUFF}[ABC]?',                r'\1 \2'),
-    (rf'(9\d)[- ]?{_MSUFF}',                                r'19\1 \2'),
-    (rf'([012]\d)[- ]?{_MSUFF}',                            r'20\1 \2'),
+    (rf'(9\d)[- ]?{_NOT_ORDINAL}{_MSUFF}',                  r'19\1 \2'),
+    (rf'([012]\d)[- ]?{_NOT_ORDINAL}{_MSUFF}',              r'20\1 \2'),
     (rf'[ABY]{_MYEAR}{_MSUFF}',                             r'\1 \2'),
     (r'([1-9]\d{4,})-[A-Z]',                                r'\1'),
-    (rf'{_NUM}-?{_MPNAME}',                                 r'(\1) \2'),
+    (rf'{_NUM}(\d\d)-?{_MPNAME}',                           r'\1\2 \3'),
     (rf'({MPC_PACKED_PATTERN})',                            mpc_unpack),
 
     # Transposition of a designation
@@ -138,11 +143,13 @@ for _pattern, _template in _TARGET_TRANSFORM_PATTERNS:
 
 # This table takes target types and embeds them into the returned string
 _TARGET_CATEGORIZER_PATTERNS = [
-    (r'(MAIN[- ]BELT |JUPITER FAMILY |)COMET',  r'[C]'),
+    (r'MBC',                                    r'[C]|[A]'),
+    (r'MAIN[- ]BELT COMET',                     r'[C]|[A]'),
+    (r'JUPITER FAMILY COMET',                   r'[C]'),
     (r'INTERSTELLAR?',                          r'[C]'),
-    (r'MBC',                                    r'[C]'),
     (r'NUCLEUS',                                r'[C]'),
     (r'FRAGMENT(ED|)',                          r'[C]'),
+    (r'COMET',                                  r'[C]'),
 
     (r'ASTEROID',                               r'[A]'),
     (r'TROJAN',                                 r'[A]'),

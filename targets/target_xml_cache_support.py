@@ -509,7 +509,7 @@ def new_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None) -> pat
     logger and logger.info('Writing new target context file: ', basename)
     if _PDS_TEMPLATE is None:
         PdsTemplate.set_logger(logger or NullLogger())
-        _PDS_TEMPLATE = PdsTemplate(_TEMPLATE_PATH, xml=True)
+        _PDS_TEMPLATE = PdsTemplate(_TEMPLATE_PATH, xml=True, crlf=False)
 
     xml_path = _write_dir() / basename
     if xml_path.exists():
@@ -596,8 +596,7 @@ def update_target_xml_dict(body_dict: dict, logger: PdsLogger | None = None):
     old_lid = xml_dict['lid_tail']
     if new_lid != old_lid:
         if compatible:
-            logger and logger.info(f'Deprecated LID: new="{new_lid}"; '
-                                   f'original="{old_lid}" (retained)')
+            logger and logger.info(f'Deprecated LID: "{old_lid}" ought to be "{new_lid}"')
         else:
             logger and logger.warning(f'LID mismatch: new="{new_lid}"; '
                                       f'original="{old_lid}" (retained)')
@@ -810,11 +809,10 @@ def _lid_name(target, *, alt_title=''):
     name = anyascii.anyascii(name).lower()
 
     # Slashes are handled inconsistently in comets!
-    if target['ttype'] == TargetType.COMET:
-        if name[1] == '/':
-            name = name.replace('/', '')    # C/2007 N3 -> C2007 N3
-        else:
-            name = name.replace('/', ' ')   # 1P/Halley -> 1P Halley
+    if name[1] == '/':
+        name = name.replace('/', '')    # C/2007 N3 -> C2007 N3
+    else:
+        name = name.replace('/', ' ')   # 1P/Halley -> 1P Halley
 
     # Filter out disallowed characters
     name = name.replace(' ', '_').lower()
@@ -832,6 +830,7 @@ def _missing_aliases(new_body, old_body):
     new_names = [new_body['title']] + new_body['alt_titles']
     old_names = set([old_body['title']] + old_body['alt_titles'])
     extras = []
+    minor_planet_number = ''
     for name in new_names:
         if name in old_names:
             continue
@@ -847,6 +846,7 @@ def _missing_aliases(new_body, old_body):
 
         # Omit "Minor Planet ..."
         if name.startswith('Minor Planet'):
+            minor_planet_number = name  # don't force an update just for this
             continue
 
         # Omit a name that is the same except for parentheses
@@ -861,6 +861,9 @@ def _missing_aliases(new_body, old_body):
             continue
 
         extras.append(name)
+
+    if extras and minor_planet_number:
+        extras.append(minor_planet_number)
 
     return extras
 

@@ -50,6 +50,7 @@ def _get_sbn_comets(
     comets = []
     for k, rec in enumerate(recs):
         rec = rec.ljust(82)
+        rec = rec.replace('141P/1994 P1-A', '141P/1994 P1  ')   # fix known error
 
         error_found = False
         for test in _COLUMN_TESTS:

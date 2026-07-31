@@ -106,6 +106,18 @@ def mpc_query_by_name(name, *, logger=None):
     parts = info.split('=')
     names = [p.strip() for p in parts]
 
+    # Check the source string
+    if name not in names:
+        test = name.upper()
+        omit = False
+        for test_name in names:
+            test_name = test_name.upper()
+            if test in test_name or test_name in test:
+                omit = True
+                break
+        if not omit:
+            names.append(name)
+
     # Split a leading minor planet number from a name
     if names[0].startswith('('):
         parts = names[0].partition(')')

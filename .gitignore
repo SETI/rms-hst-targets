@@ -148,7 +148,6 @@ dmypy.json
 
 # MacOS
 .DS_Store
->>>>>>> pdart3-repo/master
 
 # Output from make
 tmp*.xml
@@ -182,5 +181,10 @@ caches/SPT_CACHE
 # Writable overlay for locally-generated target "_local" context products; the committed
 # caches/TARGET_XML_CACHE is a read-only Engineering Node mirror and must stay clean.
 caches/TARGET_XML_OVERLAY/
+
+# The comet, centaur, and damocloid databases in caches/COMET_CACHE are build products,
+# not versioned content; they begin with "#", so the emacs "\#*" rule above already keeps
+# them out of the repo. targets.cometdb regenerates any that are missing from the cached
+# web resources, so a fresh checkout needs no manual step.
 
 targets/_version.py

@@ -588,6 +588,15 @@ def _fill_comet_aliases(
     comet['full_name'] = aliases[0]
     comet['aliases'] = aliases[1:]
 
+    # A comet with a non-unit digit tail makes it unique
+    for alt_name in comet.get('alt_names', []):
+        tail = alt_name.rpartition(' ')[-1]
+        if tail.isdigit() and tail != '1':
+            for df in dash_frags:
+                alt_full_name = alt_name + df
+                if alt_full_name != comet['full_name']:
+                    comet['aliases'].append(alt_full_name)
+
     # Create the list of lookup keys
     lookups = [comet['key']] + list(aliases)
     ambiguous = []

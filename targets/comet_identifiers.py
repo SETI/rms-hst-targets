@@ -119,10 +119,10 @@ def comet_identifiers(strings, *, logger=None):
     names = [c['full_name'] for c in comets]
     if len(comets) == 1:
         logger and logger.info(f'Comet identified: "{names[0]}"')
-    else:
+    elif len(comets) > 1:
         logger and logger.info(f'Multiple comets identified: {names}')
     if unused:
-        logger and logger.info(f'Unused strings: {unused}')
+        logger and logger.info(f'Unused comet strings: {unused}')
 
     # Return the list of matches
     return comets, used, unused, True, strong

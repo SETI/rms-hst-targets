@@ -117,7 +117,7 @@ def _epoch_dt(text: str) -> datetime:
 
     datep, _, timep = text.partition(':')
     dd, mon, yy = datep.split('-')
-    hh, mm, ss = timep.split(':')
+    hh, mm, ss = timep.split(':') if timep else (0, 0, 0)
     return datetime(int(yy), _MONTHS.index(mon.upper()) + 1, int(dd),
                     int(hh), int(mm), int(ss))
 
@@ -392,16 +392,7 @@ def identify_target_dicts(
     if len(header_lists) > 1:
         raise ValueError('Multiple visits among headers provided')
 
-    visit = headers[0]['FILENAME'][:6].upper()
     unique_headers = _unique_targets(headers)
-    plural = 's' if len(unique_headers) > 1 else ''
-    if len(unique_headers) == len(headers):
-        logger and logger.info(f'Identifying targets for visit {visit} '
-                               f'({len(headers)} header{plural})', force=True)
-    else:
-        logger and logger.info(f'Identifying targets for visit {visit} '
-                               f'({len(unique_headers)} unique header{plural})',
-                               force=True)
 
     # Apply repairs
     repaired_headers = []
@@ -579,7 +570,7 @@ def identify_target_dicts(
             # Shoemaker's perihelion distance and time with comet Cernis's orbital angles.
             # Trust the designation and take these elements out of play, so the element
             # search below cannot substitute the comet the corrupted orbit resembles.
-            logger and logger.warning(f'Comet "{key}" name is unambiguous but element '
+            logger and logger.warning(f'Comet "{key}" is unambiguous but element '
                                       f'test failed; RMS {rms:.3f} > {comet_rms})')
             results.append(cdict)
             unique_elements = [e for e in unique_elements if e != elements]
@@ -722,10 +713,28 @@ def identify_targets(
             `identify_target_dicts`).
     """
 
-    targets = identify_target_dicts(headers, comet_rms=comet_rms, mp_rms=mp_rms,
-                                    radec_delta=radec_delta, logger=logger)
-    return [get_target_xml_path(_complete_target(target), logger=logger)
-            for target in targets]
+    header_lists = _headers_by_visit(headers)
+    if len(header_lists) > 1:
+        raise ValueError('Multiple visits among headers provided')
+
+    visit = headers[0]['FILENAME'][:6].upper()
+    unique_headers = _unique_targets(headers)
+    plural = 's' if len(unique_headers) > 1 else ''
+    if len(unique_headers) == len(headers):
+        logger and logger.open(f'Identifying targets for visit {visit} '
+                               f'({len(headers)} header{plural})', force=True)
+    else:
+        logger and logger.open(f'Identifying targets for visit {visit} '
+                               f'({len(unique_headers)} unique header{plural})',
+                               force=True)
+
+    try:
+        targets = identify_target_dicts(headers, comet_rms=comet_rms, mp_rms=mp_rms,
+                                        radec_delta=radec_delta, logger=logger)
+        return [get_target_xml_path(_complete_target(target), logger=logger)
+                for target in targets]
+    finally:
+        logger and logger.close(force='warning')
 
 
 __all__ = ['identify_target_dicts', 'identify_targets']

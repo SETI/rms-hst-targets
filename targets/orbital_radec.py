@@ -81,11 +81,17 @@ def _parse_epoch_to_tt(datestr, scale):
     scale : 'UTC' or 'TDB' -- the time system the string is expressed in.
             (TDB is treated as TT; they differ by < 2 ms, negligible here.)
     """
+
     s = datestr.strip().upper()
     try:
-        date_field, rest = s.split(":", 1)
+        parts = s.split(":", 1)
+        date_field = parts[0]
+        rest = parts[1] if len(parts) > 1 else '00:00:00'
         dd, mon, yyyy = date_field.split("-")
-        hh, mm, ss = rest.split(":")
+        if rest:
+            hh, mm, ss = rest.split(":")
+        else:
+            hh, mm, ss = (0, 0, 0)
         year, month, day = int(yyyy), _MONTHS[mon], int(dd)
         hour, minute, sec = int(hh), int(mm), float(ss)
     except (ValueError, KeyError):

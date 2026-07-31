@@ -86,7 +86,7 @@ def minor_planet_identifiers(strings, *, logger=None):
     if len(mpc_dicts) == 1:
         name = mpc_dicts[0]["full_name"]
         logger and logger.info(f'Minor planet identified: "{name}"')
-    else:
+    elif len(mpc_dicts) > 1:
         names = [m['full_name'] for m in mpc_dicts]
         logger and logger.info(f'Multiple minor planets identified: {names}')
     if unused:

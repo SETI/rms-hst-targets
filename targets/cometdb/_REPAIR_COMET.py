@@ -80,13 +80,8 @@ def _repair_comet(comet: dict) -> None:
     prefix = comet['prefix']
     desig = comet.get('desig', '')
 
-    # 141P/Machholz 2 == 141P/Machholz 2-A
-    if prefix == '141P' and comet.get('fragment', '') == 'A':
-        comet['alt_frags'] = ['A']
-        comet['fragment'] = ''
-
     # 141P/Machholz 2-B == 141P/Machholz 2-H
-    elif prefix == '141P' and comet.get('fragment', '') == 'H':
+    if prefix == '141P' and comet.get('fragment', '') == 'H':
         comet['alt_frags'] = ['H']
         comet['fragment'] = 'B'
 

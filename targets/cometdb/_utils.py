@@ -7,9 +7,11 @@ import os
 import pathlib
 import pickle
 import re
+from collections.abc import Callable
 from logging import Logger
 
 import requests
+from pdslogger import PdsLogger
 
 try:
     _COMET_CACHE = (pathlib.Path(os.path.dirname(__file__)).parent.parent
@@ -19,6 +21,11 @@ except NameError:
 
 _COMET_BASENAME = '#COMETS.pickle'
 _CENTAUR_BASENAME = '#CENTAURS.pickle'
+_DAMOCLOID_BASENAME = '#DAMOCLOIDS.pickle'
+
+# Used to report a pickle file that had to be regenerated, when the caller has provided no
+# Logger of its own.
+_LOGNAME = 'pds.cometdb'
 
 
 def _fetch(
@@ -189,15 +196,47 @@ def _write_pickle(
     logger and logger.info(f'COMET_CACHE/{basename} written')
 
 
+def _dicts_from_pickle(
+    basename: str,
+    builder: Callable[..., tuple[dict[str, dict], dict[str, dict], dict[str, list[dict]]]],
+) -> tuple[dict[str, dict], dict[str, dict], dict[str, list[dict]]]:
+    """Read the dictionaries from the pickle file, regenerating it first if it is missing.
+
+    The pickle files are build products rather than versioned content, so a fresh checkout
+    contains none of them. Each one is rebuilt from the locally cached web resources, just
+    as `update_cometdb --local` would do, without querying any website. Exactly one
+    info-level message is logged for each file that has to be generated; the read, write,
+    and build steps are otherwise silent.
+
+    Parameters:
+        basename: Name of the pickle file in the local cache directory.
+        builder: The `_build_*_dicts` function that regenerates the content.
+
+    Returns:
+        (`dicts`, `by_lookup`, `by_ambiguous`), the three dictionaries from `builder`.
+    """
+
+    dicts = _read_pickle(basename)
+    if dicts is None:
+        dicts = builder(update=False)
+        _write_pickle(basename, dicts)
+        PdsLogger.get_logger(_LOGNAME).info(
+            f'COMET_CACHE/{basename} generated from the local cache')
+
+    return dicts
+
+
 _COMET_DICTS = None
 _CENTAUR_DICTS = None
+_DAMOCLOID_DICTS = None
 
 
 def _comet_dicts():
     """Comet dict by primary key, dict by any key; list of dicts by ambiguous key."""
     global _COMET_DICTS
     if not _COMET_DICTS:
-        _COMET_DICTS = _read_pickle(_COMET_BASENAME)
+        from ._build_comet_dicts import _build_comet_dicts  # here; it imports this module
+        _COMET_DICTS = _dicts_from_pickle(_COMET_BASENAME, _build_comet_dicts)
     return _COMET_DICTS
 
 
@@ -220,7 +259,8 @@ def _centaur_dicts():
     """Centaur dict by primary key, dict by any key; list of dicts by ambiguous key."""
     global _CENTAUR_DICTS
     if not _CENTAUR_DICTS:
-        _CENTAUR_DICTS = _read_pickle(_CENTAUR_BASENAME)
+        from ._build_centaur_dicts import _build_centaur_dicts  # imports this module
+        _CENTAUR_DICTS = _dicts_from_pickle(_CENTAUR_BASENAME, _build_centaur_dicts)
     return _CENTAUR_DICTS
 
 
@@ -234,9 +274,23 @@ def centaur_lookup():
     return _centaur_dicts()[1]
 
 
-def centaur_ambiguous_lookup():
-    """List of Centaur dictionaries based on any ambiguous key including upper case."""
-    return _centaur_dicts()[1]
+def _damocloid_dicts():
+    """Damocloid dict by primary key, dict by any key; list of dicts by ambiguous key."""
+    global _DAMOCLOID_DICTS
+    if not _DAMOCLOID_DICTS:
+        from ._build_damocloid_dicts import _build_damocloid_dicts  # imports this module
+        _DAMOCLOID_DICTS = _dicts_from_pickle(_DAMOCLOID_BASENAME, _build_damocloid_dicts)
+    return _DAMOCLOID_DICTS
+
+
+def damocloid_dict():
+    """Damocloid dictionary based on primary key."""
+    return _damocloid_dicts()[0]
+
+
+def damocloid_lookup():
+    """Damocloid dictionary based on any key including upper case."""
+    return _damocloid_dicts()[1]
 
 
 __all__ = [
@@ -244,16 +298,18 @@ __all__ = [
     '_COMET_BASENAME',
     '_COMET_CACHE',
     '_compare_content',
+    '_dicts_from_pickle',
     '_fetch',
     '_read_content',
     '_read_pickle',
     '_write_pickle',
-    'centaur_ambiguous_lookup',
     'centaur_dict',
     'centaur_lookup',
     'comet_ambiguous_lookup',
     'comet_dict',
     'comet_lookup',
+    'damocloid_dict',
+    'damocloid_lookup',
 ]
 
 ##########################################################################################

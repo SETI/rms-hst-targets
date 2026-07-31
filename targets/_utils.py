@@ -131,6 +131,8 @@ def _parse_mt_lv(header, prefix, *, logger=None):
                 logger and logger.info(f'Merging fields: {prev_field!r}, {field!r}')
                 pairs[-1][1] += parts[0]
                 prev_field += parts[0]
+            elif prefix == 'MT_LV1' and 'AMRAT'.startswith(field):  # known errors
+                logger and logger.info(f'Ignoring empty {prefix} field: {field!r}')
             else:
                 logger and logger.warning(f'Empty {prefix} field: {field!r}')
         elif len(parts) > 2:
