@@ -28,7 +28,10 @@ _TARGET_STRING_REPAIRS = [
     # "199\D" could never match and this entry never fired.
     (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\d)([A-Z]1?)(-\W+|)',
                                                 r'SHOEMAKER_LEVY|\1\2|[C]'),
-    (r'SL',                                     r'SHOEMAKER_LEVY'),
+    # A bare "SL" is deliberately not expanded to "SHOEMAKER_LEVY": the name alone matches
+    # 13 comets, so it identifies nothing and only widens the search. Every SL9 fragment
+    # TARGNAME ("SL-7", "SL-COL", ...) is accompanied by a TARDESCR that the entry above
+    # resolves to D/1993 F2 directly.
     # The numbered forms accept a dash as well as a slash, and supply "/" and "[C]"
     # themselves. Otherwise the generic comet-number pattern in hst_repairs gets there
     # first and appends "|[C]", after which these patterns can no longer match: they are
