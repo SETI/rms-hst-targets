@@ -46,7 +46,12 @@ _TARGET_STRING_REPAIRS = [
     (r'(?:73P[-/]?)?SCHWASSMANW3[AB]?',         r'73P/SCHWASSMANN_WACHMANN 3|[C]'),
     (r'SCHWASSMAN-WACHMAN-1',                   r'SCHWASSMANN_WACHMANN 1'),
     (r'(?:76P[-/]?)?WKI ?1?',                   r'76P/WEST_KOHOUTEK_IKEMURA|[C]'),
-    (r'288P',                                   r'(300163) 2006 VW139|[A]'),
+    # 288P is a binary main-belt comet, so "288P-B" names a component, not a cometary
+    # fragment; both components share the heliocentric orbit of (300163) 2006 VW139.
+    # Without the suffix here, the generic fragment pattern claims it and yields "288P/B",
+    # which identifies nothing: 288P is absent from the comet database, existing only as
+    # the minor planet.
+    (r'288P[-/]?[A-Z]?',                        r'(300163) 2006 VW139|[A]'),
     (r'SANTA',                                  r'HAUMEA'),
     # "2I" is itself a comet number, so the slash form has to be accepted here; otherwise
     # the generic comet-number pattern claims it and the misspelling survives.
