@@ -17,6 +17,7 @@ from targets import (
     identify_targets,
 )
 from targets._utils import _collect_strings, _norm_date, _parse_mt_lv
+from targets.hst_repairs import hst_repairs
 from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 from targets.target_xml_cache_support import use_local_xml_dir
 
@@ -268,6 +269,64 @@ def test_ambiguous_comet_name_without_elements_raises() -> None:
         identify_target_dicts([header])
 
 
+def test_sw3_fragment_abbreviated_in_targname() -> None:
+    # TARGNAME "SW3C" abbreviates 73P/Schwassmann-Wachmann 3 fragment C. The repair has to
+    # supply the comet number, the "/" and the fragment letter, because the generic
+    # comet-number pattern would otherwise claim the string first.
+    bodies = identify_target_dicts([_header('8699/u65z7u01m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '73P/Schwassmann-Wachmann 3-C'
+    assert bodies[0]['ttype'] == 'C'
+
+
+def test_sw3_accepts_either_separator_and_a_missing_fragment() -> None:
+    # The comet number may be attached with a slash as well as a dash, and the fragment
+    # letter may be absent. A slash form left to the generic comet-number pattern becomes
+    # "73P/SW 3", and an absent fragment used to leave a trailing dash; neither identifies
+    # anything.
+    assert hst_repairs('73P-SW3-C') == (['73P/SCHWASSMANN-WACHMANN 3-C'], 'C')
+    assert hst_repairs('73P/SW3-C') == (['73P/SCHWASSMANN-WACHMANN 3-C'], 'C')
+    assert hst_repairs('73P/SW3') == (['73P/SCHWASSMANN-WACHMANN 3'], 'C')
+    assert hst_repairs('SW3') == (['73P/SCHWASSMANN-WACHMANN 3'], 'C')
+
+
+def test_one_linear_chosen_from_many_by_elements() -> None:
+    # TARGNAME and TARDESCR say only "LINEAR", which names 208 comets and the asteroid
+    # 118401 LINEAR. Only the orbital elements can single one out.
+    pytest.importorskip('palpy')
+    bodies = identify_target_dicts([_header('8276/o67r09010_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == 'C/1999 S4 (LINEAR)'
+    assert bodies[0]['ttype'] == 'C'
+
+
+def test_shoemaker_levy_chosen_from_many_by_elements() -> None:
+    # Two headers: "WAVE" names nothing, and "COMET-SL-OFFSET" reduces to a bare "SL",
+    # which is deliberately not expanded because the Shoemaker-Levy name alone spans 13
+    # comets. The elements pick C/1991 T2 out of them.
+    bodies = identify_target_dicts([_header('2442/z0yy0e01t_shf.fits'),
+                                    _header('2442/z0yy0e02t_shf.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == 'C/1991 T2 (Shoemaker-Levy)'
+    assert bodies[0]['ttype'] == 'C'
+
+
+def test_minor_planet_designation_names_a_comet() -> None:
+    # TARGNAME "04PY42" and TARDESCR "scattered centaur" both describe a minor planet, but
+    # 2004 PY42 was later found to be the comet 167P/CINEOS. The categorizer recognizes the
+    # comet designation and overrides the minor planet type.
+    bodies = identify_target_dicts([_header('10514/j9fwo9010_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '167P/CINEOS'
+    assert bodies[0]['ttype'] == 'C'
+
+
+def test_two_digit_year_designation_repaired() -> None:
+    # The step the test above depends on: "04PY42" is expanded to a full designation, and
+    # only then can it be recognized as 167P/CINEOS.
+    assert hst_repairs('04PY42') == (['2004 PY42'], '')
+
+
 ##########################################################################################
 # Minor planets
 ##########################################################################################
@@ -370,6 +429,178 @@ def test_palpy_unavailable_degrades(monkeypatch: pytest.MonkeyPatch) -> None:
                         cast(ModuleType, None))
     bodies = identify_target_dicts([_header('2432/w0xh0101t_shf.fits')])
     assert bodies[0]['full_name'] == '5145 Pholus'
+
+
+##########################################################################################
+# Minor planets whose catalog entry has moved on since the observation
+##########################################################################################
+
+def test_tno_designation_has_since_been_numbered() -> None:
+    # TARGNAME "98UU43" carries only the provisional designation; the body has been
+    # numbered since, so the identification supplies the number the header never had.
+    bodies = identify_target_dicts([_header('9060/u6ht4501m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '(523955) 1998 UU43'
+    assert bodies[0]['mnum'] == '523955'
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_tno_designation_has_since_been_named() -> None:
+    # TARGNAME "05TO74" is a bare designation; 2005 TO74 has since become 385695 Clete, so
+    # the identification supplies both the number and the name.
+    bodies = identify_target_dicts([_header('11113/u9yzf901m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '385695 Clete'
+    assert bodies[0]['name'] == 'Clete'
+    assert bodies[0]['desig'] == '2005 TO74'
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_tno_carries_an_alternate_designation() -> None:
+    # 2000 FS53 is also catalogued as 1999 KS16. The alias travels with the body, which is
+    # what lets an existing context product gain the designation it was missing.
+    bodies = identify_target_dicts([_header('9060/u6htc701r_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2000 FS53'
+    assert bodies[0]['aliases'] == ['1999 KS16']
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_reidentified_tno_keeps_its_earlier_designation() -> None:
+    # 2001 OQ108 was re-identified with the earlier apparition 2001 KR76, which survives as
+    # an alias rather than replacing the designation the header used.
+    bodies = identify_target_dicts([_header('10800/u9rp2501m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2001 OQ108'
+    assert bodies[0]['aliases'] == ['2001 KR76']
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_alternate_designation_reaches_the_context_product(
+        tmp_path: pathlib.Path) -> None:
+    # The alias is what the context product is updated with, so drive the full path into a
+    # throwaway overlay and confirm a product is produced for the body.
+    with use_local_xml_dir(tmp_path):
+        paths = identify_targets([_header('9060/u6htc701r_shm.fits')])
+    assert len(paths) == 1
+    assert paths[0].name.startswith('trans-neptunian_object.2000_fs53')
+    assert paths[0].exists()
+
+
+##########################################################################################
+# Refining a minor planet into asteroid, Centaur or TNO
+##########################################################################################
+
+def test_neptune_trojan_is_a_tno_not_a_centaur() -> None:
+    # 2005 TN53 is a Neptune Trojan with a = 30.04 AU, just above the 30.03 AU boundary.
+    # Were the boundary Neptune's own 30.1 AU, this body would fall through to the Centaur
+    # test -- its perihelion of 28.1 AU is far beyond Jupiter -- and be mislabelled.
+    bodies = identify_target_dicts([_header('12468/ibtp01dmq_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2005 TN53'
+    assert bodies[0]['ttype'] == 'T'
+    assert 30.03 <= bodies[0]['A'] < 30.1
+
+
+def test_jupiter_crosser_is_an_asteroid() -> None:
+    # 2003 CC22 has a = 7.27 AU and q = 4.17 AU, so the JPL test (a >= 5.5) calls it a
+    # Centaur while the MPC test (q >= 5.2) does not. With the elements ambiguous and the
+    # body absent from the Centaur database, the SPT file's "ASTEROID" decides.
+    bodies = identify_target_dicts([_header('10800/u9rpe301m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2003 CC22'
+    assert bodies[0]['ttype'] == 'A'
+
+
+def test_jupiter_crosser_with_wider_orbit_is_still_an_asteroid() -> None:
+    # The same ambiguity for 2004 DA62, further out at a = 7.67 AU
+    bodies = identify_target_dicts([_header('10800/j9rpe5010_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2004 DA62'
+    assert bodies[0]['ttype'] == 'A'
+
+
+def test_damocloid_database_settles_ambiguous_elements() -> None:
+    # 2004 PA44 has the same ambiguous signature, a = 14.21 AU with q = 3.41 AU, and its
+    # SPT file likewise says "ASTEROID". The damocloid database is consulted before the
+    # orbit is examined at all, and it calls this one a Centaur.
+    bodies = identify_target_dicts([_header('10800/j9rpe6010_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '(154783) 2004 PA44'
+    assert bodies[0]['ttype'] == 'H'
+
+
+def test_hidalgo_is_an_asteroid_not_a_centaur() -> None:
+    # 944 Hidalgo has a = 5.74 AU, beyond the 5.5 AU the JPL definition would accept as a
+    # Centaur, but its perihelion of 1.95 AU is well inside Jupiter's orbit.
+    bodies = identify_target_dicts([_header('4784/y19y0301t_shf.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '944 Hidalgo'
+    assert bodies[0]['ttype'] == 'A'
+
+
+##########################################################################################
+# Minor planets identified without a usable name
+##########################################################################################
+
+def test_kbo_without_a_designation_identified_by_orbit() -> None:
+    # Neither TARGNAME "OBJ-KBO30726D" nor TARDESCR "KBO K30726D" contains a designation
+    # any catalog knows; the body is reached from its orbit alone.
+    pytest.importorskip('palpy')
+    bodies = identify_target_dicts([_header('10545/j9fs17011_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '(120178) 2003 OP32'
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_unambiguous_name_kept_despite_sky_position_mismatch() -> None:
+    # TARGNAME "00WW12" names 2000 WW12 unambiguously, but the header's orbit puts it far
+    # from RA_TARG/DEC_TARG and no catalog body lands near the pointing either. The name is
+    # trusted rather than discarded, and the mismatch is reported as a warning.
+    pytest.importorskip('palpy')
+    bodies = identify_target_dicts([_header('11113/u9yzg201m_shm.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '2000 WW12'
+    assert bodies[0]['ttype'] == 'T'
+
+
+def test_kagara_identified_by_number() -> None:
+    # TARGNAME "KAGARA" is a mangled rendering of 469705 ǂKá̦gára. The MPC resolves no
+    # spelling of the name, so the repair supplies the minor planet number instead, and the
+    # orbit then refines the body to a TNO.
+    # The repair itself: anyascii's "qcKagara" is a faithful transliteration but resolves
+    # nothing, so the number is the only usable handle.
+    assert hst_repairs('KAGARA') == (['(469705)'], 'M')
+
+    bodies = identify_target_dicts([_header('17707/iffc01neq_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['mnum'] == '469705'
+    assert bodies[0]['full_name'] == '469705 ǂKá̦gára'
+    assert bodies[0]['ttype'] == 'T'
+
+
+##########################################################################################
+# 288P, a comet number that names a minor planet
+##########################################################################################
+
+def test_288p_with_numeric_suffix() -> None:
+    # TARGNAME "288P3" carries a trailing visit index. 288P is absent from the comet
+    # database, existing only as the minor planet (300163) 2006 VW139.
+    bodies = identify_target_dicts([_header('16192/ieaf52g0q_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '(300163) 2006 VW139'
+    assert bodies[0]['ttype'] == 'A'
+
+
+def test_288p_binary_component_is_not_a_cometary_fragment() -> None:
+    # TARGNAME "288P-B" names a component of the binary, not a fragment, and both share the
+    # system's heliocentric orbit. Read as a fragment it becomes "288P/B", which identifies
+    # nothing; element matching then settles on 133P/Elst-Pizarro, 1.85 degrees away in
+    # inclination.
+    bodies = identify_target_dicts([_header('16687/ienl03oxq_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '(300163) 2006 VW139'
+    assert bodies[0]['ttype'] == 'A'
 
 
 ##########################################################################################
