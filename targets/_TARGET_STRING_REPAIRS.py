@@ -27,8 +27,14 @@ _TARGET_STRING_REPAIRS = [
     (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\D)([A-Z]1?)(-\W+|)',
                                                 r'SHOEMAKER_LEVY|\1\2|[C]'),
     (r'SL',                                     r'SHOEMAKER_LEVY'),
-    (r'(\d+P/)?CH.RYUMOV-GER[A-Z]*',            r'\1CHURYUMOV_GERASIMENKO'),
-    (r'(\d+P/)?CG',                             r'\1CHURYUMOV_GERASIMENKO'),
+    # The numbered forms accept a dash as well as a slash, and supply "/" and "[C]"
+    # themselves. Otherwise the generic comet-number pattern in hst_repairs gets there
+    # first and appends "|[C]", after which these patterns can no longer match: they are
+    # anchored at the end of the string, and the string now ends with the type marker.
+    (r'(\d+P)[-/]CH.RYUMOV-GER[A-Z]*',          r'\1/CHURYUMOV_GERASIMENKO|[C]'),
+    (r'CH.RYUMOV-GER[A-Z]*',                    r'CHURYUMOV_GERASIMENKO'),
+    (r'(\d+P)[-/]CG',                           r'\1/CHURYUMOV_GERASIMENKO|[C]'),
+    (r'CG',                                     r'CHURYUMOV_GERASIMENKO'),
     (r'(?:29P/?-?)?SW1',                        r'29P/SCHWASSMANN_WACHMANN 1'),
     (r'(?:73P-)?SW3-?([A-Z]|)[AB]?',            r'73P/SCHWASSMANN_WACHMANN 3_\1'),
     (r'SCHWASSMANW3-?([A-Z]|)[AB]?',            r'\1SCHWASSMANN_WACHMANN 3_\2'),
