@@ -105,10 +105,11 @@ Notes:
 | `targets/orbital_radec.py` | Orbital elements → RA/Dec (requires `palpy`) |
 | `targets/targettype.py` | The `TargetType` letter codes |
 | `targets/_*.py` | Curated data tables (see [docs/data-tables.md](docs/data-tables.md)) |
+| `targets/templates/` | The PDS4 label template used to generate new context products |
 | `targets/cometdb/` | Comet/Centaur/damocloid database: builders, scrapers, queries |
 | `targets/mpc_tools/` | Minor Planet Center queries and designation packing |
 | `tests/` | pytest tests, plus caps-named fixture/baseline files not collected by pytest |
-| `programs/` | Maintenance scripts, not shipped (see [docs/programs.md](docs/programs.md)) |
+| `programs/` | Maintenance scripts (see [docs/programs.md](docs/programs.md)) |
 | `caches/` | On-disk data caches (see [docs/data-and-caches.md](docs/data-and-caches.md)) |
 
 ## Testing

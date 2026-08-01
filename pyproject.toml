@@ -64,10 +64,12 @@ markers = []
 [tool.setuptools]
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["targets", "targets.*"]
+include = ["targets", "targets.*", "programs"]
 
 [tool.setuptools.package-data]
-"targets" = ["py.typed", "*.pyi"]
+# TARGET_LABEL_*.xml is read at run time by target_xml_cache_support whenever a new
+# context product has to be generated, so it must travel with the package.
+"targets" = ["py.typed", "*.pyi", "templates/*.xml"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"

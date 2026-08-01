@@ -1,9 +1,9 @@
 # The `programs/` scripts
 
-`programs/` holds the maintenance and diagnostic tools. Nothing here ships with
-the package — the scripts refresh the caches the library reads, rebuild the test
-corpus, and help diagnose a specific observation. Run them from the repository
-root with the virtual environment active:
+`programs/` holds the maintenance and diagnostic tools. They refresh the caches
+the library reads, rebuild the test corpus, and help diagnose a specific
+observation. Run them from the repository root with the virtual environment
+active:
 
 ```bash
 python -m programs.identify_visit JCIS01
@@ -12,6 +12,16 @@ python -m programs.identify_visit JCIS01
 They fall into three groups: **diagnosis** (run these often), **data refresh**
 (run these when the outside world changes), and **corpus rebuild** (run these
 rarely, and only with the SPT cache mounted).
+
+They are included in the wheel, so `python -m programs.<name>` works from an
+installed copy — but most of them expect a source checkout and will not find
+what they need without one. `identify_visit.py` and `reality_check_radec.py`
+read `tests/SPT_TESTS.py`, which is not part of the package;
+`build_spt_tests.py` needs `caches/SPT_CACHE`; `update_cometdb.py` and
+`update_target_xml_cache.py` write into `caches/`. Only
+`retrieve_mast_moving_target_spts.py`, which takes its output directory as an
+argument, is genuinely standalone. Treat the rest as repository tools that
+happen to be installed alongside the library.
 
 ## Diagnosis
 

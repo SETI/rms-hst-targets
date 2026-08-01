@@ -137,7 +137,7 @@ fixing identification failures — see the
 
 ## Maintenance scripts in `programs/`
 
-Not shipped with the package; all are run directly with Python and accept
+All are run directly with Python and accept
 `--help`.
 
 ### `retrieve_mast_moving_target_spts.py`

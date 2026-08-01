@@ -57,7 +57,8 @@ _XMLNS = re.compile(r'\s*(?:xmlns|xsi)(?:|:\w+)\s*=\s*"[^"]+"')
 _TARGET_XML_LOOKUP = None   # filled in lazily
 
 _TEMPLATE_BASENAME = 'TARGET_LABEL_1.0.xml'
-_TEMPLATE_PATH = pathlib.Path(__file__).parent.parent / 'templates' / _TEMPLATE_BASENAME
+# Inside the package, so it is found in an installed copy as well as a source checkout.
+_TEMPLATE_PATH = pathlib.Path(__file__).parent / 'templates' / _TEMPLATE_BASENAME
 _PDS_TEMPLATE = None        # filled in lazily
 
 
