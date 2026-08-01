@@ -8,10 +8,9 @@ import re
 import anyascii
 
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
-from targets.cometdb import comet_dict
 from targets.targettype import TargetType
 
-_MPC_CACHE = pathlib.Path(__file__).parent.parent.parent / 'caches/MPC_CACHE'
+_MPC_CACHE = pathlib.Path(__file__).parents[3] / 'caches/MPC_CACHE'
 _MPC_CACHING = True
 
 # A Palomar-Leiden (e.g. "6317 P-L") or Trojan-survey (e.g. "3101 T-2") designation is the
@@ -156,10 +155,16 @@ def _mpc_body_dict(names, elements):
     body['ttype'] = TargetType.MINOR_PLANET
     body.update(elements)
 
+    # Deferred because targets.cometdb imports targets.mpc_tools (query_comet_by_elements,
+    # _get_wiki_comets); a module-level import here would close an import cycle. Same idiom
+    # as targets/cometdb/_utils.py.
+    from targets.cometdb import comet_dict
+
     # Handle bodies that were also comets
+    comets = comet_dict()
     for name in body['alt_desigs']:
-        if name.endswith('P') and name[:-1].isdigit() and name in comet_dict():
-            comet = comet_dict()[name]
+        if name.endswith('P') and name[:-1].isdigit() and name in comets:
+            comet = comets[name]
             for alias in [comet['prefix'], comet['full_name']] + comet['aliases']:
                 if alias not in body['aliases']:
                     body['aliases'].append(alias)

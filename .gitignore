@@ -187,4 +187,4 @@ caches/TARGET_XML_OVERLAY/
 # them out of the repo. targets.cometdb regenerates any that are missing from the cached
 # web resources, so a fresh checkout needs no manual step.
 
-targets/_version.py
+src/targets/_version.py

@@ -1,19 +1,19 @@
-# The `programs/` scripts
+# The `src/targets/programs/` scripts
 
-`programs/` holds the maintenance and diagnostic tools. They refresh the caches
+`src/targets/programs/` holds the maintenance and diagnostic tools. They refresh the caches
 the library reads, rebuild the test corpus, and help diagnose a specific
 observation. Run them from the repository root with the virtual environment
 active:
 
 ```bash
-python -m programs.identify_visit JCIS01
+python -m targets.programs.identify_visit JCIS01
 ```
 
 They fall into three groups: **diagnosis** (run these often), **data refresh**
 (run these when the outside world changes), and **corpus rebuild** (run these
 rarely, and only with the SPT cache mounted).
 
-They are included in the wheel, so `python -m programs.<name>` works from an
+They are included in the wheel, so `python -m targets.programs.<name>` works from an
 installed copy — but most of them expect a source checkout and will not find
 what they need without one. `identify_visit.py` and `reality_check_radec.py`
 read `tests/SPT_TESTS.py`, which is not part of the package;
@@ -32,10 +32,10 @@ The tool you will use most. It feeds a visit's headers from the test corpus to
 identified.
 
 ```bash
-python -m programs.identify_visit JCIS01
-python -m programs.identify_visit 'IENL0*' --by-visit     # wildcards allowed
-python -m programs.identify_visit U2G008 --level info     # less noise
-python -m programs.identify_visit IFFC01 --edit           # open the XML in $EDITOR
+python -m targets.programs.identify_visit JCIS01
+python -m targets.programs.identify_visit 'IENL0*' --by-visit     # wildcards allowed
+python -m targets.programs.identify_visit U2G008 --level info     # less noise
+python -m targets.programs.identify_visit IFFC01 --edit           # open the XML in $EDITOR
 ```
 
 **When:** whenever a target identifies wrongly or not at all, and after any
@@ -57,9 +57,9 @@ the corpus to the observing midpoint and compares the predicted sky position
 against the header's `RA_TARG`/`DEC_TARG`.
 
 ```bash
-python -m programs.reality_check_radec               # both types
-python -m programs.reality_check_radec --comets      # comets only
-python -m programs.reality_check_radec -o /tmp/offsets.csv
+python -m targets.programs.reality_check_radec               # both types
+python -m targets.programs.reality_check_radec --comets      # comets only
+python -m targets.programs.reality_check_radec -o /tmp/offsets.csv
 ```
 
 It prints offset percentiles, a distribution histogram, and a table of the
@@ -84,10 +84,10 @@ Scrapes Wikipedia, the MPC, the SBN and JPL, and writes the three pickle
 databases in `caches/COMET_CACHE`.
 
 ```bash
-python -m programs.update_cometdb                    # all three, checking the web
-python -m programs.update_cometdb --local            # rebuild from cached HTML only
-python -m programs.update_cometdb --comets           # just one database
-python -m programs.update_cometdb --rebuild          # rewrite even if unchanged
+python -m targets.programs.update_cometdb                    # all three, checking the web
+python -m targets.programs.update_cometdb --local            # rebuild from cached HTML only
+python -m targets.programs.update_cometdb --comets           # just one database
+python -m targets.programs.update_cometdb --rebuild          # rewrite even if unchanged
 ```
 
 **When:** when a newly observed comet is missing from the database, when a
@@ -113,9 +113,9 @@ new context products, deletes superseded versions, and rebuilds the
 `$LOOKUP.pickle` index.
 
 ```bash
-python -m programs.update_target_xml_cache
-python -m programs.update_target_xml_cache --offline   # just rebuild the index
-python -m programs.update_target_xml_cache --rebuild
+python -m targets.programs.update_target_xml_cache
+python -m targets.programs.update_target_xml_cache --offline   # just rebuild the index
+python -m targets.programs.update_target_xml_cache --rebuild
 ```
 
 **When:** when the Engineering Node publishes new or corrected targets, or
@@ -136,8 +136,8 @@ Queries MAST for every HST observation flagged as a moving target, keeps the
 downloads them into per-program folders.
 
 ```bash
-python -m programs.retrieve_mast_moving_target_spts --outdir /Volumes/Data-SSD/SPT_CACHE
-python -m programs.retrieve_mast_moving_target_spts --manifest-only
+python -m targets.programs.retrieve_mast_moving_target_spts --outdir /Volumes/Data-SSD/SPT_CACHE
+python -m targets.programs.retrieve_mast_moving_target_spts --manifest-only
 ```
 
 **When:** rarely — to build the SPT cache from scratch, or to pick up
@@ -160,8 +160,8 @@ keywords, deduplicates, and writes the corpus module keyed by six-character
 visit.
 
 ```bash
-python -m programs.build_spt_tests
-python -m programs.build_spt_tests --limit 500        # a quick partial run
+python -m targets.programs.build_spt_tests
+python -m targets.programs.build_spt_tests --limit 500        # a quick partial run
 ```
 
 **When:** after retrieving new SPT files, and only then.

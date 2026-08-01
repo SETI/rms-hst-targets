@@ -53,9 +53,6 @@ Source = "https://github.com/SETI/rms-hst-targets"
 Issues = "https://github.com/SETI/rms-hst-targets/issues"
 
 [tool.pytest.ini_options]
-pythonpath = [
-  "."
-]
 testpaths = ["tests"]
 # TODO Update desired parallelism
 addopts = ["-n", "auto", "--cov=targets", "--strict-markers", "--strict-config"]
@@ -63,8 +60,8 @@ markers = []
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["targets", "targets.*", "programs"]
+where = ["src"]
+include = ["targets", "targets.*"]
 
 [tool.setuptools.package-data]
 # TARGET_LABEL_*.xml is read at run time by target_xml_cache_support whenever a new
@@ -73,7 +70,7 @@ include = ["targets", "targets.*", "programs"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-write_to = "targets/_version.py"
+write_to = "src/targets/_version.py"
 
 [project.optional-dependencies]
 dev = [
@@ -109,11 +106,15 @@ omit = [
   "tests/*",
   "_version.py",
   # Data-refresh tools that scrape external services (MPC, JPL, Wikipedia, ...); they
-  # never run during tests, like the scripts in programs/.
-  "targets/cometdb/_get_*.py",
-  "targets/cometdb/_build_*.py",
-  "targets/cometdb/_REPAIR_COMET.py",
-  "targets/remote_listdir.py",
+  # never run during tests, like the scripts in targets/programs/. The leading */ keeps
+  # these anchored to the package wherever it is measured from, rather than to the CWD.
+  "*/targets/cometdb/_get_*.py",
+  "*/targets/cometdb/_build_*.py",
+  "*/targets/cometdb/_REPAIR_COMET.py",
+  "*/targets/remote_listdir.py",
+  # Maintenance scripts. Now that they are a subpackage, source = ["targets"] would
+  # otherwise measure every one of their never-executed lines and sink fail_under.
+  "*/targets/programs/*",
 ]
 
 [tool.coverage.report]
@@ -129,13 +130,12 @@ fail_under = 75
 [tool.mypy]
 strict = true
 disallow_subclassing_any = false
-# Permanently exclude the targets/ and programs/ trees from type checking. mypy is
-# only ever run on tests/. Note: `exclude` only affects recursive discovery
-# (e.g. `mypy .`); the targets/programs paths are also kept off every explicit
-# mypy invocation (see scripts/run-all-checks.sh and .github/workflows/run-tests.yml).
+# Permanently exclude the src/ tree (the package and its programs/ subpackage) from type
+# checking. mypy is only ever run on tests/. Note: `exclude` only affects recursive
+# discovery (e.g. `mypy .`); those paths are also kept off every explicit mypy invocation
+# (see scripts/run-all-checks.sh and .github/workflows/run-tests.yml).
 exclude = [
-  "^targets/",
-  "^programs/",
+  "^src/",
 ]
 
 [[tool.mypy.overrides]]
@@ -188,7 +188,7 @@ extend-ignore = ["I001", "PT011", "SIM102", "SIM105", "SIM108", "RUF005",
 [tool.ruff.lint.per-file-ignores]
 # TargetType.NAME is an intentional class-level constant lookup, not a per-instance
 # mutable default.
-"targets/targettype.py" = ["RUF012"]
+"src/targets/targettype.py" = ["RUF012"]
 
 [tool.pymarkdown.plugins.md013]
 # Line length (disable so README/CONTRIBUTING can use longer lines).
@@ -201,10 +201,10 @@ enabled = false
 # Uncomment when enabling bandit in [project.optional-dependencies].dev.
 # [tool.bandit]
 # exclude_dirs = ["tests", "venv", ".venv"]
-# targets = ["targets"]
+# targets = ["src"]
 
 # Uncomment when enabling vulture in [project.optional-dependencies].dev.
 # [tool.vulture]
-# paths = ["targets"]
+# paths = ["src"]
 # exclude = ["tests/"]
 # min_confidence = 70

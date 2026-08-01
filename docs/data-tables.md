@@ -131,7 +131,7 @@ a fragment designation attached to the wrong comet, a missing alias, a
 designation that belongs to the parent rather than the fragment.
 
 **Watch for:** these corrections only take effect when the database is rebuilt
-(`python -m programs.update_cometdb`). Editing this file changes nothing until
+(`python -m targets.programs.update_cometdb`). Editing this file changes nothing until
 then. It is also the least-tested file in the project, so verify the effect by
 querying the rebuilt database directly rather than assuming.
 
@@ -145,7 +145,7 @@ code, and pytest does not collect them.
 **`tests/SPT_TESTS.py`** is the corpus: every unique target description
 harvested from the SPT cache, keyed by six-character visit. It is the evidence
 base for the whole test suite. Regenerate with
-`python -m programs.build_spt_tests`, which needs the external SPT cache
+`python -m targets.programs.build_spt_tests`, which needs the external SPT cache
 mounted.
 
 **`tests/SPT_TESTS_OUTPUT.txt`** is the baseline: the exact output of

@@ -5,7 +5,7 @@ description: Run all linting, type checking, tests, Markdown lint, and documenta
 
 # Run All Checks
 
-Execute all project checks (lint, typecheck, test, Markdown lint, docs) and fix any errors found. This skill aligns with the `scripts/run-all-checks.sh` script. The importable package is `targets/`; tests live in `tests/`.
+Execute all project checks (lint, typecheck, test, Markdown lint, docs) and fix any errors found. This skill aligns with the `scripts/run-all-checks.sh` script. The importable package is `src/targets/`; tests live in `tests/`.
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ Run from **project root** with the project **virtual environment activated** (e.
 # Lint (ruff)
 python -m ruff check targets tests
 
-# Type check (mypy) — NEVER on targets/ or support/; only tests/ is type-checked
+# Type check (mypy) — NEVER on src/; only tests/ is type-checked
 MYPYPATH=targets python -m mypy tests
 
 # Tests (pytest; use -n auto for parallel when tests are independent)
@@ -74,7 +74,7 @@ Set `VENV` or `VENV_PATH` to point to the virtual environment if it is not at `.
 ```markdown
 Check Progress:
 - [ ] Ruff check (targets, tests)
-- [ ] Mypy (tests only; never targets/ or support/)
+- [ ] Mypy (tests only; never src/)
 - [ ] Pytest (tests)
 - [ ] PyMarkdown scan (docs/, .cursor/, README, CONTRIBUTING)
 - [ ] Sphinx build (docs/) with SPHINXOPTS="-W"

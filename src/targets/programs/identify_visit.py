@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# programs/identify_visit.py
+# targets/programs/identify_visit.py
 ##########################################################################################
 """Identify the targets of one or more SPT_TESTS visits, print the context-product paths,
 and optionally open them in $EDITOR.
@@ -35,7 +35,7 @@ from targets.target_xml_cache_support import use_local_xml_dir
 
 # tests/SPT_TESTS.py is a plain data module (not part of the importable package); add the
 # tests directory to the path so it can be imported, exactly as the test suite does.
-_TESTS_DIR = pathlib.Path(__file__).resolve().parent.parent / 'tests'
+_TESTS_DIR = pathlib.Path(__file__).resolve().parents[3] / 'tests'
 
 
 def _load_spt_tests() -> dict[str, list[dict]]:

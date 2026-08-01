@@ -65,7 +65,7 @@ See the documentation in [`docs/`](docs/):
   they are refreshed.
 * [The curated data tables](docs/data-tables.md) — the caps-named modules, what
   each controls, and when you need to edit one.
-* [The programs/ scripts](docs/programs.md) — every maintenance script, what it
+* [The src/targets/programs/ scripts](docs/programs.md) — every maintenance script, what it
   does, and when to run it.
 
 ## Installation
@@ -80,9 +80,11 @@ pip install -e ".[dev]"
 
 Notes:
 
-* The importable package is **`targets/`** at the repository root. Everything
+* The importable package is **`src/targets/`** (a `src/` layout). Everything
   imports under it, e.g. `from targets import identify_targets` or
-  `from targets.mpc_tools import mpc_packing`.
+  `from targets.mpc_tools import mpc_packing`. Because nothing is importable
+  from the working tree, an editable install (`pip install -e ".[dev]"`) is
+  required before the tests will run.
 * `palpy` (the Starlink PAL/SLALIB astrometry library, used by
   `orbital_radec.py`) requires a C build. Without it, sky-position
   confirmation is skipped and `tests/test_orbital_radec.py` is skipped via
@@ -93,23 +95,23 @@ Notes:
 
 | Path | Contents |
 | ---- | -------- |
-| `targets/identify_targets.py` | Both entry points: headers → context products or body dicts |
-| `targets/identify_standard_body.py` | Planets, satellites, rings and torus identification |
-| `targets/comet_identifiers.py` | Comet identification by name and/or orbital elements |
-| `targets/minor_planet_identifiers.py` | Minor-planet identification via the MPC |
-| `targets/categorize_minor_planet.py` | Asteroid vs. Centaur vs. TNO vs. dwarf planet |
-| `targets/hst_repairs.py` | Normalization of raw HST target strings |
-| `targets/standard_bodies.py` | Planets, satellites, dwarf planets, rings, the Io torus |
-| `targets/target_xml_support.py` | Body dict → PDS4 context-product fields |
-| `targets/target_xml_cache_support.py` | The context-product cache and overlay |
-| `targets/orbital_radec.py` | Orbital elements → RA/Dec (requires `palpy`) |
-| `targets/targettype.py` | The `TargetType` letter codes |
-| `targets/_*.py` | Curated data tables (see [docs/data-tables.md](docs/data-tables.md)) |
-| `targets/templates/` | The PDS4 label template used to generate new context products |
-| `targets/cometdb/` | Comet/Centaur/damocloid database: builders, scrapers, queries |
-| `targets/mpc_tools/` | Minor Planet Center queries and designation packing |
+| `src/targets/identify_targets.py` | Both entry points: headers → context products or body dicts |
+| `src/targets/identify_standard_body.py` | Planets, satellites, rings and torus identification |
+| `src/targets/comet_identifiers.py` | Comet identification by name and/or orbital elements |
+| `src/targets/minor_planet_identifiers.py` | Minor-planet identification via the MPC |
+| `src/targets/categorize_minor_planet.py` | Asteroid vs. Centaur vs. TNO vs. dwarf planet |
+| `src/targets/hst_repairs.py` | Normalization of raw HST target strings |
+| `src/targets/standard_bodies.py` | Planets, satellites, dwarf planets, rings, the Io torus |
+| `src/targets/target_xml_support.py` | Body dict → PDS4 context-product fields |
+| `src/targets/target_xml_cache_support.py` | The context-product cache and overlay |
+| `src/targets/orbital_radec.py` | Orbital elements → RA/Dec (requires `palpy`) |
+| `src/targets/targettype.py` | The `TargetType` letter codes |
+| `src/targets/_*.py` | Curated data tables (see [docs/data-tables.md](docs/data-tables.md)) |
+| `src/targets/templates/` | The PDS4 label template used to generate new context products |
+| `src/targets/cometdb/` | Comet/Centaur/damocloid database: builders, scrapers, queries |
+| `src/targets/mpc_tools/` | Minor Planet Center queries and designation packing |
+| `src/targets/programs/` | Maintenance scripts (see [docs/programs.md](docs/programs.md)) |
 | `tests/` | pytest tests, plus caps-named fixture/baseline files not collected by pytest |
-| `programs/` | Maintenance scripts (see [docs/programs.md](docs/programs.md)) |
 | `caches/` | On-disk data caches (see [docs/data-and-caches.md](docs/data-and-caches.md)) |
 
 ## Testing
@@ -121,10 +123,9 @@ python -m pytest -q -n auto tests
 Tests run in parallel (`pytest-xdist`), entirely offline — an autouse fixture
 blocks `requests`, so every MPC or comet-database lookup must be satisfied from
 the committed caches in `caches/MPC_CACHE` and `caches/COMET_CACHE`. Coverage
-of `targets/` is enforced by the pyproject gate.
+of `src/targets/` is enforced by the pyproject gate.
 
-Type checking runs on the tests only (mypy is `strict` but excludes
-`targets/` and `programs/`):
+Type checking runs on the tests only (mypy is `strict` but excludes `src/`):
 
 ```bash
 python -m mypy tests

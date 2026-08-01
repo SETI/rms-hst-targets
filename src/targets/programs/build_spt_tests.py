@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# programs/build_spt_tests.py
+# targets/programs/build_spt_tests.py
 ##########################################################################################
 """Build a Python module of unique HST target descriptions from the SPT cache, organized
 by visit.
@@ -65,7 +65,7 @@ _TRAILING_KEYS = ('TARGNAME', 'RA_TARG', 'DEC_TARG', 'PROPOSID')
 # REGEX. Two files within a visit are duplicates when these values all agree.
 _KEYWORD_PREFIX_REGEX = re.compile(r'(TARGNAME|TARDESC|TARKEY|MT_LV)')
 
-_REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 _DEFAULT_CACHE = _REPO_ROOT / 'caches' / 'SPT_CACHE'
 _DEFAULT_OUTPUT = _REPO_ROOT / 'tests' / 'SPT_TESTS.py'
 

@@ -37,7 +37,7 @@ from targets.remote_listdir import remote_listdir
 from targets.targettype import TargetType
 
 _TARGET_URL = 'https://pds.nasa.gov/data/pds4/context-pds4/target/'
-_TARGET_XML_CACHE = pathlib.Path(__file__).parent.parent / 'caches/TARGET_XML_CACHE'
+_TARGET_XML_CACHE = pathlib.Path(__file__).parents[2] / 'caches/TARGET_XML_CACHE'
 _TARGET_LOOKUP_BASENAME = '$LOOKUP.pickle'
 
 # The committed cache above is a read-only mirror of the Engineering Node (latest versions

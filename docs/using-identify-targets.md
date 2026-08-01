@@ -149,7 +149,7 @@ INFO | "(523955) 1998 UU43" elements confirmed; RMS 0.010 <= 0.08
 
 The narrative names the strings that were tried, the body each one resolved to,
 the strings that resolved to nothing ("Unused ... strings"), and the test that
-finally confirmed or rejected each candidate. `programs/identify_visit.py` is a
+finally confirmed or rejected each candidate. `src/targets/programs/identify_visit.py` is a
 ready-made wrapper for exactly this, over the corpus in `tests/SPT_TESTS.py`.
 
 ## The tuning parameters

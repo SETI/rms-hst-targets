@@ -14,7 +14,7 @@ import requests
 from pdslogger import PdsLogger
 
 try:
-    _COMET_CACHE = (pathlib.Path(os.path.dirname(__file__)).parent.parent
+    _COMET_CACHE = (pathlib.Path(os.path.dirname(__file__)).parent.parent.parent
                     / 'caches/COMET_CACHE')
 except NameError:
     _COMET_CACHE = pathlib.Path('./COMET_CACHE')

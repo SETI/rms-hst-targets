@@ -9,9 +9,10 @@ import importlib.metadata
 import os
 import sys
 
-# The importable package lives at the repository root as targets/, so the repo
-# root must be on the path for autodoc to import it.
-sys.path.insert(0, os.path.abspath('..'))
+# The importable package lives under src/ as targets/, so that directory must be on the
+# path for autodoc to import it. This is redundant when the package is pip-installed (how
+# CI and Read the Docs build), but it keeps a bare local build working.
+sys.path.insert(0, os.path.abspath('../src'))
 
 # -- Project information -----------------------------------------------------
 

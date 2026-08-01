@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# programs/update_target_xml_cache.py
+# targets/programs/update_target_xml_cache.py
 ##########################################################################################
 """
 .. update_target_xml_cache:

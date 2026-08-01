@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# programs/reality_check_radec.py
+# targets/programs/reality_check_radec.py
 ##########################################################################################
 """Reality-check RA_TARG/DEC_TARG in tests/SPT_TESTS.py against a two-body
 propagation of the orbital elements stored in the MT_LV1_* keywords.
@@ -18,7 +18,7 @@ convention, so a correct entry should reproduce RA_TARG to ~arcsec.  Large
 offsets flag suspect header values, mis-entered elements, or frame issues
 (e.g. B1950 elements, which orbital_radec does not precess).
 
-Run:  python programs/reality_check_radec.py [--asteroids] [--comets] [-o FILE]
+Run:  python -m targets.programs.reality_check_radec [--asteroids] [--comets] [-o FILE]
 By default both asteroids and comets are checked; pass --asteroids or --comets to
 restrict to one type.
 """
@@ -30,13 +30,15 @@ import os
 import sys
 from datetime import datetime, timedelta
 
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_ROOT = os.path.dirname(_HERE)
-sys.path.insert(0, os.path.join(_ROOT, "targets"))  # orbital_radec
-sys.path.insert(0, os.path.join(_ROOT, "tests"))    # SPT_TESTS
+from targets.orbital_radec import asteroid_radec, comet_radec
 
-# These two follow the sys.path insertions above and cannot move to the top of the file.
-from orbital_radec import asteroid_radec, comet_radec   # noqa: E402
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(_HERE)))
+# tests/SPT_TESTS.py is a plain data module (not part of the importable package); add the
+# tests directory to the path so it can be imported, exactly as the test suite does.
+sys.path.insert(0, os.path.join(_ROOT, "tests"))
+
+# This follows the sys.path insertion above and cannot move to the top of the file.
 from SPT_TESTS import SPT_TESTS                         # noqa: E402
 
 DEFAULT_SCALE = "UTC"      # assumed T/EPOCH time scale when none is given

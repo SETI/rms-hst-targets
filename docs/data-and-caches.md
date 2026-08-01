@@ -1,9 +1,9 @@
 # Data files and caches
 
 The identification pipeline runs almost entirely from local data: curated
-Python tables inside `targets/`, and on-disk caches under `caches/`. Network
+Python tables inside `src/targets/`, and on-disk caches under `caches/`. Network
 access happens only as a fallback (MPC lookups for uncached objects) or when
-the maintenance scripts in `programs/` are run explicitly — never at import.
+the maintenance scripts in `src/targets/programs/` are run explicitly — never at import.
 
 ## Cache directories
 
@@ -54,7 +54,7 @@ fixed basename:
 | Johnston's Archive (Centaurs only) | `johnstonsarchive.net/astro/tnoslist.html` | `johnstonarchive_tnoslist.txt` |
 
 Hand corrections to individual source records live in
-`targets/cometdb/repair_comet.py` and are applied during every build. When a
+`src/targets/cometdb/_REPAIR_COMET.py` and are applied during every build. When a
 freshly fetched source page differs from the cached copy, the old copy is
 kept as `<stem>-<YYYY-MM-DD>.<ext>`; superseded pickles are kept as
 `#COMETS_v<NNN>.pickle`.
@@ -91,7 +91,7 @@ narrowing the search window, then ranks the returned bodies by
 A mirror of the PDS4 target context products from
 `https://pds.nasa.gov/data/pds4/context-pds4/target/`, plus a pickled
 name-lookup index (`$LOOKUP.pickle`). Maintained by
-`programs/update_target_xml_cache.py`, which downloads new products, removes
+`src/targets/programs/update_target_xml_cache.py`, which downloads new products, removes
 superseded versions, and rebuilds the index. To stage a product locally
 before it exists remotely, name it with a `_local` suffix before `.xml`.
 
@@ -119,7 +119,7 @@ deleted. Outside the context (the default) everything resolves to the committed
 cache, exactly as before, so `update_target_xml_cache.py` still refreshes and
 commits the mirror normally.
 
-## Curated data tables in `targets/`
+## Curated data tables in `src/targets/`
 
 These are Python modules, maintained by hand, that encode the accumulated
 knowledge about HST's header conventions. They are the primary levers for
@@ -135,7 +135,7 @@ fixing identification failures — see the
 | `_DISALLOWED_MINOR_PLANET_NAMES.py` | Names reserved for satellites/comets that must not match asteroids |
 | `_STANDARD_BODY_LIST.py` | Planets, satellites, dwarf planets, systems, rings, torus — names, numbers, NAIF IDs, aliases |
 
-## Maintenance scripts in `programs/`
+## Maintenance scripts in `src/targets/programs/`
 
 All are run directly with Python and accept
 `--help`.
@@ -193,4 +193,4 @@ interactive tester artifacts, **not** collected by pytest:
   by the pytest tests, the reality checker, and bulk validation loops.
 * `SPT_TESTS_OUTPUT.txt` — baseline output of running `hst_repairs` over the
   whole corpus (regenerate via the `if False:` block at the bottom of
-  `targets/hst_repairs.py`); diff after changing the repair tables.
+  `src/targets/hst_repairs.py`); diff after changing the repair tables.

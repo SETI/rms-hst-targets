@@ -354,7 +354,7 @@ run_code_checks() {
 
     if [ "$RUN_RUFF_CHECK" = true ] && [ "$ENABLE_RUFF_CHECK" = true ]; then
         print_info "Running ruff check..."
-        if python -m ruff check targets tests; then
+        if python -m ruff check src tests; then
             print_success "Ruff check passed"
         else
             print_error "Ruff check failed"
@@ -365,7 +365,7 @@ run_code_checks() {
 
     if [ "$RUN_RUFF_FORMAT" = true ] && [ "$ENABLE_RUFF_FORMAT" = true ]; then
         print_info "Running ruff format --check..."
-        if python -m ruff format --check targets tests; then
+        if python -m ruff format --check src tests; then
             print_success "Ruff format check passed"
         else
             print_error "Ruff format check failed"
@@ -376,9 +376,9 @@ run_code_checks() {
 
     if [ "$RUN_MYPY" = true ] && [ "$ENABLE_MYPY" = true ]; then
         print_info "Running mypy..."
-        # mypy is never run on targets/ or support/; only tests/ is type-checked.
-        # MYPYPATH=targets is kept so imports of the package still resolve.
-        if MYPYPATH=targets python -m mypy tests; then
+        # mypy is never run on src/targets/; only tests/ is type-checked.
+        # MYPYPATH=src is kept so imports of the package still resolve.
+        if MYPYPATH=src python -m mypy tests; then
             print_success "Mypy passed"
         else
             print_error "Mypy failed"
@@ -414,7 +414,7 @@ run_code_checks() {
 
     if [ "$RUN_BANDIT" = true ] && [ "$ENABLE_BANDIT" = true ]; then
         print_info "Running bandit..."
-        if python -m bandit -c pyproject.toml -r targets -q; then
+        if python -m bandit -c pyproject.toml -r src -q; then
             print_success "Bandit passed"
         else
             print_error "Bandit failed"
@@ -425,7 +425,7 @@ run_code_checks() {
 
     if [ "$RUN_VULTURE" = true ] && [ "$ENABLE_VULTURE" = true ]; then
         print_info "Running vulture..."
-        if python -m vulture targets tests; then
+        if python -m vulture src tests; then
             print_success "Vulture passed"
         else
             print_error "Vulture failed"

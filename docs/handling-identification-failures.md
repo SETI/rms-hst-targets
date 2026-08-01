@@ -12,7 +12,7 @@ assumes you know the pipeline stages.
 ## How failures present
 
 `TargetIdentificationFailure` is raised from four places in
-`targets/identify_targets.py`:
+`src/targets/identify_targets.py`:
 
 1. **`Unresolved standard target "STD=..." in MT_LV1/2`** — an `MT_LV*`
    `STD=` field named something that isn't in `STANDARD_BODY_LOOKUP` and
@@ -112,13 +112,13 @@ plausibly also use — fix it in the repair data:
 
 | Table | Fix it here when... |
 | ----- | ------------------- |
-| `targets/_TARGNAME_SUFFIX_PATTERNS.py` (`_TARGNAME_SUFFIX_PATTERNS`) | An instrument/pointing decoration after a dash pollutes the name (`-ACQ`, `-EPOCH2`, `-HRC`). A trailing `-<digits>` / `-<letter>` is stripped along with it. |
+| `src/targets/_TARGNAME_PREFIX_SUFFIX_PATTERNS.py` (`_TARGNAME_SUFFIX_PATTERNS`) | An instrument/pointing decoration after a dash pollutes the name (`-ACQ`, `-EPOCH2`, `-HRC`). A trailing `-<digits>` / `-<letter>` is stripped along with it. |
 | ibid. (`_TARGNAME_SUFFIX_PATTERNS_NO_TAIL`) | Same, but the pattern is short/ambiguous enough that it should only be stripped as a last resort, after everything else has been tried. |
 | ibid. (`_TARGNAME_PREFIX_PATTERNS`) | Junk before a dash at the start (`OBJ-`, `RD-`). |
-| `targets/_UNDIAGNOSTIC_TARGET_WORDS.py` | A word contributes nothing and should simply be deleted (`AURORAL`, `MOSAIC`). Short words go in `_UNDIAGNOSTIC_SHORT_WORDS`. |
-| `targets/_TARGET_STRING_REPAIRS.py` | A specific misspelling or idiom maps to a canonical identifier (`SW3` → `73P/SCHWASSMANN_WACHMANN 3`, `SANTA` → `HAUMEA`). |
-| `_TARGET_TRANSFORM_PATTERNS` in `targets/hst_repairs.py` | A whole *syntactic family* needs converting (`COMET-98-P1` → `C/1998 P1`, packed designations, transposed year/letters). |
-| `_TARGET_CATEGORIZER_PATTERNS` in `targets/hst_repairs.py` | A category word should be consumed and turned into a `TargetType` vote instead of being mistaken for a name. |
+| `src/targets/_UNDIAGNOSTIC_TARGET_WORDS.py` | A word contributes nothing and should simply be deleted (`AURORAL`, `MOSAIC`). Short words go in `_UNDIAGNOSTIC_SHORT_WORDS`. |
+| `src/targets/_TARGET_STRING_REPAIRS.py` | A specific misspelling or idiom maps to a canonical identifier (`SW3` → `73P/SCHWASSMANN_WACHMANN 3`, `SANTA` → `HAUMEA`). |
+| `_TARGET_TRANSFORM_PATTERNS` in `src/targets/hst_repairs.py` | A whole *syntactic family* needs converting (`COMET-98-P1` → `C/1998 P1`, packed designations, transposed year/letters). |
+| `_TARGET_CATEGORIZER_PATTERNS` in `src/targets/hst_repairs.py` | A category word should be consumed and turned into a `TargetType` vote instead of being mistaken for a name. |
 
 Conventions inside replacement templates: `|` splits the result into separate
 identifiers; `$` marks a piece to be re-processed through the tables; `[X]`
@@ -134,7 +134,7 @@ the most regression-prone part of the system.
 
 If the header of one particular program/target is simply *wrong* — and no
 generalization exists — add an entry to `SPT_REPAIRS` in
-`targets/_HST_PROGRAM_OVERRIDES.py`, keyed by `TARG_ID`:
+`src/targets/_HST_PROGRAM_OVERRIDES.py`, keyed by `TARG_ID`:
 
 * `'12345_6'` matches one target of one program; `'12345_*'` matches every
   target of the program. Exact keys win over wildcards.
@@ -193,7 +193,7 @@ which case `UNDESIGNATED_TNO` is also the right call.
 
 If a name identifies a satellite or comet but the MPC also has a minor planet
 by that name (there are many: 85 Io, 9 Metis, 2688 Halley...), add it to
-`targets/_DISALLOWED_MINOR_PLANET_NAMES.py`. Such names never resolve to the
+`src/targets/_DISALLOWED_MINOR_PLANET_NAMES.py`. Such names never resolve to the
 minor planet unless the header's own type votes say the target *is* a minor
 planet.
 
@@ -202,7 +202,7 @@ planet.
 If a planet, satellite, dwarf planet, ring, or torus is being missed because
 of an unrecognized alias (a provisional `S/2003 J 1`-style designation, an
 abbreviation, an unusual spelling), add the alias to that body's entry in
-`targets/_STANDARD_BODY_LIST.py`. Aliases become `STANDARD_BODY_LOOKUP` keys
+`src/targets/_STANDARD_BODY_LIST.py`. Aliases become `STANDARD_BODY_LOOKUP` keys
 automatically, with case variants and (for satellites) generated
 `"<planet> <roman>"`, `"J1"`, and `S/`-designation permutations. Use the
 optional trailing `alt_keys` element of the tuple for lookup-only strings
@@ -214,12 +214,12 @@ Comet identification runs against the merged local database
 (`caches/COMET_CACHE/#COMETS.pickle`), not the live web. If a comet is
 missing, misnamed, or carries a wrong designation/fragment:
 
-* **Record-level corrections** go in `targets/cometdb/repair_comet.py`, which
+* **Record-level corrections** go in `src/targets/cometdb/_REPAIR_COMET.py`, which
   patches each source record during the build (name normalizations like
   `PANSTARRS` → `PanSTARRS`, fragment fixes, designation corrections via
   `_DESIG_REPAIRS`).
 * **Refresh or rebuild** the database with
-  `python programs/update_cometdb.py` (`--rebuild` to force, `--local` to
+  `python -m targets.programs.update_cometdb` (`--rebuild` to force, `--local` to
   rebuild from cached source pages without hitting the web). Sources are
   merged in decreasing authoritativeness: Wikipedia lists → MPC PeriodicCodes
   → PDS SBN → JPL SBDB → ICQ.
@@ -310,14 +310,14 @@ may be in the escape hatch, not the data.
 
    * The full test corpus `tests/SPT_TESTS.py` holds every *unique* target
      description harvested from the SPT cache (regenerate with
-     `python programs/build_spt_tests.py` — requires the `caches/SPT_CACHE`
+     `python -m targets.programs.build_spt_tests` — requires the `caches/SPT_CACHE`
      SSD to be mounted). Loop `identify_target_dicts` over it and diff the
-     failures against the previous run, or use `programs/identify_visit.py`
+     failures against the previous run, or use `src/targets/programs/identify_visit.py`
      to run a single visit.
    * `hst_repairs` regressions: run the `if False:` block at the bottom of
-     `targets/hst_repairs.py` over `SPT_TESTS` and diff the output against
+     `src/targets/hst_repairs.py` over `SPT_TESTS` and diff the output against
      `tests/SPT_TESTS_OUTPUT.txt`.
-   * Header sanity: `python programs/reality_check_radec.py` compares every
+   * Header sanity: `python -m targets.programs.reality_check_radec` compares every
      header's `RA_TARG`/`DEC_TARG` against its own `MT_LV1` elements and
      highlights offsets ≥ 60″ with a categorized breakdown (dummy targets,
      B1950, nongravitational comets, epoch gaps, unexplained).

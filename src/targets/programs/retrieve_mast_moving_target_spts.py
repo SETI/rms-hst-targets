@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ##########################################################################################
-# programs/retrieve_mast_moving_target_spts.py
+# targets/programs/retrieve_mast_moving_target_spts.py
 ##########################################################################################
 """Retrieve HST target files (SPT/SHM/SHF/DMF) for every moving-target observation.
 
@@ -50,7 +50,7 @@ SUFFIXES = ("_spt.fits", "_shm.fits", "_shf.fits", "_dmf.fits")
 DOWNLOAD_URL = "https://mast.stsci.edu/api/v0.1/Download/file"
 
 _HERE = pathlib.Path(__file__).resolve().parent
-DEFAULT_OUTDIR = _HERE.parent / "caches" / "SPT_CACHE"
+DEFAULT_OUTDIR = _HERE.parents[2] / "caches" / "SPT_CACHE"
 
 _thread_local = threading.local()
 

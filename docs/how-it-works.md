@@ -1,7 +1,7 @@
 # How target identification works
 
 This document walks through the identification pipeline in
-`targets/identify_targets.py` and its supporting modules, from raw SPT/SHF
+`src/targets/identify_targets.py` and its supporting modules, from raw SPT/SHF
 header keywords to the normalized body dictionaries it returns.
 
 See also:
@@ -54,7 +54,7 @@ available) and `TTIMESCALE`/`EPOCHTIMESCALE` (`UTC` or `TDB`).
 header
   │
   ├─ 1. _apply_overrides()      per-program repairs and sentinels
-  │        (targets/_HST_PROGRAM_OVERRIDES.py)
+  │        (src/targets/_HST_PROGRAM_OVERRIDES.py)
   │
   ├─ 2. _collect_strings()      gather TARKEY*, TARGNAME, TARDESCR pieces
   ├─ 3. _parse_mt_lv()          parse MT_LV1 (tracked) and MT_LV2 (FOV)
@@ -76,7 +76,7 @@ header
 
 ### 1. Per-program overrides
 
-`SPT_REPAIRS` in `targets/_HST_PROGRAM_OVERRIDES.py` is consulted first, keyed
+`SPT_REPAIRS` in `src/targets/_HST_PROGRAM_OVERRIDES.py` is consulted first, keyed
 by `TARG_ID` — an exact key like `'10514_3'` is tried before the wildcard
 `'10514_*'` that covers a whole program. (A few headers carry non-numeric
 `TARG_ID`s such as `'ANTISUN'`; those key directly.) An entry is either:
@@ -162,7 +162,7 @@ dash-separated). The tables, all curated by hand:
 ### 6. Standard bodies by name
 
 Each repaired answer is checked against `STANDARD_BODY_LOOKUP`
-(`targets/standard_bodies.py`), built from the curated `_STANDARD_BODY_LIST`:
+(`src/targets/standard_bodies.py`), built from the curated `_STANDARD_BODY_LIST`:
 the planets, their satellites, the IAU dwarf planets, planetary systems,
 rings, and the Io torus, each with an extensive set of lookup aliases
 (`"J1"`, `"JUPITER I"`, `"S/2003 J 1"` variants, three-letter planet
@@ -274,7 +274,7 @@ Small bodies additionally carry their catalog identifiers (`mnum`, `desig`,
 known `M`, `EPOCH`, `T`).
 
 Generic minor planets are categorized by `minor_planet_ttype()`
-(`targets/categorize_minor_planet.py`): IAU dwarf planets by fixed list, then
+(`src/targets/categorize_minor_planet.py`): IAU dwarf planets by fixed list, then
 Centaurs by the Centaur database, then by elements (a ≥ 30.1 AU → TNO;
 q > 5.2 AU with a < 30.1 AU → Centaur; else asteroid), then by the header's
 type hints, defaulting to asteroid with a warning.
@@ -284,7 +284,7 @@ placeholder, `TargetIdentificationFailure` is raised.
 
 ## TargetType codes
 
-From `targets/targettype.py`:
+From `src/targets/targettype.py`:
 
 | Code | Name | | Code | Name |
 | ---- | ---- |-| ---- | ---- |
