@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Configuration file for the Sphinx documentation builder.
 
@@ -17,7 +16,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'rms-hst-targets'
-copyright = f'{datetime.date.today().year}, SETI Institute'
+# Sphinx requires this variable to be named `copyright`, shadowing the builtin.
+copyright = f'{datetime.date.today().year}, SETI Institute'   # noqa: A001
 author = 'SETI Institute'
 
 # The full version, including alpha/beta/rc tags

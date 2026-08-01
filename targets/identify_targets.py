@@ -455,7 +455,7 @@ def identify_target_dicts(
     headers = repaired_headers + unrepaired_headers
 
     # A standard body observation is identified entirely from the header
-    bodies, unused_words = identify_standard_body(headers, logger=logger)
+    bodies, _unused_words = identify_standard_body(headers, logger=logger)
     if bodies:
         return bodies + extra_dicts
 

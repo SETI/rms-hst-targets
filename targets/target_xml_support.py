@@ -113,7 +113,7 @@ def _complete_target(target):
                 desc = ['Cometary fragments: ' + ', '.join(uncataloged)]
             else:
                 desc = ['Cometary fragments:']
-                for frag_key, info in frag_info.items():
+                for info in frag_info.values():
                     parts = [info['fragment'], ': ']
                     if 'lid_tail' in info:
                         parts += ['LID = ', info['lid_tail']]

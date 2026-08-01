@@ -17,42 +17,56 @@ a standard-body name (`MT_LV1_*`, `MT_LV2_*`), and the planned sky position
 (`RA_TARG`/`DEC_TARG`). These fields are inconsistent, abbreviated, misspelled,
 and occasionally simply wrong — thirty-five years of proposal-writing habits.
 
-`identify_target()` turns that mess into a list of clean body dictionaries
-suitable for generating PDS4 Target context products. It recognizes bodies by
-name wherever possible, then *confirms* each identification against the orbital
-elements embedded in the header: comets by direct element comparison, minor
-planets by propagating their catalog orbit to the observation time and
-comparing the predicted sky position with `RA_TARG`/`DEC_TARG`. When no name
-can be recognized, it identifies the body from the elements alone, by searching
-the local comet database or the Minor Planet Center.
+`identify_targets()` turns that mess into the PDS4 Target context products for
+the bodies observed. It recognizes bodies by name wherever possible, then
+*confirms* each identification against the orbital elements embedded in the
+header: comets by direct element comparison, minor planets by propagating their
+catalog orbit to the observation time and comparing the predicted sky position
+with `RA_TARG`/`DEC_TARG`. When no name can be recognized, it identifies the
+body from the elements alone, by searching the local comet database or the
+Minor Planet Center.
 
 ```python
 from astropy.io import fits
-from targets.identify_target import identify_target, TargetIdentificationError
+from targets import identify_targets
 
-with fits.open('j8i701011_spt.fits') as hdul:
+with fits.open('u6ht4501m_shm.fits') as hdul:
     header = hdul[0].header
 
-bodies = identify_target(header)
-for body in bodies:
-    print(body['full_name'], body['ttype_name'], body['lid_suffix'])
-# Quaoar  trans-neptunian_object  trans-neptunian_object.quaoar
+for path in identify_targets([header]):
+    print(path.name)
+# trans-neptunian_object.1998_uu43_1.2_local.xml
 ```
 
-Each returned dictionary is guaranteed to contain `name`, `full_name`, `ttype`
-(a `TargetType` letter code), `ttype_name`, `naif_id` (or None), `aliases`,
-`parent_key`, and `lid_suffix`; small bodies also carry their orbital elements.
-Pass a `Logger` to get the full narrative of how each target was identified.
+Use `identify_target_dicts()` instead when you want the body dictionaries
+rather than the context products:
+
+```python
+from targets import identify_target_dicts
+
+for body in identify_target_dicts([header]):
+    print(body['full_name'], body['ttype'], body['naif_id'])
+# (523955) 1998 UU43 T 2523955
+```
+
+Pass a `Logger` to either one to get the full narrative of how each target was
+identified.
 
 See the documentation in [`docs/`](docs/):
 
+* [Using identify_targets](docs/using-identify-targets.md) — the user's guide:
+  inputs, outputs, tuning parameters, and what to do when it fails.
 * [How target identification works](docs/how-it-works.md) — the pipeline from
   raw header keywords to normalized body dictionaries.
 * [Handling identification failures](docs/handling-identification-failures.md)
   — the developer's guide: how to diagnose a failure and every mechanism
   available to fix one.
-* [Data files and caches](docs/data-and-caches.md) — the on-disk caches, the
-  curated data tables, and the `programs/` maintenance scripts.
+* [Data files and caches](docs/data-and-caches.md) — the on-disk caches and how
+  they are refreshed.
+* [The curated data tables](docs/data-tables.md) — the caps-named modules, what
+  each controls, and when you need to edit one.
+* [The programs/ scripts](docs/programs.md) — every maintenance script, what it
+  does, and when to run it.
 
 ## Installation
 
@@ -66,10 +80,9 @@ pip install -e ".[dev]"
 
 Notes:
 
-* The importable package is **`targets/`**; modules import bare (e.g.
-  `from targets.identify_target import identify_target`, or `import
-  identify_comet` inside the test suite, whose `pythonpath` includes
-  `targets`).
+* The importable package is **`targets/`** at the repository root. Everything
+  imports under it, e.g. `from targets import identify_targets` or
+  `from targets.mpc_tools import mpc_packing`.
 * `palpy` (the Starlink PAL/SLALIB astrometry library, used by
   `orbital_radec.py`) requires a C build. Without it, sky-position
   confirmation is skipped and `tests/test_orbital_radec.py` is skipped via
@@ -80,20 +93,22 @@ Notes:
 
 | Path | Contents |
 | ---- | -------- |
-| `targets/identify_target.py` | Top-level entry point: header → list of body dicts |
-| `targets/identify_small_body.py` | Dispatch between comet and minor-planet identification |
-| `targets/identify_comet.py` | Comet identification by name and/or orbital elements |
-| `targets/identify_minor_planet.py` | Minor-planet identification via the MPC |
+| `targets/identify_targets.py` | Both entry points: headers → context products or body dicts |
+| `targets/identify_standard_body.py` | Planets, satellites, rings and torus identification |
+| `targets/comet_identifiers.py` | Comet identification by name and/or orbital elements |
+| `targets/minor_planet_identifiers.py` | Minor-planet identification via the MPC |
+| `targets/categorize_minor_planet.py` | Asteroid vs. Centaur vs. TNO vs. dwarf planet |
 | `targets/hst_repairs.py` | Normalization of raw HST target strings |
 | `targets/standard_bodies.py` | Planets, satellites, dwarf planets, rings, the Io torus |
-| `targets/categorize_minor_planet.py` | Asteroid vs. Centaur vs. TNO vs. dwarf planet |
+| `targets/target_xml_support.py` | Body dict → PDS4 context-product fields |
+| `targets/target_xml_cache_support.py` | The context-product cache and overlay |
 | `targets/orbital_radec.py` | Orbital elements → RA/Dec (requires `palpy`) |
 | `targets/targettype.py` | The `TargetType` letter codes |
-| `targets/_*.py` | Curated data tables (overrides, string repairs, body lists) |
-| `targets/cometdb/` | Comet/Centaur database: builders, scrapers, and queries |
+| `targets/_*.py` | Curated data tables (see [docs/data-tables.md](docs/data-tables.md)) |
+| `targets/cometdb/` | Comet/Centaur/damocloid database: builders, scrapers, queries |
 | `targets/mpc_tools/` | Minor Planet Center queries and designation packing |
-| `tests/` | pytest tests, plus caps-named fixture/tester files not collected by pytest |
-| `programs/` | Data-refresh and validation scripts (not shipped) |
+| `tests/` | pytest tests, plus caps-named fixture/baseline files not collected by pytest |
+| `programs/` | Maintenance scripts, not shipped (see [docs/programs.md](docs/programs.md)) |
 | `caches/` | On-disk data caches (see [docs/data-and-caches.md](docs/data-and-caches.md)) |
 
 ## Testing
@@ -111,7 +126,7 @@ Type checking runs on the tests only (mypy is `strict` but excludes
 `targets/` and `programs/`):
 
 ```bash
-MYPYPATH=targets python -m mypy tests
+python -m mypy tests
 ```
 
 Lint and format with `ruff check` and `ruff format`. Style: 100-character

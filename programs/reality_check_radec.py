@@ -35,8 +35,9 @@ _ROOT = os.path.dirname(_HERE)
 sys.path.insert(0, os.path.join(_ROOT, "targets"))  # orbital_radec
 sys.path.insert(0, os.path.join(_ROOT, "tests"))    # SPT_TESTS
 
-from orbital_radec import asteroid_radec, comet_radec
-from SPT_TESTS import SPT_TESTS
+# These two follow the sys.path insertions above and cannot move to the top of the file.
+from orbital_radec import asteroid_radec, comet_radec   # noqa: E402
+from SPT_TESTS import SPT_TESTS                         # noqa: E402
 
 DEFAULT_SCALE = "UTC"      # assumed T/EPOCH time scale when none is given
 # Header position to check the propagated sky position against: the nominal target
@@ -56,8 +57,8 @@ def full_mt_lv1(entry):
     """Concatenate MT_LV1_1, MT_LV1_2, ... in numeric order."""
     parts = []
     i = 1
-    while ("MT_LV1_%d" % i) in entry:
-        parts.append(entry["MT_LV1_%d" % i])
+    while f"MT_LV1_{i}" in entry:
+        parts.append(entry[f"MT_LV1_{i}"])
         i += 1
     return "".join(parts)
 
@@ -82,7 +83,7 @@ def norm_date(s):
         yy = 1900 + yy if yy >= 50 else 2000 + yy       # HST-era pivot
     tp = (timep.split(":") + ["0", "0", "0"])[:3]
     hh, mm, ss = int(tp[0] or 0), int(tp[1] or 0), int(float(tp[2] or 0))
-    return "%02d-%s-%04d:%02d:%02d:%02d" % (int(dd), mon.upper(), yy, hh, mm, ss)
+    return f"{int(dd):02d}-{mon.upper()}-{yy:04d}:{hh:02d}:{mm:02d}:{ss:02d}"
 
 
 def hst_time(s):
@@ -103,8 +104,8 @@ def mean_obs_dt(entry):
 
 
 def dt_to_str(dt):
-    return "%02d-%s-%04d:%02d:%02d:%02d" % (
-        dt.day, _MON[dt.month - 1], dt.year, dt.hour, dt.minute, dt.second)
+    return (f"{dt.day:02d}-{_MON[dt.month - 1]}-{dt.year:04d}:"
+            f"{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}")
 
 
 def epoch_dt(norm):
@@ -131,7 +132,7 @@ def check(key, entry):
     """Return a result dict (with 'offset' or 'skip')."""
     for req in (COORD[0], COORD[1], "PSTRTIME", "PSTPTIME"):
         if req not in entry:
-            return {"key": key, "skip": "missing %s" % req}
+            return {"key": key, "skip": f"missing {req}"}
 
     el = parse_elements(full_mt_lv1(entry))
     typ = el.get("TYPE", "").upper()
@@ -161,19 +162,19 @@ def check(key, entry):
         return None
 
     if typ not in ("ASTEROID", "COMET"):
-        return {"key": key, "skip": "TYPE=%r" % typ}
+        return {"key": key, "skip": f"TYPE={typ!r}"}
     try:
         # Propagate WITH major-planet perturbations so a stale osculation epoch
         # is not itself the source of the offset; fall back to two-body if the
         # perturbation integrator rejects the elements (e.g. extreme orbits).
         try:
             res = run(True)
-        except Exception:                        # noqa: BLE001
+        except Exception:               # any propagation failure: retry unperturbed
             res = run(False)
     except KeyError as exc:
-        return {"key": key, "skip": "missing element %s" % exc}
-    except Exception as exc:                     # noqa: BLE001
-        return {"key": key, "skip": "error: %s" % exc}
+        return {"key": key, "skip": f"missing element {exc}"}
+    except Exception as exc:            # report and skip, never abort the sweep
+        return {"key": key, "skip": f"error: {exc}"}
 
     gap_yr = abs((obs_dt - epoch_dt(epoch_norm)).days) / 365.25 if epoch_norm else 0.0
     tarkey = entry.get("TARKEY1", "").upper()
@@ -193,10 +194,10 @@ def check(key, entry):
 # --------------------------------------------------------------------------
 def fmt_off(arcsec):
     if arcsec < 60:
-        return "%.2f\"" % arcsec
+        return f'{arcsec:.2f}"'
     if arcsec < 3600:
-        return "%.2f'" % (arcsec / 60)
-    return "%.3f deg" % (arcsec / 3600)
+        return f"{arcsec / 60:.2f}'"
+    return f"{arcsec / 3600:.3f} deg"
 
 
 def main(argv=None):
@@ -216,15 +217,19 @@ def main(argv=None):
     include_comets = args.comets or not args.asteroids
     csv_out = args.output
 
+    # SPT_TESTS maps each six-character visit to its list of per-file headers, and every
+    # header carries its own elements and pointing, so the check is per file rather than
+    # per visit.
     results, skips = [], []
-    for key, entry in SPT_TESTS:
-        typ = entry.get("MT_LV1_1", "").replace(" ", "").upper()
-        is_ast = typ.startswith("TYPE=ASTEROID")
-        is_com = typ.startswith("TYPE=COMET")
-        if not ((is_ast and include_asteroids) or (is_com and include_comets)):
-            continue
-        r = check(key, entry)
-        (skips if "skip" in r else results).append(r)
+    for visit, headers in SPT_TESTS.items():
+        for entry in headers:
+            typ = entry.get("MT_LV1_1", "").replace(" ", "").upper()
+            is_ast = typ.startswith("TYPE=ASTEROID")
+            is_com = typ.startswith("TYPE=COMET")
+            if not ((is_ast and include_asteroids) or (is_com and include_comets)):
+                continue
+            r = check(entry.get("FILENAME", visit), entry)
+            (skips if "skip" in r else results).append(r)
 
     results.sort(key=lambda r: r["offset"], reverse=True)
 
@@ -237,60 +242,63 @@ def main(argv=None):
         for r in results:
             w.writerow([r["key"], r["targname"], r["tarkey1"], r["type"],
                         r["equinox"], r["obs"],
-                        "%.6f" % r["ra_h"], "%.6f" % r["dec_h"],
-                        "%.6f" % r["ra_c"], "%.6f" % r["dec_c"],
-                        "%.3f" % r["offset"], "%.2f" % r["gap_yr"],
+                        f'{r["ra_h"]:.6f}', f'{r["dec_h"]:.6f}',
+                        f'{r["ra_c"]:.6f}', f'{r["dec_c"]:.6f}',
+                        f'{r["offset"]:.3f}', f'{r["gap_yr"]:.2f}',
                         r["nongrav"], r["other"], r["has_lv2"]])
 
     # summary
     n = len(results)
     offs = [r["offset"] for r in results]
     print("=" * 78)
-    print("REALITY CHECK: %s/%s vs propagation of MT_LV elements"
-          % (COORD[0], COORD[1]))
+    print(f"REALITY CHECK: {COORD[0]}/{COORD[1]} vs propagation of MT_LV elements")
     print("=" * 78)
-    print("checked: %d   skipped: %d   (full table -> %s)"
-          % (n, len(skips), os.path.basename(csv_out)))
+    print(f"checked: {n}   skipped: {len(skips)}   "
+          f"(full table -> {os.path.basename(csv_out)})")
     if n:
         srt = sorted(offs)
-        pct = lambda p: srt[min(n - 1, int(p / 100 * n))]
-        print("offset percentiles:  median %s   90%% %s   99%% %s   max %s"
-              % (fmt_off(pct(50)), fmt_off(pct(90)), fmt_off(pct(99)),
-                 fmt_off(max(offs))))
+        def pct(p):
+            return srt[min(n - 1, int(p / 100 * n))]
+
+        print(f"offset percentiles:  median {fmt_off(pct(50))}   "
+              f"90% {fmt_off(pct(90))}   99% {fmt_off(pct(99))}   "
+              f"max {fmt_off(max(offs))}")
         bins = [("< 1\"", 0, 1), ("1-10\"", 1, 10), ("10-60\"", 10, 60),
                 ("1'-10'", 60, 600), ("10'-1deg", 600, 3600),
                 ("1-10deg", 3600, 36000), ("> 10deg", 36000, 9e9)]
         print("\ndistribution:")
         for label, lo, hi in bins:
             c = sum(1 for o in offs if lo <= o < hi)
-            print("  %-9s %5d  %s" % (label, c, "#" * (c * 50 // max(1, n))))
+            print(f'  {label:<9s} {c:5d}  {"#" * (c * 50 // max(1, n))}')
 
     # excessive
-    THRESH = 60.0    # arcsec
-    bad = [r for r in results if r["offset"] >= THRESH]
+    thresh = 60.0    # arcsec
+    bad = [r for r in results if r["offset"] >= thresh]
     print("\n" + "-" * 78)
-    print("HIGHLIGHTED: %d entries with offset >= %s" % (len(bad), fmt_off(THRESH)))
+    print(f"HIGHLIGHTED: {len(bad)} entries with offset >= {fmt_off(thresh)}")
     print("-" * 78)
-    clip = lambda s, n: (s if len(s) <= n else s[:n - 1] + "…")
-    print("%-28s %-20s %-18s %-8s %10s  %s" %
-          ("key", "targname", "tarkey1", "type", "offset", "note"))
+    def clip(s, n):
+        return s if len(s) <= n else s[:n - 1] + "…"
+
+    print(f'{"key":<28s} {"targname":<20s} {"tarkey1":<18s} '
+          f'{"type":<8s} {"offset":>10s}  note')
     for r in bad[:60]:
         note = []
         if r["other"]:
             note.append("DUMMY/slew target")
         if r["equinox"] != "J2000":
-            note.append("%s (rotated to J2000)" % r["equinox"])
+            note.append(f'{r["equinox"]} (rotated to J2000)')
         if r["nongrav"]:
             note.append("nongravitational (A1/A2/A3)")
         if r["gap_yr"] >= 1:
-            note.append("epoch gap %.1f yr" % r["gap_yr"])
+            note.append(f'epoch gap {r["gap_yr"]:.1f} yr')
         if r["has_lv2"]:
             note.append("MT_LV2 offset")
-        print("%-28s %-20s %-18s %-8s %10s  %s" %
-              (r["key"], clip(r["targname"], 20), clip(r["tarkey1"], 18),
-               r["type"], fmt_off(r["offset"]), "; ".join(note) or "-"))
+        print(f'{r["key"]:<28s} {clip(r["targname"], 20):<20s} '
+              f'{clip(r["tarkey1"], 18):<18s} {r["type"]:<8s} '
+              f'{fmt_off(r["offset"]):>10s}  {"; ".join(note) or "-"}')
     if len(bad) > 60:
-        print("... %d more in %s" % (len(bad) - 60, os.path.basename(csv_out)))
+        print(f"... {len(bad) - 60} more in {os.path.basename(csv_out)}")
 
     # Why are they off?  (categories are not exclusive; "unexplained" = none apply)
     def explained(r):
@@ -302,15 +310,15 @@ def main(argv=None):
         ("epoch gap >= 1 yr", lambda r: r["gap_yr"] >= 1),
         ("UNEXPLAINED (clean, still off)", lambda r: not explained(r)),
     ]
-    print("\nbreakdown of the %d highlighted:" % len(bad))
+    print(f"\nbreakdown of the {len(bad)} highlighted:")
     for label, fn in cats:
-        print("  %4d  %s" % (sum(1 for r in bad if fn(r)), label))
+        print(f"  {sum(1 for r in bad if fn(r)):4d}  {label}")
 
     if skips:
         print("\nskipped reasons (counts):")
         from collections import Counter
         for reason, c in Counter(s["skip"].split(":")[0] for s in skips).most_common():
-            print("  %4d  %s" % (c, reason))
+            print(f"  {c:4d}  {reason}")
 
 
 if __name__ == "__main__":

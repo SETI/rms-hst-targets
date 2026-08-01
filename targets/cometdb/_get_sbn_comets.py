@@ -74,7 +74,7 @@ def _get_sbn_comets(
         alt_names = []
         if name_num:
             if name_num[-1].isdigit():
-                name, _, num = name_num.rpartition(' ')
+                name, _, _num = name_num.rpartition(' ')
                 comet['name'] = name
                 alt_names.append(name_num)
             elif name_num[0] == '(':

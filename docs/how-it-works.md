@@ -50,7 +50,7 @@ available) and `TTIMESCALE`/`EPOCHTIMESCALE` (`UTC` or `TDB`).
 
 ## Pipeline overview
 
-```
+```text
 header
   │
   ├─ 1. _apply_overrides()      per-program repairs and sentinels
@@ -63,7 +63,7 @@ header
   ├─ 5. hst_repairs()           normalize the name strings; extract type hints
   ├─ 6. standard-body names     repaired strings that match STANDARD_BODY_LOOKUP
   │
-  ├─ 7. identify_small_body()   comet / minor-planet identification by name,
+  ├─ 7. small-body identifiers  comet / minor-planet identification by name,
   │                             cross-checked against the MT_LV1 elements
   ├─ 8. confirmation            comets: element residual; minor planets:
   │                             propagated sky position vs. RA_TARG/DEC_TARG
@@ -123,7 +123,7 @@ body HST tracked. `_resolve_std()` looks the token up in
 or `"(N) NAME"` identifies a minor planet by number; the name alone is not
 trusted, because satellites share names with asteroids (e.g. `"9 (METIS)"` is
 the asteroid, not Jupiter's moon). Unresolvable `STD` values raise
-`TargetIdentificationError`.
+`TargetIdentificationFailure`.
 
 ### 5. String repair: `hst_repairs()`
 
@@ -171,9 +171,9 @@ gets identified.
 
 ### 7. Small-body identification
 
-`identify_small_body(strings, elements)` (note: the *raw* strings — it runs
-`hst_repairs` itself) dispatches between comet and minor-planet
-identification:
+`identify_target_dicts` dispatches between comet and minor-planet
+identification inline, using `comet_identifiers()` and
+`minor_planet_identifiers()`:
 
 * Names in `_DISALLOWED_MINOR_PLANET_NAMES` (`Io`, `Halley`, `Pan`, ...) are
   excluded from the minor-planet search unless the header explicitly marks the
@@ -184,7 +184,7 @@ identification:
   (`"C/1995 O1"` scores 9 as a comet; a bare name scores 1). Whichever family
   scores higher is tried first; the other is tried if it fails.
 
-**Comets** (`identify_comet`) are looked up in the local comet database
+**Comets** (`comet_identifiers`) are looked up in the local comet database
 (`cometdb.query_comet_by_name`, built from five web sources into
 `caches/COMET_CACHE/#COMETS.pickle`). An ambiguous name (`"MCNAUGHT"` matches
 dozens of comets) is resolved by comparing the header elements against every
@@ -192,7 +192,7 @@ candidate (`query_comet_by_elements`). With no usable name at all, the whole
 database is searched by elements; the best match is accepted only if its
 residual beats the threshold *and* is less than half the runner-up's.
 
-**Minor planets** (`identify_minor_planet`) are looked up at the Minor Planet
+**Minor planets** (`minor_planet_identifiers`) are looked up at the Minor Planet
 Center (`mpc_tools.mpc_query_by_name`, cached per object in
 `caches/MPC_CACHE`). Multiple candidate bodies are resolved by element
 residual, like comets.
@@ -218,7 +218,7 @@ the result against the header's own ephemeris:
   none — `_rescue_comet_by_elements()` searches for a comet matching *both*
   the elements and one of the name strings (this recovers, e.g., an old
   designation shared by two comets). Otherwise the mismatch raises
-  `TargetIdentificationError`.
+  `TargetIdentificationFailure`.
 
 * **Minor planets** (`MT_LV1 TYPE=ASTEROID`): `_confirm_minor_planet()`
   propagates the body's catalog orbit to the observation midpoint
@@ -241,7 +241,7 @@ the result against the header's own ephemeris:
      elements (rms ≤ 1.0), the miss is attributed to an orbit revision after
      the observation — common for single-opposition TNOs — and the body is
      accepted with a warning.
-  3. Otherwise `TargetIdentificationError`.
+  3. Otherwise `TargetIdentificationFailure`.
 
 ### 9. Position-based fallback
 
@@ -263,11 +263,11 @@ guarantees every dictionary has:
 | `name` | Body name (may be `''`) |
 | `full_name` | Display name, e.g. `"1P/Halley"`, `"136108 Haumea"` |
 | `ttype` | Specific `TargetType` letter — never the generic `"M"` |
-| `ttype_name` | e.g. `"comet"`, `"trans-neptunian_object"` |
+| `type_name` | e.g. `"comet"`, `"trans-neptunian_object"` |
 | `naif_id` | NAIF integer ID, or None |
 | `aliases` | Alternate designations |
 | `parent_key` | Parent body for satellites/fragments, else `''` |
-| `lid_suffix` | PDS4 LID tail, e.g. `"asteroid.253_mathilde"` |
+| `lid_tail` | PDS4 LID tail, e.g. `"asteroid.253_mathilde"` |
 
 Small bodies additionally carry their catalog identifiers (`mnum`, `desig`,
 `alt_desigs`) and orbital elements (`A`, `Q`, `E`, `I`, `O`, `W`, and where
@@ -280,7 +280,7 @@ q > 5.2 AU with a < 30.1 AU → Centaur; else asteroid), then by the header's
 type hints, defaulting to asteroid with a warning.
 
 If nothing was identified and the `TARGNAME` was not a calibration
-placeholder, `TargetIdentificationError` is raised.
+placeholder, `TargetIdentificationFailure` is raised.
 
 ## TargetType codes
 

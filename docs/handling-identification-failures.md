@@ -11,7 +11,7 @@ assumes you know the pipeline stages.
 
 ## How failures present
 
-`TargetIdentificationError` is raised from four places in
+`TargetIdentificationFailure` is raised from four places in
 `targets/identify_targets.py`:
 
 1. **`Unresolved standard target "STD=..." in MT_LV1/2`** — an `MT_LV*`
@@ -178,7 +178,7 @@ repair dict:
 | `'UNDESIGNATED_TNO'` | A real TNO known only by a survey-internal name, never designated by the MPC | one placeholder body `"Unknown HST-nnnnn"` |
 
 The placeholders carry `ttype = 'T'` (`trans-neptunian_object`), `desig = ''`,
-and a `lid_suffix` like `trans-neptunian_object.survey_hst-13633`, so
+and a `lid_tail` like `trans-neptunian_object.survey_hst-13633`, so
 downstream PDS4 labeling still gets a well-formed target. `nnnnn` is the
 five-digit zero-padded program ID.
 
@@ -265,7 +265,7 @@ prefer encoding the reason itself (the way the per-year drift term and the
 Also know the escape hatches that already exist before adding one:
 
 * High name-confidence (> 5) outvotes a bad element residual in
-  `identify_comet`/`identify_minor_planet` (a clean designation like
+  `comet_identifiers`/`minor_planet_identifiers` (a clean designation like
   `2014 OS133` unpacked from `K14OD3S` shouldn't be vetoed by stale header
   elements).
 * `_rescue_comet_by_elements` re-resolves a name that matched the wrong comet.
@@ -303,7 +303,7 @@ may be in the escape hatch, not the data.
    parallel-safe under `-n auto`.
 
 2. **Run the suite**: `python -m pytest -q -n auto tests`, plus
-   `MYPYPATH=targets python -m mypy tests` and `ruff check`.
+   `python -m mypy tests` and `ruff check`.
 
 3. **Bulk regression.** For changes to the repair tables or identification
    logic, run the corpus checks:
@@ -311,8 +311,9 @@ may be in the escape hatch, not the data.
    * The full test corpus `tests/SPT_TESTS.py` holds every *unique* target
      description harvested from the SPT cache (regenerate with
      `python programs/build_spt_tests.py` — requires the `caches/SPT_CACHE`
-     SSD to be mounted). Loop `identify_target_dicts` (or `identify_small_body`)
-     over it and diff the failures against the previous run.
+     SSD to be mounted). Loop `identify_target_dicts` over it and diff the
+     failures against the previous run, or use `programs/identify_visit.py`
+     to run a single visit.
    * `hst_repairs` regressions: run the `if False:` block at the bottom of
      `targets/hst_repairs.py` over `SPT_TESTS` and diff the output against
      `tests/SPT_TESTS_OUTPUT.txt`.

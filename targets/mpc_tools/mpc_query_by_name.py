@@ -5,7 +5,6 @@
 import bs4
 import requests
 
-# noqa: I0001
 from ._utils import (_mpc_body_dict, _mpc_date_to_str, _MPC_BY_NAME, _MPC_CACHE,
                      _MPC_CACHING)
 

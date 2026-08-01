@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rms-hst-targets"
 dynamic = ["version"]
-description = "TODO"
+description = "Identify HST small-body moving targets from SPT header keywords"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -27,7 +27,7 @@ authors = [
 maintainers = [
   {name = "Robert S. French", email = "rfrench@seti.org"}
 ]
-keywords = ["TODO"]
+keywords = ["hst", "pds", "astronomy", "comets", "asteroids", "solar system"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Natural Language :: English",
@@ -76,7 +76,7 @@ write_to = "targets/_version.py"
 [project.optional-dependencies]
 dev = [
   "coverage>=7.0",
-  # "mypy>=1.0",
+  "mypy>=1.0",
   "pymarkdownlnt>=0.9.35",
   "pytest>=7.0",
   "pytest-cov>=4.0",
@@ -110,7 +110,7 @@ omit = [
   # never run during tests, like the scripts in programs/.
   "targets/cometdb/_get_*.py",
   "targets/cometdb/_build_*.py",
-  "targets/cometdb/repair_comet.py",
+  "targets/cometdb/_REPAIR_COMET.py",
   "targets/remote_listdir.py",
 ]
 
@@ -175,15 +175,18 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "A", "N", "PT", "RUF"]
 # SIM105 - Use contextlib.suppress for suppressions.
 # SIM108 - Use ternary operator for simple if/else.
 # RUF005 - Prefer iterable unpacking over concatenation ([*a, b] vs a + [b]).
-extend-ignore = ["I001", "PT011", "SIM102", "SIM105", "SIM108", "RUF005"]
+# N817 - CamelCase imported as acronym; "TargetType as TT" is used throughout.
+# N818 - Exception name without an Error suffix; TargetIdentificationFailure and
+#        TargetCategorizationFailure are public API and are matched by name in tests.
+# N999 - Module name not lowercase; the caps-named data tables (_STANDARD_BODY_LIST,
+#        _REPAIR_COMET, ...) are named that way deliberately. See docs/data-tables.md.
+extend-ignore = ["I001", "PT011", "SIM102", "SIM105", "SIM108", "RUF005",
+                 "N817", "N818", "N999"]
 
 [tool.ruff.lint.per-file-ignores]
 # TargetType.NAME is an intentional class-level constant lookup, not a per-instance
 # mutable default.
 "targets/targettype.py" = ["RUF012"]
-# The caps-named data-table modules (_HST_PROGRAM_OVERRIDES, _STANDARD_BODY_LIST, ...)
-# use SCREAMING_SNAKE_CASE deliberately to mark them as constant tables.
-"targets/_*.py" = ["N999"]
 
 [tool.pymarkdown.plugins.md013]
 # Line length (disable so README/CONTRIBUTING can use longer lines).

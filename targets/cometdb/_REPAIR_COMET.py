@@ -127,6 +127,6 @@ def _repair_comet(comet: dict) -> None:
                 break
 
 
-__all__ = ['repair_comet']
+__all__ = ['_repair_comet']
 
 ##########################################################################################

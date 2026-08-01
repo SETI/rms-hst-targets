@@ -77,9 +77,9 @@ def _extract(header):
     in the order they appear in the header.
     """
 
-    tardescs = [k for k in header.keys() if k.startswith('TARDESC')]
-    tarkeys = [k for k in header.keys() if k.startswith('TARKEY')]
-    mt_lvs = [k for k in header.keys() if k.startswith('MT_LV')]
+    tardescs = [k for k in header if k.startswith('TARDESC')]
+    tarkeys = [k for k in header if k.startswith('TARKEY')]
+    mt_lvs = [k for k in header if k.startswith('MT_LV')]
 
     ordered = (list(_LEADING_KEYS) + tardescs + list(_MIDDLE_KEYS)
                + tarkeys + mt_lvs + list(_TRAILING_KEYS))
@@ -141,10 +141,10 @@ def build_spt_tests(cache, output, limit=0):
     read = 0
     unreadable = 0
     duplicates = 0
-    for i, (proposal_id, path) in enumerate(files):
+    for i, (_proposal_id, path) in enumerate(files):
         try:
             header = fits.getheader(path, 0)
-        except Exception as exc:                    # noqa: BLE001 - log and continue
+        except Exception as exc:        # report and continue with the next file
             unreadable += 1
             sys.stderr.write(f'  skipped unreadable {path}: {exc}\n')
             continue

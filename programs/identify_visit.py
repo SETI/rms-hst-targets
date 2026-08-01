@@ -108,7 +108,9 @@ def identify_visit(visit: str,  logger: pdslogger.PdsLogger,
     try:
         paths = identify_targets(headers, logger=logger)
     except TargetIdentificationFailure as err:
-        print('**** TargetIdentificationFailure')
+        # The message says which strings and elements were rejected and why, which is the
+        # only useful part; the traceback is always the same and is not printed.
+        print(f'**** TargetIdentificationFailure: {err}')
         return []
 
     if by_visit:

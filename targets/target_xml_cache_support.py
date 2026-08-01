@@ -287,7 +287,7 @@ def _update_target_cache(*, logger: PdsLogger | None = None,
 
     # Check the local context products
     logger and logger.info(f'Checking local targets: {_TARGET_XML_CACHE}')
-    local_basenames = set(p.name for p in _TARGET_XML_CACHE.iterdir())
+    local_basenames = {p.name for p in _TARGET_XML_CACHE.iterdir()}
     local_basenames.discard(_TARGET_LOOKUP_BASENAME)
 
     if not offline:
@@ -408,7 +408,7 @@ def _latest_basenames(basenames: list[str] | set[str]) -> str:
         version_dict.setdefault(lid, []).append(basename)
 
     latest = []
-    for lid, version_list in version_dict.items():
+    for version_list in version_dict.values():
         version_list.sort(key=_sort_key)
         latest.append(version_list[-1])
 
@@ -876,7 +876,7 @@ def _new_desc(new_body, old_body):
         return False
 
     # Compare ignoring spaces and case
-    old_desc = set(d.replace(' ', '').lower() for d in old_body['description'])
+    old_desc = {d.replace(' ', '').lower() for d in old_body['description']}
 
     for text in new_body['description']:
         text = text.replace(' ', '').lower()
@@ -886,8 +886,15 @@ def _new_desc(new_body, old_body):
     return True
 
 
-__all__ = ['new_target_xml_dict', 'find_xml_dict', 'find_xml_path', 'target_xml_dict',
-           'target_xml_lookup', 'target_xml_path', 'update_target_xml_dict',
-           'use_local_xml_dir']
+__all__ = [
+    'find_xml_dict',
+    'find_xml_path',
+    'new_target_xml_dict',
+    'target_xml_dict',
+    'target_xml_lookup',
+    'target_xml_path',
+    'update_target_xml_dict',
+    'use_local_xml_dir',
+]
 
 ##########################################################################################

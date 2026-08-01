@@ -12,7 +12,7 @@ on:
 
 jobs:
   lint:
-    name: Lint REPONAME
+    name: Lint rms-hst-targets
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,15 +29,11 @@ jobs:
 
       - name: Ruff (lint)
         run: |
-          ruff check targets tests
-
-      - name: Ruff (format)
-        run: |
-          ruff format --check targets tests
+          ruff check
 
       - name: Mypy
         run: |
-          MYPYPATH=targets mypy tests
+          mypy tests
 
       - name: Sphinx
         run: |
@@ -48,7 +44,7 @@ jobs:
           pymarkdown scan docs/ .cursor/ README.md CONTRIBUTING.md
 
   test:
-    name: Test REPONAME
+    name: Test rms-hst-targets
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

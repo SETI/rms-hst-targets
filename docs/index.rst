@@ -14,14 +14,14 @@ Planetary Data System at the SETI Institute. Early-stage / work in progress.
 .. code-block:: python
 
    from astropy.io import fits
-   from targets.identify_targets import identify_target_dicts
+   from targets import identify_target_dicts
 
-   with fits.open('j8i701011_spt.fits') as hdul:
-       bodies = identify_target_dicts(hdul[0].header)
+   with fits.open('u6ht4501m_shm.fits') as hdul:
+       bodies = identify_target_dicts([hdul[0].header])
 
    for body in bodies:
-       print(body['full_name'], body['ttype_name'], body['lid_suffix'])
-   # Quaoar  trans-neptunian_object  trans-neptunian_object.quaoar
+       print(body['full_name'], body['ttype'], body['naif_id'])
+   # (523955) 1998 UU43 T 2523955
 
 Guides
 ------
@@ -29,9 +29,12 @@ Guides
 .. toctree::
    :maxdepth: 2
 
+   using-identify-targets
    how-it-works
    handling-identification-failures
    data-and-caches
+   data-tables
+   programs
 
 API reference
 -------------

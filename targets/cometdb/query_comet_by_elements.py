@@ -2,8 +2,6 @@
 # cometdb/query_comet_by_elements.py
 ##########################################################################################
 
-from logging import Logger
-
 from targets.mpc_tools import element_resid
 
 from ._utils import comet_dict

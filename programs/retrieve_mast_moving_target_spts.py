@@ -73,8 +73,8 @@ def query_moving_target_observations():
     t0 = time.time()
     obs = Observations.query_criteria(obs_collection="HST", mtFlag=True)
     pids = np.unique(np.array(obs["proposal_id"]).astype(str))
-    print("  %d observations across %d programs  (%.0fs)"
-          % (len(obs), len(pids), time.time() - t0), flush=True)
+    print(f"  {len(obs)} observations across {len(pids)} programs  "
+          f"({time.time() - t0:.0f}s)", flush=True)
     return obs
 
 
@@ -85,7 +85,7 @@ def build_manifest(obs, chunk=1000):
     """
     keep = []
     n = len(obs)
-    print("Listing products in chunks of %d ..." % chunk, flush=True)
+    print(f"Listing products in chunks of {chunk} ...", flush=True)
     for i in range(0, n, chunk):
         sub = obs[i:i + chunk]
         prod = Observations.get_product_list(sub)
@@ -97,8 +97,7 @@ def build_manifest(obs, chunk=1000):
             keep.append(prod[mask])
         done = min(i + chunk, n)
         got = sum(len(k) for k in keep)
-        print("  %6d / %6d obs   support files so far: %d"
-              % (done, n, got), flush=True)
+        print(f"  {done:6d} / {n:6d} obs   support files so far: {got}", flush=True)
 
     if not keep:
         return Table()
@@ -143,20 +142,20 @@ def download_one(row, outdir):
                     nbytes += len(chunk)
         os.replace(tmp, dest)
         return "ok", nbytes
-    except Exception as exc:            # noqa: BLE001 - log and continue
+    except Exception as exc:            # report and continue with the next file
         if os.path.exists(tmp):
             try:
                 os.remove(tmp)
             except OSError:
                 pass
-        sys.stderr.write("  FAIL %s : %s\n" % (row["productFilename"], exc))
+        sys.stderr.write(f'  FAIL {row["productFilename"]} : {exc}\n')
         return "fail", 0
 
 
 def download_all(man, outdir, workers=8):
     """Download every file in the manifest, resumably, with a thread pool."""
     total = len(man)
-    print("Downloading %d files with %d workers -> %s" % (total, workers, outdir),
+    print(f"Downloading {total} files with {workers} workers -> {outdir}",
           flush=True)
     counts = {"ok": 0, "skip": 0, "fail": 0}
     nbytes = 0
@@ -164,17 +163,15 @@ def download_all(man, outdir, workers=8):
     rows = [man[i] for i in range(total)]
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futs = {pool.submit(download_one, row, outdir): row for row in rows}
-        done = 0
-        for fut in as_completed(futs):
+        for done, fut in enumerate(as_completed(futs), start=1):
             status, nb = fut.result()
             counts[status] += 1
             nbytes += nb
-            done += 1
             if done % 250 == 0 or done == total:
                 dt = time.time() - t0
-                print("  %6d / %6d   ok=%d skip=%d fail=%d   %.2f GB   %.0fs"
-                      % (done, total, counts["ok"], counts["skip"],
-                         counts["fail"], nbytes / 1e9, dt), flush=True)
+                print(f'  {done:6d} / {total:6d}   ok={counts["ok"]} '
+                      f'skip={counts["skip"]} fail={counts["fail"]}   '
+                      f'{nbytes / 1e9:.2f} GB   {dt:.0f}s', flush=True)
     return counts, nbytes
 
 
@@ -205,8 +202,8 @@ def main(argv=None):
         keep_pids = set(sorted(pids)[:args.limit_programs])
         mask = np.array([str(p) in keep_pids for p in obs["proposal_id"]])
         obs = obs[mask]
-        print("Restricted to %d programs -> %d observations"
-              % (len(keep_pids), len(obs)), flush=True)
+        print(f"Restricted to {len(keep_pids)} programs -> {len(obs)} observations",
+              flush=True)
 
     man = build_manifest(obs, chunk=args.chunk)
     if len(man) == 0:
@@ -222,20 +219,20 @@ def main(argv=None):
 
     sizes = np.array(man["size"]).astype(float)
     nprog = len(np.unique(np.array(man["proposal_id"]).astype(str)))
-    print("\nManifest: %d files, %d programs, %.2f GB total"
-          % (len(man), nprog, np.nansum(sizes) / 1e9), flush=True)
-    print("  saved -> %s" % manifest_path, flush=True)
+    print(f"\nManifest: {len(man)} files, {nprog} programs, "
+          f"{np.nansum(sizes) / 1e9:.2f} GB total", flush=True)
+    print(f"  saved -> {manifest_path}", flush=True)
 
     if args.manifest_only:
         print("--manifest-only: not downloading.", flush=True)
         return
 
     counts, nbytes = download_all(man, args.outdir, workers=args.workers)
-    print("\nDone. ok=%d skip=%d fail=%d   %.2f GB   into %s"
-          % (counts["ok"], counts["skip"], counts["fail"],
-             nbytes / 1e9, args.outdir), flush=True)
+    print(f'\nDone. ok={counts["ok"]} skip={counts["skip"]} '
+          f'fail={counts["fail"]}   {nbytes / 1e9:.2f} GB   into {args.outdir}',
+          flush=True)
     if counts["fail"]:
-        print("Re-run to retry the %d failed files (resumable)." % counts["fail"],
+        print(f'Re-run to retry the {counts["fail"]} failed files (resumable).',
               flush=True)
 
 
