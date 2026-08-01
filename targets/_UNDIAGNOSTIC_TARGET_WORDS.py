@@ -258,7 +258,7 @@ _UNDIAGNOSTIC_TARGET_WORDS = [
     r'RESONANT',
     r'REVISED?',
     r'RIGHT',
-    r'ROSETTA',
+    r'ROSE(TTA)?',   # "Rose" is "Rosetta" truncated by the SPT keyword length
     r'ROTATION(|AL?)',
     r'SATELLITES?',
     r'SATURATION',
