@@ -46,10 +46,16 @@ _TARGET_STRING_REPAIRS = [
     (r'(?:76P[-/]?)?WKI ?1?',                   r'76P/WEST_KOHOUTEK_IKEMURA|[C]'),
     (r'288P',                                   r'(300163) 2006 VW139|[A]'),
     (r'SANTA',                                  r'HAUMEA'),
-    (r'(?:2I|I2)?-?BOROSOV',                    r'2I/BORISOV'),
+    # "2I" is itself a comet number, so the slash form has to be accepted here; otherwise
+    # the generic comet-number pattern claims it and the misspelling survives.
+    (r'(?:2I|I2)?[-/]?BOROSOV',                 r'2I/BORISOV|[C]'),
     (r'(HARTLEY|TEMPEL|WILD|GEHRELS|REINMUTH)(\d)',
                                                 r'\1 \2'),
-    (r'FORBES2',                                r'FORBES'),
+    # "Forbes 2" is a misnomer for 37P/Forbes. The numbered form must be handled here,
+    # because otherwise the pattern that splits a trailing digit off a comet name gets
+    # there first and yields "37P/FORBES 2", which identifies nothing.
+    (r'(\d+P)[-/]FORBES ?2',                    r'\1/FORBES|[C]'),
+    (r'FORBES ?2',                              r'FORBES'),
     (r'KAGARA',                                 r'qcKagara'),
 
     (r'MARS[- ]?DUST',                          r'MARS|[R]'),
