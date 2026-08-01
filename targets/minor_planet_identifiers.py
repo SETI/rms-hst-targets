@@ -67,13 +67,16 @@ def minor_planet_identifiers(strings, *, logger=None):
         except RuntimeError:
             unused.append(string)
 
-    # Now that we have candidates, check again using full strings against body lookups
-    formatted, unused, _confidence = _select_minor_planet_identifiers(strings,
-                                                                      longmatch=True)
+    # Now that we have candidates, check again using full strings against body lookups.
+    # A string matching none of the long patterns still has to be tested, because those
+    # patterns all require a number; a bare name or bare number identifies the body just as
+    # well, and reporting it as unused would contradict the body we just identified from it.
+    formatted, unmatched, _confidence = _select_minor_planet_identifiers(strings,
+                                                                         longmatch=True)
 
     used = {}  # string -> mpc result as a dict
     unused = []
-    for string in formatted:
+    for string in list(formatted) + unmatched:
         found = False
         for mpc_dict in mpc_dicts:
             if string in mpc_dict['lookups']:

@@ -127,6 +127,12 @@ def _mpc_body_dict(names, elements):
             lookups.add(f'({mnum}) {desig}')
         lookups.add(f'({mnum})')
         lookups.add(mnum)
+        # The number combined with the name, e.g. "762 Pulcova" and "(762) Pulcova". This
+        # is the most common way a TARGNAME identifies a numbered minor planet, and
+        # `full_name` alone is not enough because it is excluded from `aliases` below.
+        if body_name:
+            lookups.add(f'{mnum} {body_name}')
+            lookups.add(f'({mnum}) {body_name}')
 
     # Add ASCII versions of non-ASCII names
     for name in [full_name, body_name]:
