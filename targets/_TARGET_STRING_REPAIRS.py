@@ -58,7 +58,10 @@ _TARGET_STRING_REPAIRS = [
     # there first and yields "37P/FORBES 2", which identifies nothing.
     (r'(\d+P)[-/]FORBES ?2',                    r'\1/FORBES|[C]'),
     (r'FORBES ?2',                              r'FORBES'),
-    (r'KAGARA',                                 r'qcKagara'),
+    # "KAGARA" is a mangled rendering of 469705 ǂKá̦gára. The number is the only usable
+    # handle: the MPC resolves neither the actual name nor any ASCII transliteration of
+    # it, including anyascii's "qcKagara".
+    (r'KAGARA',                                 r'(469705)|[M]'),
 
     (r'MARS[- ]?DUST',                          r'MARS|[R]'),
     (r'IO[ -]?(WAKE|TORUS)',                    r'IO|[t]'),
