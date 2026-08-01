@@ -21,7 +21,6 @@ process.
 """
 
 _TARGET_STRING_REPAIRS = [
-    (r'SOLAR SYSTEM',                           ''),
     (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (HYAKUTAKE)|[C]'),
     (r'COMET SHOEMAKER-LEVY 1993E.*',           r'D/1993 F2 (SHOEMAKER_LEVY 9)|[C]'),
     # "\d", not "\D": the fourth character of a 1990s year is a digit, so the original
@@ -39,7 +38,6 @@ _TARGET_STRING_REPAIRS = [
     (r'(\d+P)[-/]CH.RYUMOV-GER[A-Z]*',          r'\1/CHURYUMOV_GERASIMENKO|[C]'),
     (r'CH.RYUMOV-GER[A-Z]*',                    r'CHURYUMOV_GERASIMENKO'),
     (r'(\d+P)[-/]CG',                           r'\1/CHURYUMOV_GERASIMENKO|[C]'),
-    (r'CG',                                     r'CHURYUMOV_GERASIMENKO'),
     (r'(?:29P[-/]?)?SW1',                       r'29P/SCHWASSMANN_WACHMANN 1|[C]'),
     # Split by fragment, because an empty fragment would otherwise leave a trailing "_",
     # and hence a trailing dash, on the repaired name.
