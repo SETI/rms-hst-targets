@@ -24,7 +24,9 @@ _TARGET_STRING_REPAIRS = [
     (r'SOLAR SYSTEM',                           ''),
     (r'COMET[- ]B2([- ]NUCLEUS|)',              r'C/1996 B2 (HYAKUTAKE)|[C]'),
     (r'COMET SHOEMAKER-LEVY 1993E.*',           r'D/1993 F2 (SHOEMAKER_LEVY 9)|[C]'),
-    (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\D)([A-Z]1?)(-\W+|)',
+    # "\d", not "\D": the fourth character of a 1990s year is a digit, so the original
+    # "199\D" could never match and this entry never fired.
+    (r'COMET[ -](?:SHOEMAKER[- ]LEVY|SL)[- ](199\d)([A-Z]1?)(-\W+|)',
                                                 r'SHOEMAKER_LEVY|\1\2|[C]'),
     (r'SL',                                     r'SHOEMAKER_LEVY'),
     # The numbered forms accept a dash as well as a slash, and supply "/" and "[C]"
