@@ -839,13 +839,14 @@ def test_alias_repairs_reach_the_mpc_identifier() -> None:
     assert bodies[0]['full_name'] == '50000 Quaoar'
 
 
-def test_minor_planet_identifiers_skips_unqueryable_strings() -> None:
+def test_minor_planet_identifiers_skips_short_strings() -> None:
     # mpc_query_by_name caches the MPC reply before checking that it is valid, so every
-    # impossible query leaves a permanent "not found" page in caches/MPC_CACHE. Strings
-    # that cannot name a minor planet are dropped before the query. They must still be
-    # reported as unused, and must not disturb the body the other strings identify.
-    for strings, expected in ((['STAR', 'K III-I', '2014 MU69'], '486958 Arrokoth'),
-                              (['LR', 'C', '3548 EURYBATES'], '3548 Eurybates')):
+    # impossible query leaves a permanent "not found" page in caches/MPC_CACHE. A string of
+    # one or two letters cannot name a minor planet, so it is dropped before the query. It
+    # must still be reported as unused, and must not disturb the body the other strings
+    # identify. Because these are never queried, the test needs no cached page for them.
+    for strings, expected in ((['LR', 'C', '3548 EURYBATES'], '3548 Eurybates'),
+                              (['UB', '2060 CHIRON'], '2060 Chiron')):
         dicts, _used, unused, _single = minor_planet_identifiers(strings)
         assert [d['full_name'] for d in dicts] == [expected]
         assert strings[0] in unused

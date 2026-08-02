@@ -86,6 +86,30 @@ narrowing the search window, then ranks the returned bodies by
 `element_resid` and resolves each candidate through `mpc_query_by_name`
 (and hence through the same page cache).
 
+#### Failed lookups are cached too
+
+`mpc_query_by_name()` writes the reply to disk *before* checking whether it is
+valid, so a query the MPC cannot answer leaves a permanent "not found" page —
+either its "Vaguely similar sounding possible matches" form, which the function
+turns into `None`, or its "Exact match … not found" form, which it raises on.
+About 130 of the committed pages are such failures. They are harmless (every
+caller treats an unresolved name as unused) but they never expire, so a junk
+query pollutes the cache for good.
+
+To limit that, `minor_planet_identifiers()` refuses to query any purely
+alphabetic string of one or two letters. No minor planet has a name that short —
+the shortest are `Ate`, `Ida` and `Oda` — so these are always leftovers: half of
+a split designation (`1977 UB` → `UB`), a two-letter star-catalog prefix (`BD`,
+`WR`, `HV`), or an aperture code. Digits are excluded from the rule, so a bare
+minor-planet number still resolves. Across the corpus such strings resolved no
+body at all, so nothing is lost.
+
+Longer junk (`STAR`, `GALAXY`, `DART`) is *not* filtered. It was tried, and
+deleting the filter changed no identification anywhere in the corpus — the body
+is always established by the other strings or by the orbital elements — so the
+only cost is a handful of wasted lookups on a cold cache, which did not justify
+a hand-maintained list of words.
+
 ### TARGET_XML_CACHE
 
 A mirror of the PDS4 target context products from
