@@ -125,13 +125,21 @@ often than the asteroid of the same name, so the satellite is the safer default;
 
 Strings that survive repair looking like a minor-planet name but that the Minor
 Planet Center does not know — observing vocabulary (`FLAT`, `PHOTOMETRIC`), class
-words (`STAR`, `GALAXY`, `ASTEROID`), catalog prefixes (`AGK`, `COL`) and mission
-names (`DART`). `minor_planet_identifiers()` drops them before querying.
+words (`STAR`, `GALAXY`), catalog prefixes (`AGK`, `COL`) and mission names
+(`DART`). `minor_planet_identifiers()` drops them before querying.
 
 This matters more than a wasted round trip. `mpc_query_by_name()` writes the MPC
 reply into `caches/MPC_CACHE` *before* checking whether it is valid, so every
 impossible query leaves a permanent "not found" page that is then served from the
 cache forever.
+
+**Why not just more `_UNDIAGNOSTIC_TARGET_WORDS`?** Because the two differ in
+*bare string vs. embedded token*. An undiagnostic word is deleted from the target
+string wherever it appears, including inside a longer name; a string listed here
+is only refused as a whole MPC query. `MOUNTAIN` alone is not in the MPC, but
+`PURPLE MOUNTAIN` is (3494) Purple Mountain — deleting the word would reduce that
+target to `PURPLE` and identify nothing. The same applies to `MAIN`, `FLAT`,
+`STAR` and `GALAXY`.
 
 Alongside it, `minor_planet_identifiers` rejects any purely alphabetic string of
 one or two letters. No minor planet has a name that short — the shortest are
@@ -141,7 +149,11 @@ designation (`1977 UB` → `UB`), a two-letter star-catalog prefix (`BD`, `WR`,
 
 **Edit when:** a junk `.html` file appears in `caches/MPC_CACHE` for a word that is
 plainly not a body. Confirm the MPC really does not know it — the cached page will
-say "Vaguely similar sounding" or "Exact match … not found" — then add it.
+say "Vaguely similar sounding" or "Exact match … not found" — then check
+`hst_repairs('WORD')` first. An empty result means the repairs already delete the
+word and it never reaches the MPC, so it does not belong here. A word consumed
+into a `TargetType` vote (`ASTEROID` → `A`, `KBO` → `T`) belongs in neither table:
+suppressing it would discard the vote.
 
 **Watch for:** do *not* add a misspelling or alternative name of a real body
 (`QUAUAR` for Quaoar, `OUMUAMUA` for 1I, `XENA` for Eris). Those belong in
