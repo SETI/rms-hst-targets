@@ -798,6 +798,27 @@ def test_identify_targets_returns_context_product_paths(tmp_path: pathlib.Path) 
     assert paths[0].exists()
 
 
+def test_identify_targets_spans_multiple_visits(tmp_path: pathlib.Path) -> None:
+    # identify_target_dicts() handles exactly one visit and rejects headers from more than
+    # one; identify_targets() groups them by visit and identifies each independently, so a
+    # caller can hand it a whole directory of files. The result is the per-visit results
+    # concatenated in visit order, duplicates included.
+    jupiter = _header('1080/y0zz0301t_shf.fits')
+    saturn = _header('6854/o4bd04vmq_spt.fits')
+    assert jupiter['FILENAME'][:6] != saturn['FILENAME'][:6]
+
+    with pytest.raises(ValueError, match='Multiple visits among headers provided'):
+        identify_target_dicts([jupiter, saturn])
+
+    with use_local_xml_dir(tmp_path):
+        paths = identify_targets([jupiter, saturn])
+        separately = identify_targets([jupiter]) + identify_targets([saturn])
+
+    assert [p.name for p in paths] == [p.name for p in separately]
+    assert paths[0].name.startswith('planet.jupiter')
+    assert paths[-1].name.startswith('planet.saturn')
+
+
 def test_collect_strings_skips_category() -> None:
     header = {'TARGNAME': 'IO-IN', 'TARKEY1': 'SATELLITE IO', 'TARGCAT': 'SOLAR SYSTEM',
               'TARDESCR': 'SOLAR SYSTEM;SATELLITE IO'}

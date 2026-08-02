@@ -691,50 +691,57 @@ def identify_targets(
 ) -> list[pathlib.Path]:
     """Identify the target bodies of an HST observation and return their context products.
 
-    Identical to `identify_target_dicts` in its inputs and in how it identifies bodies,
-    but each identified body dictionary is resolved to the path of its PDS4 target context
+    Each identified body dictionary is resolved to the path of its PDS4 target context
     product rather than returned directly. The dictionary is first completed with its PDS
     fields (`_complete_target`), then `get_target_xml_path` returns the path of the
     matching context product, generating a new "_local" product when none exists.
 
+    Unlike `identify_target_dicts`, which handles exactly one visit and rejects headers
+    spanning more than one, this function accepts headers from any number of visits. They
+    are grouped by the visit encoded in the first six characters of "FILENAME" and each
+    visit is identified independently.
+
     Parameters:
-        headers: The SPT/SHF headers of a single visit; see `identify_target_dicts`.
+        headers: The SPT/SHF headers, which may span several visits; see
+            `identify_target_dicts` for the keywords used.
         comet_rms: Upper limit on the comet element root-mean-square discrepancy.
         mp_rms: Upper limit on the minor-planet element root-mean-square discrepancy.
         radec_delta: Base tolerance in arcsec on the minor-planet sky-position offset.
         logger: An optional Logger.
 
     Returns:
-        A list of `pathlib.Path` objects, one per identified target, in the same order as
-        `identify_target_dicts` returns them.
+        A list of `pathlib.Path` objects, one per identified target, ordered by visit and
+        then as `identify_target_dicts` returns them. A target common to several visits
+        appears once per visit, so callers wanting a unique set must deduplicate.
 
     Raises:
-        TargetIdentificationFailure: If no target can be identified (see
-            `identify_target_dicts`).
+        TargetIdentificationFailure: If no target can be identified for any one visit (see
+            `identify_target_dicts`); identification of the remaining visits is abandoned.
     """
 
-    header_lists = _headers_by_visit(headers)
-    if len(header_lists) > 1:
-        raise ValueError('Multiple visits among headers provided')
+    paths: list[pathlib.Path] = []
+    for header_list in _headers_by_visit(headers):
+        visit = header_list[0]['FILENAME'][:6].upper()
+        unique_headers = _unique_targets(header_list)
+        plural = 's' if len(unique_headers) > 1 else ''
+        if len(unique_headers) == len(header_list):
+            logger and logger.open(f'Identifying targets for visit {visit} '
+                                   f'({len(header_list)} header{plural})', force=True)
+        else:
+            logger and logger.open(f'Identifying targets for visit {visit} '
+                                   f'({len(unique_headers)} unique header{plural})',
+                                   force=True)
 
-    visit = headers[0]['FILENAME'][:6].upper()
-    unique_headers = _unique_targets(headers)
-    plural = 's' if len(unique_headers) > 1 else ''
-    if len(unique_headers) == len(headers):
-        logger and logger.open(f'Identifying targets for visit {visit} '
-                               f'({len(headers)} header{plural})', force=True)
-    else:
-        logger and logger.open(f'Identifying targets for visit {visit} '
-                               f'({len(unique_headers)} unique header{plural})',
-                               force=True)
+        try:
+            targets = identify_target_dicts(header_list, comet_rms=comet_rms,
+                                            mp_rms=mp_rms, radec_delta=radec_delta,
+                                            logger=logger)
+            paths += [get_target_xml_path(_complete_target(target), logger=logger)
+                      for target in targets]
+        finally:
+            logger and logger.close(force='warning')
 
-    try:
-        targets = identify_target_dicts(headers, comet_rms=comet_rms, mp_rms=mp_rms,
-                                        radec_delta=radec_delta, logger=logger)
-        return [get_target_xml_path(_complete_target(target), logger=logger)
-                for target in targets]
-    finally:
-        logger and logger.close(force='warning')
+    return paths
 
 
 __all__ = ['identify_target_dicts', 'identify_targets']
