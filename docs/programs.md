@@ -15,8 +15,9 @@ rarely, and only with the SPT cache mounted).
 
 They are included in the wheel, so `python -m targets.programs.<name>` works from an
 installed copy — but most of them expect a source checkout and will not find
-what they need without one. `identify_visit.py` and `reality_check_radec.py`
-read `tests/SPT_TESTS.py`, which is not part of the package;
+what they need without one. `reality_check_radec.py` reads `tests/SPT_TESTS.py`,
+which is not part of the package, as does `identify_visit.py` whenever it is
+given a visit rather than a path;
 `build_spt_tests.py` needs `caches/SPT_CACHE`; `update_cometdb.py` and
 `update_target_xml_cache.py` write into `caches/`. Only
 `retrieve_mast_moving_target_spts.py`, which takes its output directory as an
@@ -27,16 +28,29 @@ happen to be installed alongside the library.
 
 ### `identify_visit.py` — run one visit and watch it think
 
-The tool you will use most. It feeds a visit's headers from the test corpus to
-`identify_targets` and prints the whole narrative, then the context products
-identified.
+The tool you will use most. It feeds headers to `identify_targets` and prints
+the whole narrative, then the context products identified.
+
+Each argument is either a **visit** from the test corpus or a **path**. A path
+names an SPT/SHM/SHF/DMF FITS file, or a directory, which contributes every such
+file at or below it — so it works on a directory of FITS files that were never
+added to the corpus. The two kinds can be mixed in one command.
 
 ```bash
 python -m targets.programs.identify_visit JCIS01
 python -m targets.programs.identify_visit 'IENL0*' --by-visit     # wildcards allowed
 python -m targets.programs.identify_visit U2G008 --level info     # less noise
 python -m targets.programs.identify_visit IFFC01 --edit           # open the XML in $EDITOR
+python -m targets.programs.identify_visit caches/SPT_CACHE/10102  # a whole directory
+python -m targets.programs.identify_visit some/u8ta0101m_shm.fits # one file
+python -m targets.programs.identify_visit JCIS01 /data/spt        # mixed
 ```
+
+Headers are grouped by visit — the first six characters of the file's base name
+— and each visit is identified separately, so one unidentifiable visit does not
+abandon the rest; it prints a `****` line and the run continues. Unreadable
+files are reported and skipped for the same reason. The context-product paths
+printed at the end are deduplicated across everything identified.
 
 **When:** whenever a target identifies wrongly or not at all, and after any
 change to the repair tables or the categorization logic, to confirm the visits
@@ -48,7 +62,9 @@ candidate. Nearly every diagnosis in this project starts here.
 
 New `_local` context products go to the gitignored
 `caches/TARGET_XML_OVERLAY`, never the committed cache, so it is safe to run
-repeatedly. It needs only `tests/SPT_TESTS.py`, not the SPT cache.
+repeatedly. The corpus is consulted only when a visit argument is given, so a
+run over FITS-file paths alone needs neither `tests/SPT_TESTS.py` nor the SPT
+cache.
 
 ### `reality_check_radec.py` — sanity-check the corpus pointing
 
