@@ -820,6 +820,25 @@ def test_identify_targets_spans_multiple_visits(tmp_path: pathlib.Path) -> None:
     assert paths[-1].name.startswith('planet.saturn')
 
 
+def test_alias_repairs_reach_the_mpc_identifier() -> None:
+    # Four names the MPC does not resolve. Each was reaching mpc_query_by_name and leaving
+    # a permanent "not found" page in caches/MPC_CACHE, because the reply is cached before
+    # it is checked. The repairs map them onto the identifier the MPC does recognize.
+    assert hst_repairs('QUAUAR') == (['QUAOAR'], '')            # misspelling
+    assert hst_repairs('CHARIKLORING') == (['CHARIKLO'], '')    # "CHARIKLO RING" run together
+    assert hst_repairs('OUMUAMUA') == (['1I'], '')              # the MPC knows only "1I"
+
+    # Zoe is the satellite of (58534) Logos, not a minor planet, so only the primary
+    # resolves. The numbered form needs its own pattern because these are anchored.
+    assert hst_repairs('LOGOS-ZOE') == (['LOGOS'], '')
+    assert hst_repairs('58534-LOGOS-ZOE') == (['58534 LOGOS'], '')
+
+    # QUAUAR is the one that changes an outcome: the visit failed outright before.
+    bodies = identify_target_dicts([_header('9678/j8i702011_spt.fits')])
+    assert len(bodies) == 1
+    assert bodies[0]['full_name'] == '50000 Quaoar'
+
+
 def test_minor_planet_identifiers_skips_unqueryable_strings() -> None:
     # mpc_query_by_name caches the MPC reply before checking that it is valid, so every
     # impossible query leaves a permanent "not found" page in caches/MPC_CACHE. Strings

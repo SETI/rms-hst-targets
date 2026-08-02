@@ -63,6 +63,22 @@ _TARGET_STRING_REPAIRS = [
     # it, including anyascii's "qcKagara".
     (r'KAGARA',                                 r'(469705)|[M]'),
 
+    # Alternative names and manglings that the MPC does not resolve. Without these, each
+    # one reaches mpc_query_by_name, which writes the reply into caches/MPC_CACHE before
+    # checking that it is valid, so the "not found" page is cached permanently.
+    (r'QUAUAR',                                 r'QUAOAR'),
+    # "CHARIKLO RING" run together. The ring is the subject, but the target is the body,
+    # as the TARDESCR of the same visit ("ASTEROID CENTAUR CHARIKLO 10199") confirms.
+    (r'CHARIKLORING',                           r'CHARIKLO'),
+    # Zoe is the satellite of (58534) Logos, not a minor planet of its own, so the pair
+    # name resolves only through the primary. The numbered form has to come first: these
+    # patterns are anchored, so the bare one cannot match "58534-LOGOS-ZOE".
+    (r'(\d+)[- ]LOGOS-ZOE',                     r'\1 LOGOS'),
+    (r'LOGOS-ZOE',                              r'LOGOS'),
+    # 1I/'Oumuamua. The MPC knows it as "1I", never by name; the apostrophe form does not
+    # survive header transcription anyway.
+    (r'OUMUAMUA',                               r'1I'),
+
     (r'MARS[- ]?DUST',                          r'MARS|[R]'),
     (r'IO[ -]?(WAKE|TORUS)',                    r'IO|[t]'),
     (r'IO[- ]N(EUTRAL)?[- ]?CLOUD.*',           r'IO|[t]'),
