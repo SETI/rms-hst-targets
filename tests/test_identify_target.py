@@ -18,6 +18,7 @@ from targets import (
 )
 from targets._utils import _collect_strings, _norm_date, _parse_mt_lv
 from targets.hst_repairs import hst_repairs
+from targets.minor_planet_identifiers import minor_planet_identifiers
 from targets.mpc_tools.mpc_query_by_name import _mpc_date_to_str, mpc_query_by_name
 from targets.target_xml_cache_support import use_local_xml_dir
 
@@ -817,6 +818,26 @@ def test_identify_targets_spans_multiple_visits(tmp_path: pathlib.Path) -> None:
     assert [p.name for p in paths] == [p.name for p in separately]
     assert paths[0].name.startswith('planet.jupiter')
     assert paths[-1].name.startswith('planet.saturn')
+
+
+def test_minor_planet_identifiers_skips_unqueryable_strings() -> None:
+    # mpc_query_by_name caches the MPC reply before checking that it is valid, so every
+    # impossible query leaves a permanent "not found" page in caches/MPC_CACHE. Strings
+    # that cannot name a minor planet are dropped before the query. They must still be
+    # reported as unused, and must not disturb the body the other strings identify.
+    for strings, expected in ((['STAR', 'K III-I', '2014 MU69'], '486958 Arrokoth'),
+                              (['LR', 'C', '3548 EURYBATES'], '3548 Eurybates')):
+        dicts, _used, unused, _single = minor_planet_identifiers(strings)
+        assert [d['full_name'] for d in dicts] == [expected]
+        assert strings[0] in unused
+
+    # A name of three letters is the shortest any minor planet has, so the length rule
+    # must not reach it, and a bare number must survive whatever its length.
+    for string, expected in (('IDA', '243 Ida'), ('ATE', '111 Ate'), ('624', '624 Hektor')):
+        dicts, _used, unused, single = minor_planet_identifiers([string])
+        assert single
+        assert dicts[0]['full_name'] == expected
+        assert unused == []
 
 
 def test_collect_strings_skips_category() -> None:

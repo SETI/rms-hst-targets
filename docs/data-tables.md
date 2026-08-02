@@ -18,10 +18,11 @@ globally to keep them visibly distinct in a file listing.
 | `_UNDIAGNOSTIC_TARGET_WORDS.py` | Words that carry no target information and are deleted |
 | `_TARGNAME_PREFIX_SUFFIX_PATTERNS.py` | Prefixes/suffixes stripped before anything else |
 | `_DISALLOWED_MINOR_PLANET_NAMES.py` | Names shared by a satellite/comet and a minor planet |
+| `_NON_MINOR_PLANET_STRINGS.py` | Strings never sent to the MPC, because it will never know them |
 | `cometdb/_REPAIR_COMET.py` | Corrections to records scraped from the comet sources |
 
-The first six are read by `hst_repairs()` and the identification pipeline. The
-seventh is applied when the comet database is rebuilt.
+The first seven are read by `hst_repairs()` and the identification pipeline. The
+eighth is applied when the comet database is rebuilt.
 
 ---
 
@@ -119,6 +120,33 @@ and the wrong one is being chosen.
 **Watch for:** the asymmetry is deliberate. HST observes the satellite far more
 often than the asteroid of the same name, so the satellite is the safer default;
 `9 Metis` is still reachable when the header says `ASTEROID`.
+
+## `_NON_MINOR_PLANET_STRINGS.py`
+
+Strings that survive repair looking like a minor-planet name but that the Minor
+Planet Center does not know — observing vocabulary (`FLAT`, `PHOTOMETRIC`), class
+words (`STAR`, `GALAXY`, `ASTEROID`), catalog prefixes (`AGK`, `COL`) and mission
+names (`DART`). `minor_planet_identifiers()` drops them before querying.
+
+This matters more than a wasted round trip. `mpc_query_by_name()` writes the MPC
+reply into `caches/MPC_CACHE` *before* checking whether it is valid, so every
+impossible query leaves a permanent "not found" page that is then served from the
+cache forever.
+
+Alongside it, `minor_planet_identifiers` rejects any purely alphabetic string of
+one or two letters. No minor planet has a name that short — the shortest are
+`Ate`, `Ida` and `Oda` — so these are always leftovers: half of a split
+designation (`1977 UB` → `UB`), a two-letter star-catalog prefix (`BD`, `WR`,
+`HV`), or an aperture code.
+
+**Edit when:** a junk `.html` file appears in `caches/MPC_CACHE` for a word that is
+plainly not a body. Confirm the MPC really does not know it — the cached page will
+say "Vaguely similar sounding" or "Exact match … not found" — then add it.
+
+**Watch for:** do *not* add a misspelling or alternative name of a real body
+(`QUAUAR` for Quaoar, `OUMUAMUA` for 1I, `XENA` for Eris). Those belong in
+`_TARGET_STRING_REPAIRS`, which maps them onto an identifier the MPC recognizes;
+listing them here throws away an identification a repair could rescue.
 
 ## `cometdb/_REPAIR_COMET.py`
 

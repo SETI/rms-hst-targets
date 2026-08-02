@@ -5,9 +5,32 @@
 import re
 
 from targets import mpc_tools
+from targets._NON_MINOR_PLANET_STRINGS import _NON_MINOR_PLANET_STRINGS
 
 # A bare 1-3 digit number, optionally parenthesized.
 _BARE_NUMBER_REGEX = re.compile(r'\(?\d{1,3}\)?$')
+
+# A purely alphabetic string of one or two letters. No minor planet has a name this short
+# -- the shortest in the corpus are Ate, Ida and Oda, all three letters -- so such a string
+# is always a leftover: half of a split designation ("1977 UB" -> "UB"), a star-catalog
+# prefix (BD, WR, HV, AGK), or an aperture or filter code. Digits are excluded from the
+# pattern so that a bare minor-planet number is untouched.
+_TOO_SHORT_REGEX = re.compile(r"[A-Z']{1,2}$", re.I)
+
+
+def _is_queryable(string):
+    """False if this string cannot name a minor planet and must not be sent to the MPC.
+
+    Querying an impossible name costs a network round trip whose "not found" reply is then
+    cached permanently, because `mpc_query_by_name` writes the response before validating
+    it. See `_NON_MINOR_PLANET_STRINGS`.
+
+    Parameters:
+        string (str): A candidate minor-planet identifier.
+    """
+
+    return (not _TOO_SHORT_REGEX.match(string)
+            and string.upper() not in _NON_MINOR_PLANET_STRINGS)
 
 
 def minor_planet_identifiers(strings, *, logger=None):
@@ -38,6 +61,14 @@ def minor_planet_identifiers(strings, *, logger=None):
         dropped = {s for s in formatted if _BARE_NUMBER_REGEX.match(s)}
         if dropped:
             formatted = formatted - dropped
+
+    # Strings that cannot name a minor planet are dropped before the MPC sees them. They
+    # still end up in the returned "unused" list, which the long-match pass below rebuilds
+    # from the original strings, so the caller sees no difference beyond the missing query.
+    rejected = {s for s in formatted if not _is_queryable(s)}
+    if rejected:
+        formatted = formatted - rejected
+        logger and logger.debug(f'Not queried as minor planets: {sorted(rejected)}')
 
     used = {}  # string -> mpc result as a dict
     mpc_dicts = []
