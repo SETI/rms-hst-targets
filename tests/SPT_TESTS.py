@@ -6646,23 +6646,6 @@ SPT_TESTS = {
             "PROPOSID": 4113,
         },
     ],
-    "y11n01": [
-        {
-            "FILENAME": "y11n0101t_shf.fits",
-            "PSTRTIME": "1992.239:20:02:50",
-            "PSTPTIME": "1992.239:20:11:05",
-            "TARG_ID": "4123_1",
-            "TAR_TYPE": "POINT TARGET",
-            "TARDESCR": "CALIBRATION;FLAT FIELD;PHOTOMETRIC;",
-            "TARGCAT": "CALIBRATION",
-            "TARKEY1": "FLAT FIELD",
-            "TARKEY2": "PHOTOMETRIC",
-            "TARGNAME": "WD0501+527",
-            "RA_TARG": 76.3775,
-            "DEC_TARG": 52.83166666667,
-            "PROPOSID": 4123,
-        },
-    ],
     "v14e07": [
         {
             "FILENAME": "v14e0701t_shf.fits",

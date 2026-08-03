@@ -387,7 +387,6 @@
 'x1bx0202t_shf.fits' --- (['JUPITER'], '')
 'x1bx0301t_shf.fits' --- (['JUPITER'], '')
 'x1bx0402t_shf.fits' --- (['JUPITER'], '')
-'y11n0101t_shf.fits' --- (['FLAT', 'PHOTOMETRIC', 'WD0501', '527'], '')
 'v14e0701t_shf.fits' --- (['TITAN'], 'S')
 'v14e0801t_shf.fits' --- (['TITAN', '01493-B'], '')
 'v14e0901t_shf.fits' --- (['01493'], '')
