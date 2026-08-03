@@ -24,6 +24,11 @@ _TOO_SHORT_REGEX = re.compile(r"[A-Z']{1,2}$", re.I)
 def minor_planet_identifiers(strings, *, logger=None):
     """Identify one or more minor planets by a name or list of alternative names.
 
+    A string of one or two letters is never queried: no minor planet has a name that
+    short, so it is always a leftover such as half of a split designation or a star-
+    catalog prefix. It is reported as unused, exactly as a name the MPC failed to find
+    would be.
+
     Parameters:
         strings (str or list[str]): One or more strings potentially identifying a minor
             planet.

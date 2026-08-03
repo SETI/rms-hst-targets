@@ -56,6 +56,9 @@ header
   ├─ 1. _apply_overrides()      per-program repairs and sentinels
   │        (src/targets/_HST_PROGRAM_OVERRIDES.py)
   │
+  ├─ 1a. is this planetary?     reject a visit that observes no solar-system
+  │                             body at all -> NotPlanetaryError
+  │
   ├─ 2. _collect_strings()      gather TARKEY*, TARGNAME, TARDESCR pieces
   ├─ 3. _parse_mt_lv()          parse MT_LV1 (tracked) and MT_LV2 (FOV)
   │
@@ -98,6 +101,36 @@ where `nnnnn` is the five-digit, zero-padded HST program ID from `TARG_ID`.
 `TNO_SURVEY` marks blind Kuiper-belt searches with no specific target;
 `UNDESIGNATED_TNO` marks real TNOs known only by a survey-internal name that
 never received an MPC designation.
+
+### 1a. Is this a planetary observation at all?
+
+Some HST programs point at no solar-system body whatsoever — instrument
+calibration aimed at a standard star is the common case. Identification is not
+merely expected to fail for these; it is capable of *succeeding wrongly*, since a
+stellar catalog designation can leave behind a bare number that reads as a minor
+planet. `WD0501+527`, a white dwarf, splits to `WD0501` and `527`, and `527`
+alone resolves to the asteroid (527) Euryanthe.
+
+So the visit is tested before any of that can happen, and rejected with
+`NotPlanetaryError` if it fails. A visit passes if **any** of its headers:
+
+* has `TAR_TYPE` `MOVING TARGET`; or
+* declares `TARGCAT` `SOLAR SYSTEM`; or
+* comes from FGS or HSP — filename beginning `f` or `v` — the instruments used
+  to time stellar occultations, where the target is the occulted star.
+
+The test is per **visit**, not per header, because an acquisition or companion
+exposure is routinely archived as a `POINT TARGET` beside the moving-target
+science exposure; vetoing on that header alone would discard the real target.
+`TARGCAT` is what admits a body archived as a fixed target — Quaoar is too
+distant to need tracking, so its visit is a `POINT TARGET` that nonetheless says
+`SOLAR SYSTEM`.
+
+A header with no `TAR_TYPE` cannot be judged and neither rejects nor rescues; the
+synthetic headers built for an `addition` override carry only `FILENAME` and
+`TARGNAME`, and identification recurses on them. Any `_HST_PROGRAM_OVERRIDES`
+entry exempts the visit, which is the intended escape hatch when the heuristic
+is wrong.
 
 ### 2–3. String collection and MT_LV parsing
 

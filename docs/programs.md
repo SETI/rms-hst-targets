@@ -9,9 +9,44 @@ active:
 python -m targets.programs.identify_visit JCIS01
 ```
 
-They fall into three groups: **diagnosis** (run these often), **data refresh**
-(run these when the outside world changes), and **corpus rebuild** (run these
-rarely, and only with the SPT cache mounted).
+## Which of these you actually need
+
+Most users need **none** of them. `identify_targets()` is the entry point of the
+package, and nothing here is required to call it.
+
+| Script | How often |
+| ------ | --------- |
+| `update_cometdb.py` | **Regularly** — the only two scripts in routine use |
+| `update_target_xml_cache.py` | **Regularly** — likewise |
+| `identify_visit.py` | Whenever a target identifies wrongly, or not at all |
+| `reality_check_radec.py` | Rarely; a corpus-wide audit |
+| `retrieve_mast_moving_target_spts.py` | Almost never; needs the external SSD |
+| `build_spt_tests.py` | Almost never; needs the external SSD |
+
+**The two `update_*` scripts are the only ones meant to be run on a schedule.**
+They refresh this package's picture of the outside world: the comet database and
+the PDS4 context products. Everything else is a diagnostic or a corpus-rebuild
+tool.
+
+Their output must be **committed to the repository to take effect anywhere
+else.** Both write into `caches/`, which is version-controlled precisely so that
+every installation resolves the same bodies without hitting the network. Running
+an update locally and not committing it means your results silently differ from
+everyone else's, and the next clone will not have the new bodies at all. Run the
+script, read the diff, commit it.
+
+`identify_visit.py` is the tool to reach for when something identifies wrongly
+or not at all — it prints the whole decision narrative and is where nearly every
+diagnosis starts. Expect to need it when new observations arrive with target
+names the repair tables have not seen.
+
+The remaining three exist for completeness and for rebuilding the test corpus
+from scratch. A typical user will probably never run them; two require the SPT
+cache on the external SSD.
+
+Beyond that they fall into three groups: **diagnosis**, **data refresh** (when
+the outside world changes), and **corpus rebuild** (rarely, and only with the
+SPT cache mounted).
 
 They are included in the wheel, so `python -m targets.programs.<name>` works from an
 installed copy — but most of them expect a source checkout and will not find
@@ -115,9 +150,15 @@ element matching — which is where wrong answers come from.
 
 `--local` rebuilds from the committed HTML in `caches/COMET_CACHE` without
 contacting anything, which is what you want when you have edited a scraper or a
-repair and only need to see the effect. Note that the pickles themselves are
-**not** committed; they are build products, regenerated automatically the first
-time the library needs them.
+repair and only need to see the effect.
+
+**Commit the result.** The pickles are build products and gitignored, but the
+scraped HTML and CSV sources they are built from *are* committed, and those are
+what a fresh clone regenerates from. A refresh that is not committed exists only
+on your machine: other installations keep resolving the old set of comets, and a
+new clone will not have the new ones at all. If a scraper gains a new source
+file, `git add` it explicitly — an untracked source means nobody else can
+rebuild.
 
 The previous pickle is kept as `#COMETS_v001.pickle` and so on, so a bad
 rebuild can be undone.
@@ -140,6 +181,13 @@ after hand-adding a `_local` product.
 **Why:** `identify_targets` resolves each body to an existing context product
 where one exists, and only generates a `_local` product when it must. A stale
 cache means generating products that already exist under a different name.
+
+**Commit the result.** `caches/TARGET_XML_CACHE`, including its
+`$LOOKUP.pickle` index, is version-controlled so that every installation
+resolves bodies to the same products offline. An uncommitted sync means your
+runs generate `_local` products for bodies that other installations resolve to
+published ones, and vice versa. Read the diff before committing: it should be
+new and superseded products, nothing else.
 
 To add or correct a product by hand, create the file with `_local` before
 `.xml`. Local files are preserved until an official file of the same name and

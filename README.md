@@ -8,6 +8,11 @@ SPT/SHF support-file headers.
 Maintained by the [RMS Node](https://pds-rings.seti.org) of the NASA Planetary
 Data System at the SETI Institute. **Early-stage / work in progress.**
 
+**`identify_targets()` is the entry point** — the one function a caller needs.
+It is a core stage of the RMS Node's **`rms-hst-pipeline`**, which is what this
+package exists to serve: the pipeline hands it SPT/SHF headers and receives the
+PDS4 Target context products for everything the observation looked at.
+
 ## What it does
 
 Every HST moving-target observation carries a support ("SPT") header describing
@@ -65,7 +70,11 @@ See the documentation in [`docs/`](docs/):
   they are refreshed.
 * [The curated data tables](docs/data-tables.md) — the caps-named modules, what
   each controls, and when you need to edit one.
-* [The src/targets/programs/ scripts](docs/programs.md) — every maintenance script, what it
+* [The src/targets/programs/ scripts](docs/programs.md) — of these, only
+  `update_cometdb` and `update_target_xml_cache` are run regularly, and their
+  results must be committed to take effect elsewhere; `identify_visit` is the
+  tool for diagnosing an identification failure, and the rest will probably
+  never be needed. Every maintenance script, what it
   does, and when to run it.
 
 ## Installation

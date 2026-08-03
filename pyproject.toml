@@ -66,7 +66,7 @@ include = ["targets", "targets.*"]
 [tool.setuptools.package-data]
 # TARGET_LABEL_*.xml is read at run time by target_xml_cache_support whenever a new
 # context product has to be generated, so it must travel with the package.
-"targets" = ["py.typed", "*.pyi", "templates/*.xml"]
+"targets" = ["py.typed", "templates/*.xml"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
@@ -149,9 +149,9 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # Both the package internals and the tests import everything as "targets.*". Those
-# modules are untyped and excluded from checking; skip following the imports so mypy
-# treats them as Any. The typed public surface lives in targets/__init__.pyi (for
-# external consumers via py.typed).
+# modules are excluded from checking; skip following the imports so mypy treats them as
+# Any. There is no stub file: py.typed advertises the inline annotations that the package
+# already carries, so a consumer of the public API sees those directly.
 module = ["targets", "targets.*"]
 follow_imports = "skip"
 

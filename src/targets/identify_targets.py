@@ -65,8 +65,8 @@ _FALLBACK_CANDIDATES = 25           # element-search candidates to test by sky p
 
 # RA_TARG/DEC_TARG can only confirm or refute a body if it tracks the header's own
 # ephemeris (it normally reproduces the MT_LV1 orbit to ~arcsec; see
-# support/reality_check_radec.py). When it is farther than this from the header orbit,
-# the pointing is offset from the body and the sky-position tests are skipped.
+# targets/programs/reality_check_radec.py). When it is farther than this from the header
+# orbit, the pointing is offset from the body and the sky-position tests are skipped.
 _SELF_CONSISTENCY_MAX = 60.         # arcsec, before distance scaling
 
 # When a body identified by name fails the sky-position test but its catalog orbit still
@@ -383,10 +383,16 @@ def identify_target_dicts(
         returned.
 
     Raises:
+        NotPlanetaryError: If the visit is not a planetary observation at all, such as an
+            instrument calibration exposure pointed at a star. A visit qualifies if any
+            header tracks a moving target, declares TARGCAT "SOLAR SYSTEM", or was taken
+            with FGS or HSP, whose targets are the occulted stars rather than the body.
+            An entry in `_HST_PROGRAM_OVERRIDES` overrides the test either way.
         TargetIdentificationFailure: If no target can be identified (including programs
             with no identifiable target, such as anti-solar pointings and slew tests), or
             if a target identified by name is incompatible with the orbital elements or
-            target position in the header.
+            target position in the header. `NotPlanetaryError` is a subclass, so catching
+            this catches both.
     """
 
     header_lists = _headers_by_visit(headers)
@@ -745,8 +751,13 @@ def identify_targets(
         appears once per visit, so callers wanting a unique set must deduplicate.
 
     Raises:
+        NotPlanetaryError: If any one visit is not a planetary observation (see
+            `identify_target_dicts`); the remaining visits are abandoned.
         TargetIdentificationFailure: If no target can be identified for any one visit (see
             `identify_target_dicts`); identification of the remaining visits is abandoned.
+            Callers that process many visits should catch this per visit, as
+            `targets.programs.identify_visit` does, so that one bad visit does not end the
+            run.
     """
 
     paths: list[pathlib.Path] = []

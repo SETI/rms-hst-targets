@@ -23,6 +23,36 @@ globally to keep them visibly distinct in a file listing.
 The first six are read by `hst_repairs()` and the identification pipeline. The
 seventh is applied when the comet database is rebuilt.
 
+## Which file do I edit?
+
+You edit a repair file when a **specific** observation identifies wrongly or not
+at all and the cause is the target *string*, not the logic. Work from the
+symptom — run `identify_visit.py` first, since its log names every string that
+was tried and what each resolved to:
+
+| Symptom | File |
+| ------- | ---- |
+| The body is a planet, satellite, ring or the Io torus, and is unknown or misnamed | `_STANDARD_BODY_LIST.py` |
+| One observation or one program is wrong in a way no general rule would fix; or a visit is wrongly accepted or rejected as planetary | `_HST_PROGRAM_OVERRIDES.py` |
+| A real body is consistently written in a form no catalog recognizes (`QUAUAR`, `SW3`, `CHARIKLORING`) | `_TARGET_STRING_REPAIRS.py` |
+| A leftover word is reported as unused, or is mistaken for a name (`ANTISUN`, `PHOTOMETRIC`) | `_UNDIAGNOSTIC_TARGET_WORDS.py` |
+| The name is right but wrapped in decoration (`-ACQ`, `-EPOCH2`, an instrument prefix) | `_TARGNAME_PREFIX_SUFFIX_PATTERNS.py` |
+| A name means both a satellite/comet and a minor planet, and the wrong one wins | `_DISALLOWED_MINOR_PLANET_NAMES.py` |
+| A comet's *database record* is wrong, so every observation of it is wrong | `cometdb/_REPAIR_COMET.py` |
+
+Two cautions that apply to all of them.
+
+**Prefer the narrowest table that fixes it.** `_HST_PROGRAM_OVERRIDES.py` is
+keyed by `TARG_ID` and touches nothing else, so it is the safe choice for a
+one-off. A pattern in `_TARGET_STRING_REPAIRS.py` or a word in
+`_UNDIAGNOSTIC_TARGET_WORDS.py` applies to every observation ever taken, so it
+must be right for all of them, not just the one in front of you.
+
+**Editing any of them changes `tests/SPT_TESTS_OUTPUT.txt`.** Regenerate it with
+`python tests/test_hst_repairs_output.py` and *read the diff*. That baseline is
+the main guard against a repair that fixes one target and quietly breaks
+another; a diff touching visits you were not working on is the warning.
+
 ---
 
 ## `_STANDARD_BODY_LIST.py`

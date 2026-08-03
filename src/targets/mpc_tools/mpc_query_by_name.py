@@ -31,13 +31,25 @@ def mpc_query_by_name(name, *, logger=None):
         * "T": time of perihelion passage as "DD-MON-YYYY:hh:mm:ss", if available.
         * "EPOCH": epoch of the elements as "DD-MON-YYYY:hh:mm:ss", if available.
 
-        If the name is not found, a warning is issued to the `logger` and None is
-        returned.
+        None is returned, after a warning to the `logger`, whenever the MPC reports that
+        it does not know the name. It says so in two ways -- a page of "Vaguely similar
+        sounding possible matches", and a bare "Exact match for <name> not found" -- and
+        both mean the same thing, so both give None rather than an exception.
 
     Raises:
         requests.RequestException: If the query to the MPC "show_object" tool fails. This
             will actually be an informative subclass of RequestException.
-        RuntimeError: If the MPC returns a malformed web page.
+        RuntimeError: If the MPC returns a malformed web page, or replies "Unknown
+            object", which means the query itself was ill-formed rather than the body
+            unknown. "2937 Gibbs" provokes this: `show_object` takes the number or the
+            name, never both.
+
+    Notes:
+        The reply is written to `caches/MPC_CACHE` before it is checked, so a query the
+        MPC cannot answer leaves a "not found" page behind, and that page then satisfies
+        the same query forever after. This is deliberate to the extent that it is what
+        lets the test suite resolve a known-bad name with `requests` blocked, but it does
+        mean junk accumulates; see `docs/data-and-caches.md`.
     """
 
     # Retrieve from cache if available

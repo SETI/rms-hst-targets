@@ -1,11 +1,13 @@
 API reference
 =============
 
-The importable package is ``targets``. The two entry points are
-:func:`~targets.identify_targets.identify_targets`, which returns the path of each
-target's PDS4 context product, and
-:func:`~targets.identify_targets.identify_target_dicts`, which returns the body
-dictionaries themselves. The remaining modules implement the stages they orchestrate.
+The importable package is ``targets``. The entry point is
+:func:`~targets.identify_targets.identify_targets`, which takes SPT/SHF headers
+spanning any number of visits and returns the path of each target's PDS4 context
+product. :func:`~targets.identify_targets.identify_target_dicts` is the
+lower-level form beneath it: one visit at a time, returning the body dictionaries
+themselves rather than context products. The remaining modules implement the
+stages they orchestrate.
 
 Top-level identification
 ------------------------

@@ -11,17 +11,25 @@ SPT/SHF support-file headers.
 Maintained by the `RMS Node <https://pds-rings.seti.org>`_ of the NASA
 Planetary Data System at the SETI Institute. Early-stage / work in progress.
 
+``identify_targets()`` is the entry point: give it SPT/SHF headers, get back the
+PDS4 Target context product for each body observed. It is a core stage of the
+RMS Node's ``rms-hst-pipeline``, which is what this package exists to serve.
+
 .. code-block:: python
 
    from astropy.io import fits
-   from targets import identify_target_dicts
+   from targets import identify_targets
 
    with fits.open('u6ht4501m_shm.fits') as hdul:
-       bodies = identify_target_dicts([hdul[0].header])
+       paths = identify_targets([hdul[0].header])
 
-   for body in bodies:
-       print(body['full_name'], body['ttype'], body['naif_id'])
-   # (523955) 1998 UU43 T 2523955
+   for path in paths:
+       print(path.name)
+   # asteroid.523955_1998_uu43_1.0.xml
+
+The headers may span any number of visits; they are grouped and identified one
+visit at a time. ``identify_target_dicts()`` is the lower-level form, returning
+the body dictionaries instead of context-product paths.
 
 Guides
 ------

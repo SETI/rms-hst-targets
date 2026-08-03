@@ -1,62 +1,63 @@
 # Using `identify_targets`
 
-This is the user's guide to the two entry points of the `targets` package. For
-the internals — how a raw `TARGNAME` becomes a body — see
+`identify_targets()` is the entry point of this package. It is the one function
+a caller needs, and it is how the RMS Node's **`rms-hst-pipeline`** obtains the
+PDS4 target context products for every HST observation it archives — this
+package exists to serve that pipeline, and target identification is one of its
+core stages.
+
+For the internals — how a raw `TARGNAME` becomes a body — see
 [How target identification works](how-it-works.md). For what to do when a real
 observation refuses to identify, see
 [Handling identification failures](handling-identification-failures.md).
 
-## The two entry points
-
-Both take the same arguments and differ only in what they hand back.
+## The entry point
 
 ```python
+from targets import identify_targets
+
 identify_targets(headers, *, comet_rms=0.1, mp_rms=0.08,
                  radec_delta=120.0, logger=None) -> list[pathlib.Path]
-
-identify_target_dicts(headers, *, comet_rms=0.1, mp_rms=0.08,
-                      radec_delta=120.0, logger=None) -> list[dict]
 ```
 
-`identify_target_dicts` does the identification and returns one dictionary per
-body. `identify_targets` calls it, then completes each dictionary and resolves
-it to a PDS4 Target context product, returning the file paths. Use the dict
-form when you want to inspect or post-process the bodies; use the path form
-when you are generating a PDS4 bundle.
+Give it SPT/SHF headers, get back the path of one PDS4 Target context product
+per identified body. That is the whole interface. A pipeline stage needs
+nothing else.
 
-Import either from the package root:
+`identify_target_dicts()` sits underneath it and returns the body dictionaries
+instead of paths. It is public, and useful when you want to inspect a body
+rather than archive it, but it is a lower-level view: it handles exactly one
+visit and it does not produce context products. Prefer `identify_targets()`
+unless you specifically need the dictionaries.
 
-```python
-from targets import identify_targets, identify_target_dicts
-```
+## Input: SPT/SHF headers
 
-## Input: the headers of one visit
-
-`headers` is a **list** of header objects for a **single HST visit**. Each may
-be a plain `dict` or an `astropy.io.fits.Header`; both are read the same way.
+`headers` is a **list** of header objects. Each may be a plain `dict` or an
+`astropy.io.fits.Header`; both are read the same way.
 
 ```python
 from astropy.io import fits
+from targets import identify_targets
 
-paths = []
 with fits.open('u6ht4501m_shm.fits') as hdul:
     paths = identify_targets([hdul[0].header])
 ```
 
-Passing headers from more than one visit raises `ValueError`. A visit is
-identified by the first six characters of `FILENAME`, so all the headers in one
-call must agree on that prefix. Group them first if you are walking a directory:
+The headers may span **any number of visits**. `identify_targets()` groups them
+by visit — the first six characters of `FILENAME` — and identifies each visit
+independently, so a whole directory can be handed over in one call:
 
 ```python
-import collections
-
-by_visit = collections.defaultdict(list)
-for header in all_headers:
-    by_visit[header['FILENAME'][:6].upper()].append(header)
-
-for visit, headers in by_visit.items():
-    paths = identify_targets(headers)
+paths = identify_targets(every_header_in_the_directory)
 ```
+
+The results are concatenated in visit order, and a target common to several
+visits appears once per visit, so deduplicate if you want a unique set. Note
+that a failure in any one visit abandons the rest; see
+[When it fails](#when-it-fails) for how to isolate them.
+
+`identify_target_dicts()` does **not** do this. It handles a single visit and
+raises `ValueError` on headers spanning more than one.
 
 Give the function **every** header of the visit rather than one at a time. A
 target is often named in one exposure's keywords and confirmed by another's
@@ -104,10 +105,63 @@ dictionaries returned by `identify_target_dicts`.
 
 ## Output: context-product paths
 
-`identify_targets` returns `pathlib.Path` objects. A path may point into the
-committed mirror `caches/TARGET_XML_CACHE`, or — when the body is new, or the
-existing product needs a correction — into the writable overlay
-`caches/TARGET_XML_OVERLAY`, with `_local` in the filename.
+`identify_targets` returns `pathlib.Path` objects, one per identified body,
+each pointing at a PDS4 Target context product. A path leads either into the
+committed mirror `caches/TARGET_XML_CACHE` or into the writable overlay
+`caches/TARGET_XML_OVERLAY`, where the filename carries a `_local` suffix.
+
+### What a `_local` file is, and when one appears
+
+`caches/TARGET_XML_CACHE` is a read-only mirror of the products published by the
+PDS Engineering Node. When identification produces a body the mirror cannot
+serve as-is, the package writes its own product rather than modifying the
+mirror. That file is a `_local` file, and it is generated in exactly two
+circumstances:
+
+1. **The body has no context product at all.** No published product matches the
+   body's logical identifier, so a new one is written as
+   `<lid_tail>_1.0_local.xml` — version 1.0, because nothing preceded it. Newly
+   designated comets and TNOs are the usual cause, along with targets the
+   Engineering Node has not yet published.
+
+2. **A published product exists but is out of date.** The identification carries
+   information the published product lacks — a corrected title, a refined body
+   type, or aliases that would let a future observation resolve by a name the
+   product does not currently list. The existing version is copied, amended, and
+   written with the version incremented by 0.1 and the suffix appended, e.g.
+   `..._1.2_local.xml` beside a published `..._1.1.xml`. If nothing needs
+   changing, no file is written and the path of the published product is
+   returned unchanged.
+
+A `_local` file is a complete, valid `Product_Context` label, not a fragment.
+It carries the logical identifier, the version, the title, the alias list, the
+`Target` name/type/description, and a `Modification_History` in which a new
+`Modification_Detail` records what this package changed while every earlier
+entry is preserved:
+
+```xml
+<logical_identifier>urn:nasa:pds:context:target:centaur.144908_2004_yh32</logical_identifier>
+<version_id>1.2</version_id>
+<title>(144908) 2004 YH32</title>
+...
+<Modification_Detail>
+  <modification_date>2026-07-31</modification_date>
+  <version_id>1.2</version_id>
+  <description>
+    Updated by the RMS Node's HST pipeline: revised type (was "Centaur").
+    Note that the logical_identifier has not been modified.
+  </description>
+</Modification_Detail>
+```
+
+The logical identifier is deliberately **not** changed when a name is corrected,
+because the LID is what everything else references; the mismatch is recorded in
+the description instead.
+
+Reads resolve overlay-first, so once a `_local` file exists it is what later
+runs get. The overlay is gitignored: `_local` products are working output, and
+promoting one into the published set is an Engineering Node action, not
+something this package does.
 
 If you do not want the run to write anything into the overlay, wrap it:
 
@@ -179,18 +233,35 @@ loosen when a result looks suspicious.
 ## When it fails
 
 `TargetIdentificationFailure` is raised when no target can be identified. Its
-message names the file and the strings involved:
+message names the file and the strings involved. Because one bad visit ends the
+whole call, process visit by visit when you are working through many:
 
 ```python
-from targets import TargetIdentificationFailure
+import collections
+from targets import identify_targets, TargetIdentificationFailure
 
-try:
-    paths = identify_targets(headers)
-except TargetIdentificationFailure as err:
-    print(f'no target: {err}')
+by_visit = collections.defaultdict(list)
+for header in all_headers:
+    by_visit[header['FILENAME'][:6].upper()].append(header)
+
+for visit, headers in by_visit.items():
+    try:
+        paths = identify_targets(headers)
+    except TargetIdentificationFailure as err:
+        print(f'{visit}: {type(err).__name__}: {err}')
 ```
 
-Some failures are correct and expected — anti-solar pointings, slew tests,
+`NotPlanetaryError` is a **subclass**, so the code above catches it too. It
+means something more specific: the visit is not a planetary observation at all,
+so there is nothing here to archive, as opposed to "we could not work out what
+this is". Instrument calibration programs pointed at a star are the usual case.
+A visit is accepted as planetary if any of its headers tracks a moving target,
+declares `TARGCAT` `SOLAR SYSTEM`, or was taken with FGS or HSP — the
+occultation instruments, whose targets are the occulted stars rather than the
+body. Catch it by name if you want to treat "nothing to archive" differently
+from a genuine failure.
+
+Other failures are correct and expected too — anti-solar pointings, slew tests,
 internal calibration exposures and dark frames have no celestial target at all.
 The exception is the intended outcome for those, not a bug.
 
