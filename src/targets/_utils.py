@@ -11,6 +11,18 @@ class TargetIdentificationFailure(ValueError):
     """
 
 
+class NotPlanetaryError(TargetIdentificationFailure):
+    """Raised when an observation is not planetary at all, such as an instrument
+    calibration exposure pointed at a star. Can be circumvented by adding a special case
+    to _HST_PROGRAM_OVERRIDES.
+
+    A subclass of `TargetIdentificationFailure` because no target is identified either
+    way: every caller that already handles an unidentifiable observation handles this one
+    too, and a caller that cares about the distinction -- "there is nothing here to
+    archive" rather than "we could not work out what this is" -- can catch it by name.
+    """
+
+
 class TargetCategorizationFailure(ValueError):
     """Raised when a minor planet cannot be categorized as TNO, Centaur, asteroid, or
     dwarf planet.

@@ -192,8 +192,10 @@ def _identify(headers: list[dict], visit: str, logger: pdslogger.PdsLogger,
         paths = identify_targets(headers, logger=logger)
     except TargetIdentificationFailure as err:
         # The message says which strings and elements were rejected and why, which is the
-        # only useful part; the traceback is always the same and is not printed.
-        print(f'**** {visit}: TargetIdentificationFailure: {err}')
+        # only useful part; the traceback is always the same and is not printed. The class
+        # is named because NotPlanetaryError, a subclass, means something different: not
+        # "we could not identify this" but "there is nothing here to archive".
+        print(f'**** {visit}: {type(err).__name__}: {err}')
         return []
 
     if by_visit:

@@ -11,7 +11,8 @@ Lower-level helpers (``mpc_tools``, ``roman``, ``remote_listdir``) remain import
 their own modules.
 """
 
-from targets._utils                   import (TargetCategorizationFailure,
+from targets._utils                   import (NotPlanetaryError,
+                                              TargetCategorizationFailure,
                                               TargetIdentificationFailure)
 from targets.categorize_minor_planet  import categorize_minor_planet
 from targets.cometdb                  import (centaur_dict, centaur_lookup, comet_dict,
@@ -34,6 +35,7 @@ else:
     _HAS_ORBITAL_RADEC = True
 
 __all__ = [
+    'NotPlanetaryError',
     'TargetCategorizationFailure',
     'TargetIdentificationFailure',
     'TargetType',

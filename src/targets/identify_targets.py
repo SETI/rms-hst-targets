@@ -29,6 +29,7 @@ from logging import Logger
 
 from targets._utils                   import (_collect_strings, _headers_by_visit,
                                               _parse_mt_lv, _unique_targets,
+                                              NotPlanetaryError,
                                               TargetIdentificationFailure)
 from targets._DISALLOWED_MINOR_PLANET_NAMES import _DISALLOWED_MINOR_PLANET_NAMES
 from targets._HST_PROGRAM_OVERRIDES   import _HST_PROGRAM_OVERRIDES
@@ -421,15 +422,44 @@ def identify_target_dicts(
         else:
             repaired_headers.append(header)
 
+    # Reject a visit that is not a planetary observation at all, such as an instrument
+    # calibration program pointed at a star. The test is per visit rather than per header:
+    # an acquisition or companion exposure is routinely recorded as a POINT TARGET beside
+    # the moving-target science exposure, so one such header does not make the visit
+    # non-planetary. A visit qualifies if any header tracks a moving target, declares
+    # TARGCAT "SOLAR SYSTEM", or was taken with FGS or HSP, the instruments used to time
+    # stellar occultations, whose targets are the occulted stars rather than the body.
+    # TARGCAT is what separates a slow body archived as a fixed target -- Quaoar in visit
+    # J8I702 is a POINT TARGET, being far too distant to need tracking -- from a genuine
+    # calibration exposure, which says CALIBRATION, STAR, GALAXY or UNIDENTIFIED instead.
+    #
+    # Headers carrying an override are exempt, which is how _HST_PROGRAM_OVERRIDES
+    # circumvents this. Headers with no TAR_TYPE cannot be judged and so neither reject nor
+    # rescue; the synthetic headers built for an 'addition' below, which carry only
+    # FILENAME and TARGNAME, are the usual case and must not trip this on the recursive
+    # call.
+    judgeable = [h for h in unique_headers if 'TAR_TYPE' in h]
+    if judgeable and not repaired_headers:
+        if not any(h['TAR_TYPE'] == 'MOVING TARGET'
+                   or str(h.get('TARGCAT', '')).upper().startswith('SOLAR SYSTEM')
+                   or h['FILENAME'][:1].upper() in ('F', 'V') for h in judgeable):
+            visit = judgeable[0]['FILENAME'][:6].upper()
+            files = ', '.join(sorted(h['FILENAME'].upper() for h in judgeable))
+            message = (f'Visit {visit} does not describe a moving target or a stellar '
+                       f'occultation: {files}')
+            logger and logger.error(message)
+            raise NotPlanetaryError(message)
+
     # Check for special overrides
     extra_dicts = []
     extra_headers = []
     done = False
     for header in repaired_headers:
         if 'reject' in header:
-            message = 'Not a planetary observation; do not re-archive'
+            message = (f'File {header["FILENAME"].upper()} does not describe a planetary '
+                       'observation')
             logger and logger.error(message)
-            raise TargetIdentificationFailure(message)
+            raise NotPlanetaryError(message)
 
         if 'dict' in header:
             if header['dict'] not in extra_dicts:
