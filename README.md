@@ -43,6 +43,16 @@ for path in identify_targets([header]):
 # trans-neptunian_object.1998_uu43_1.2_local.xml
 ```
 
+`lids_from_target_paths()` turns that list of paths into the PDS4 logical
+identifiers of the same products, which is what a label referencing them needs:
+
+```python
+from targets import identify_targets, lids_from_target_paths
+
+print(lids_from_target_paths(identify_targets([header])))
+# ['urn:nasa:pds:context:target:trans-neptunian_object.1998_uu43']
+```
+
 Use `identify_target_dicts()` instead when you want the body dictionaries
 rather than the context products:
 

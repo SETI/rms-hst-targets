@@ -28,8 +28,10 @@ RMS Node's ``rms-hst-pipeline``, which is what this package exists to serve.
    # asteroid.523955_1998_uu43_1.0.xml
 
 The headers may span any number of visits; they are grouped and identified one
-visit at a time. ``identify_target_dicts()`` is the lower-level form, returning
-the body dictionaries instead of context-product paths.
+visit at a time. ``lids_from_target_paths()`` turns the returned paths into the
+PDS4 logical identifiers of those products, which is what a label referencing
+them needs. ``identify_target_dicts()`` is the lower-level form, returning the
+body dictionaries instead of context-product paths.
 
 Guides
 ------

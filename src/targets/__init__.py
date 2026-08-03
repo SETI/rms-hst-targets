@@ -22,7 +22,8 @@ from targets.cometdb                  import (centaur_dict, centaur_lookup, come
 from targets.comet_identifiers        import comet_identifiers
 from targets.hst_repairs              import hst_repairs
 from targets.identify_standard_body   import identify_standard_body
-from targets.identify_targets         import identify_target_dicts, identify_targets
+from targets.identify_targets         import (identify_target_dicts, identify_targets,
+                                              lids_from_target_paths)
 from targets.minor_planet_identifiers import minor_planet_identifiers
 from targets.targettype               import TargetType
 
@@ -49,6 +50,7 @@ __all__ = [
     'identify_standard_body',
     'identify_target_dicts',
     'identify_targets',
+    'lids_from_target_paths',
     'minor_planet_identifiers',
     'query_centaur_by_name',
     'query_comet_by_elements',

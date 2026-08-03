@@ -15,6 +15,7 @@ from targets import (
     TargetIdentificationFailure,
     identify_target_dicts,
     identify_targets,
+    lids_from_target_paths,
 )
 from targets._utils import _collect_strings, _norm_date, _parse_mt_lv
 from targets.hst_repairs import hst_repairs
@@ -818,6 +819,26 @@ def test_identify_targets_spans_multiple_visits(tmp_path: pathlib.Path) -> None:
     assert [p.name for p in paths] == [p.name for p in separately]
     assert paths[0].name.startswith('planet.jupiter')
     assert paths[-1].name.startswith('planet.saturn')
+
+
+def test_lids_from_target_paths(tmp_path: pathlib.Path) -> None:
+    # The LID of a context product is encoded in its file name, so the paths returned by
+    # identify_targets() convert without touching the disk. The version and any "_local"
+    # suffix are stripped; one LID per path, in the order given.
+    with use_local_xml_dir(tmp_path):
+        paths = identify_targets([_header('1080/y0zz0301t_shf.fits')])   # Jupiter
+    assert lids_from_target_paths(paths) == ['urn:nasa:pds:context:target:planet.jupiter']
+
+    assert lids_from_target_paths([]) == []
+    assert lids_from_target_paths([pathlib.Path('nowhere/centaur.2060_chiron_1.1.xml'),
+                                   pathlib.Path('centaur.144908_2004_yh32_1.2_local.xml')]) \
+        == ['urn:nasa:pds:context:target:centaur.2060_chiron',
+            'urn:nasa:pds:context:target:centaur.144908_2004_yh32']
+
+    with pytest.raises(ValueError,
+                       match=r'Not a target context product file name: "jupiter\.xml"'):
+        lids_from_target_paths([pathlib.Path('planet.jupiter_1.1.xml'),
+                                pathlib.Path('jupiter.xml')])
 
 
 def test_alias_repairs_reach_the_mpc_identifier() -> None:

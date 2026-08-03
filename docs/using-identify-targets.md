@@ -24,6 +24,17 @@ Give it SPT/SHF headers, get back the path of one PDS4 Target context product
 per identified body. That is the whole interface. A pipeline stage needs
 nothing else.
 
+```python
+from targets import lids_from_target_paths
+
+lids_from_target_paths(paths) -> list[str]
+```
+
+`lids_from_target_paths()` is the one companion: it converts that list of paths
+into the PDS4 logical identifiers of the same products — what a label
+referencing them actually cites. See
+[From paths to LIDs](#from-paths-to-lids).
+
 `identify_target_dicts()` sits underneath it and returns the body dictionaries
 instead of paths. It is public, and useful when you want to inspect a body
 rather than archive it, but it is a lower-level view: it handles exactly one
@@ -109,6 +120,32 @@ dictionaries returned by `identify_target_dicts`.
 each pointing at a PDS4 Target context product. A path leads either into the
 committed mirror `caches/TARGET_XML_CACHE` or into the writable overlay
 `caches/TARGET_XML_OVERLAY`, where the filename carries a `_local` suffix.
+
+### From paths to LIDs
+
+A label that references a target context product cites its **logical
+identifier**, not its path. `lids_from_target_paths()` supplies them:
+
+```python
+from targets import identify_targets, lids_from_target_paths
+
+paths = identify_targets(headers)
+lids = lids_from_target_paths(paths)
+# ['urn:nasa:pds:context:target:centaur.144908_2004_yh32']
+```
+
+The LID is encoded in the file name — always `<lid_tail>_<version>.xml` or
+`<lid_tail>_<version>_local.xml` — so the conversion is
+`urn:nasa:pds:context:target:` followed by the name stripped of its version and
+any `_local` suffix. Nothing is read from disk and the files need not exist, so
+the paths from an earlier run convert just as well as a fresh list.
+
+There is one LID per path, in the order given, so a target observed in several
+visits yields one LID per visit exactly as `identify_targets()` returns it;
+deduplicate if you want a unique set. Note that the version is discarded
+deliberately: the LID identifies the target, and a `_local` product carries the
+same LID as the published product it supersedes. A file name that is not a
+target context product's raises `ValueError`.
 
 ### What a `_local` file is, and when one appears
 

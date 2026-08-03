@@ -13,11 +13,13 @@ to RA_TARG/DEC_TARG. When no name can be recognized, the body is identified by s
 the comet database or the Minor Planet Center for the nearest orbital elements.
 
 `identify_targets` is the same but returns the path to each body's PDS4 target context
-product instead of its dictionary.
+product instead of its dictionary. `lids_from_target_paths` converts those paths to the
+PDS4 logical identifiers of the products, which are encoded in their file names.
 
 To use::
 
-    from targets.identify_targets import identify_target_dicts, identify_targets
+    from targets.identify_targets import (identify_target_dicts, identify_targets,
+                                          lids_from_target_paths)
     from targets import TargetIdentificationFailure
 
 """
@@ -41,7 +43,9 @@ from targets.identify_standard_body   import identify_standard_body
 from targets.minor_planet_identifiers import minor_planet_identifiers
 from targets.mpc_tools                import (element_resid, mpc_query_by_elements,
                                               mpc_query_by_name)
-from targets.target_xml_support       import _complete_target, get_target_xml_path
+from targets.target_xml_cache_support import _BASENAME_SPLITTER
+from targets.target_xml_support       import (_complete_target, _LID_PREFIX,
+                                              get_target_xml_path)
 from targets.targettype               import TargetType
 
 _DISALLOWED_UC = {name.upper() for name in _DISALLOWED_MINOR_PLANET_NAMES}
@@ -785,6 +789,36 @@ def identify_targets(
     return paths
 
 
-__all__ = ['identify_target_dicts', 'identify_targets']
+def lids_from_target_paths(paths: list[pathlib.Path]) -> list[str]:
+    """The PDS4 logical identifiers of the given target context products.
+
+    The LID of a target context product is encoded in its file name, which is always
+    "<lid_tail>_<version>.xml" or "<lid_tail>_<version>_local.xml", so the LID is
+    "urn:nasa:pds:context:target:" followed by the name with its version and any "_local"
+    suffix removed. Nothing is read from disk and the files need not exist.
+
+    Parameters:
+        paths: The context-product paths, as returned by `identify_targets`.
+
+    Returns:
+        The LID of each path, in the order given. There is one LID per path, so a target
+        appearing once per visit yields one LID per visit, exactly as `identify_targets`
+        returns it.
+
+    Raises:
+        ValueError: If a file name is not that of a target context product.
+    """
+
+    lids = []
+    for path in paths:
+        match = _BASENAME_SPLITTER.match(path.name)
+        if not match:
+            raise ValueError(f'Not a target context product file name: "{path.name}"')
+        lids.append(_LID_PREFIX + match.group(1))
+
+    return lids
+
+
+__all__ = ['identify_target_dicts', 'identify_targets', 'lids_from_target_paths']
 
 ##########################################################################################
