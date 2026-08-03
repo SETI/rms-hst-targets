@@ -47,7 +47,6 @@ _TARGET_STRING_REPAIRS = [
     # which identifies nothing: 288P is absent from the comet database, existing only as
     # the minor planet.
     (r'288P[-/]?[A-Z]?',                        r'(300163) 2006 VW139|[A]'),
-    (r'SANTA',                                  r'HAUMEA'),
     # "2I" is itself a comet number, so the slash form has to be accepted here; otherwise
     # the generic comet-number pattern claims it and the misspelling survives.
     (r'(?:2I|I2)?[-/]?BOROSOV',                 r'2I/BORISOV|[C]'),

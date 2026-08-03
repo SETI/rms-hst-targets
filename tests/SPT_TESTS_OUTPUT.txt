@@ -3638,7 +3638,7 @@
 'j9fs17011_spt.fits' --- (['K30726D', 'KBO30726D'], 'AT')
 'j9fs18011_spt.fits' --- (['K40804A', 'KBO40804A'], 'AT')
 'j9fs19011_spt.fits' --- (['KBO41003B'], 'AT')
-'j9fs20011_spt.fits' --- (['HAUMEA', 'KBO40506A'], 'AT')
+'j9fs20011_spt.fits' --- (['Santa', 'KBO40506A'], 'AT')
 'j9fs21011_spt.fits' --- (['Xena', '2003 UB313'], 'AT')
 'j9fs34011_spt.fits' --- (['Ixion'], 'AT')
 'j9fg01010_spt.fits' --- (['(20000)', '20000'], 'AM')
