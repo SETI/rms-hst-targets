@@ -89,12 +89,21 @@ narrowing the search window, then ranks the returned bodies by
 #### Failed lookups are cached too
 
 `mpc_query_by_name()` writes the reply to disk *before* checking whether it is
-valid, so a query the MPC cannot answer leaves a permanent "not found" page —
-either its "Vaguely similar sounding possible matches" form, which the function
-turns into `None`, or its "Exact match … not found" form, which it raises on.
-About 130 of the committed pages are such failures. They are harmless (every
-caller treats an unresolved name as unused) but they never expire, so a junk
-query pollutes the cache for good.
+valid, so a query the MPC cannot answer still leaves a "not found" page behind.
+The MPC has two ways of saying it does not know a name — a page of "Vaguely
+similar sounding possible matches", and a bare "Exact match … not found" — and
+both return `None`. (The second form has no `<h3>`; it used to fall through to
+the parser and raise "non-standard response" instead, which was the same outcome
+dressed as an error.) A third form, "Unknown object", means the *query* was
+malformed rather than the body unknown, and still raises.
+
+127 such pages had accumulated in the committed cache and have been removed. They
+were harmless — every caller treats an unresolved name as unused — but they never
+expire, so they persisted long after the code that produced them had changed.
+Expect a few to reappear: a page is written whenever a junk name is queried, so
+the removal only sticks for names nothing asks for any more. Note that this
+negative caching is not purely a nuisance, since it is also what lets the test
+suite resolve a known-bad name with `requests` blocked.
 
 To limit that, `minor_planet_identifiers()` refuses to query any purely
 alphabetic string of one or two letters. No minor planet has a name that short —

@@ -65,8 +65,13 @@ def mpc_query_by_name(name, *, logger=None):
             with open(filepath, 'wb') as f:
                 f.write(html)
 
-    # You might get a list of "Vaguely similar sounding possible matches"
-    if not html or b'Vaguely similar sounding' in html:
+    # The MPC has two ways of saying it does not know the name: a page of "Vaguely similar
+    # sounding possible matches", or a bare "Exact match for <name> not found." Both mean
+    # the same thing, so both return None. The second form has no <h3> and used to fall
+    # through to the parser below, which raised "non-standard response" instead -- the same
+    # outcome dressed as an error, and one every caller had to catch separately.
+    if (not html or b'Vaguely similar sounding' in html
+            or b'Exact match for ' in html):
         logger and logger.warning(f'No MPC info found for "{name}"')
         return None
 
