@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Identifies HST small-body moving targets (comets, asteroids/minor planets, standard bodies) from FITS SPT header keywords. RMS Node (SETI). Early-stage / WIP — the working tree on `main` is usually dirty.
+Identifies HST small-body moving targets (comets, asteroids/minor planets, standard bodies) from FITS SPT header keywords. RMS Node (SETI). The working tree on `main` is usually dirty.
 
 **`identify_targets(headers, ...) -> list[pathlib.Path]` is the entry point** and the only one callers need; it is a core stage of the RMS Node's `rms-hst-pipeline`. It accepts headers spanning any number of visits, groups them by visit (first six characters of `FILENAME`), and returns one PDS4 Target context-product path per identified body. `identify_target_dicts()` is the lower-level form: one visit only (`ValueError` otherwise), returns body dicts, generates no context products. Failure raises `TargetIdentificationFailure`, or its subclass `NotPlanetaryError` when the visit is not a planetary observation at all — a visit qualifies if any header is a `MOVING TARGET`, declares `TARGCAT` `SOLAR SYSTEM`, or is FGS/HSP (occultations); `_HST_PROGRAM_OVERRIDES` overrides either way. A failure in one visit abandons the rest, so callers looping over many should catch per visit.
 

@@ -6,7 +6,7 @@ standard planets and satellites — from the target-description keywords of thei
 SPT/SHF support-file headers.
 
 Maintained by the [RMS Node](https://pds-rings.seti.org) of the NASA Planetary
-Data System at the SETI Institute. **Early-stage / work in progress.**
+Data System at the SETI Institute.
 
 **`identify_targets()` is the entry point** — the one function a caller needs.
 It is a core stage of the RMS Node's **`rms-hst-pipeline`**, which is what this
