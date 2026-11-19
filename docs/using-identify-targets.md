@@ -89,7 +89,7 @@ the rest depend on what kind of body it is.
 | Key | Meaning |
 | --- | ------- |
 | `name` | Bare name, e.g. `'Io'`, `'Clete'`. Empty for an unnamed minor planet |
-| `full_name` | Preferred display name, e.g. `'385695 Clete'`, `'73P/Schwassmann-Wachmann 3-C'` |
+| `full_name` | Preferred display name, e.g. `'385695 Clete'`, `'73P/Schwassmann-Wachmann 3-C'`; Pluto is just `'Pluto'` |
 | `ttype` | One-letter `TargetType` code — see below |
 | `naif_id` | NAIF integer ID, or `None` |
 | `aliases` | Other names and designations for the same body |

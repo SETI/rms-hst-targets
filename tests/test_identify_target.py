@@ -660,7 +660,7 @@ def test_occultation_adds_occulted_star() -> None:
     assert 'GSC 06323-01466' in saturn
 
     pluto = _names('f5br01')           # 8105: FGS Pluto occultation (standard body)
-    assert '134340 Pluto' in pluto
+    assert 'Pluto' in pluto
     assert '2MASS J16324364-1038237' in pluto
 
     arrokoth = _names('fdfm01')        # 15003: Arrokoth occultation (small-body + dict)

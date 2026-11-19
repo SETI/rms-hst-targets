@@ -264,6 +264,24 @@ def test_lid_tail_provisional_satellite() -> None:
     assert _lid_tail(target) == 'satellite.jupiter.s2010j1'
 
     # A moon of a minor planet is prefixed by the primary's full_name, number included.
+    assert _lid_tail(STANDARD_BODY_DICT['Weywot']) == 'satellite.50000_quaoar.weywot'
     assert _lid_tail(STANDARD_BODY_DICT['Charon']) == 'satellite.134340_pluto.charon'
+
+
+def test_pluto_names() -> None:
+    # Pluto is named like a planet, matching the "Pluto" alternate title of its context
+    # product, but its LIDs and those of its moons and rings keep the minor planet number.
+    pluto = STANDARD_BODY_DICT['Pluto']
+    assert pluto['full_name'] == 'Pluto'
+    assert '134340 Pluto' in pluto['aliases']
+    assert _lid_tail(pluto) == 'dwarf_planet.134340_pluto'
+    assert _lid_tail(STANDARD_BODY_DICT['Pluto Rings']) == 'ring.134340_pluto.rings'
+
+    charon = STANDARD_BODY_DICT['Charon']
+    assert charon['full_name'] == 'Charon'
+    assert '134340 Pluto I (Charon)' in charon['aliases']
+
+    # Other dwarf planets keep their numbers
+    assert STANDARD_BODY_DICT['Eris']['full_name'] == '136199 Eris'
 
 ##########################################################################################

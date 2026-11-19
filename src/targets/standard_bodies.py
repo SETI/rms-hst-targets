@@ -21,7 +21,8 @@ Each dictionary value is a dictionary with these items:
   key in STANDARD_BODY_DICT. For as-yet unnamed moons, it is the temporary designation.
 * "full_name": Standard name including minor planet number if any, and can be more
   complicated for satellites. This is to be used as the body's `title` in the context
-  product.
+  product. Pluto is the exception: its full_name is "Pluto", which is one of its context
+  product's alternate titles, although "134340" is kept in its LID and aliases.
 * "lid_name": The name as it will be adapted for the LID, including a parent and "." for
   satellites, rings, and the Io torus.
 * "ttype": A TargetType letter indication the target type: "P" for planet, "S" for
@@ -79,11 +80,25 @@ def _name(info):
 def _full_name(info):
     """The full_name of a standard body."""
 
-    # Treat Pluto like a planet here for backward compatibility
-    if info[_PNAME] == 'Pluto':
+    # Treat Pluto and its moons like a planet and its moons, so Pluto is "Pluto", not
+    # "134340 Pluto", and Charon is "Charon". LIDs and aliases keep the number; see
+    # _numbered_name().
+    if info[_NAME] == 'Pluto' or info[_PNAME] == 'Pluto':
         return _name(info)
 
     return _long_name(info)
+
+
+def _numbered_name(info):
+    """The full_name of a standard body, except that Pluto keeps its minor planet number.
+    It begins the lid_names of the body and its children, e.g. "dwarf_planet.134340_pluto"
+    and "satellite.134340_pluto.charon", and the long names of its moons, e.g. "134340
+    Pluto I (Charon)"."""
+
+    if info[_NAME] == 'Pluto':
+        return _long_name(info)
+
+    return _full_name(info)
 
 
 def _long_name(info):
@@ -102,7 +117,8 @@ def _long_name(info):
         if parent[_TTYPE] == TT.PLANET:
             return info[_NAME]
         else:
-            return f'{_full_name(parent)} {int_to_roman(info[_NUMBER])} ({info[_NAME]})'
+            roman = int_to_roman(info[_NUMBER])
+            return f'{_numbered_name(parent)} {roman} ({info[_NAME]})'
 
     return _name(info)
 
@@ -113,24 +129,24 @@ def _lid_name(info):
     if info[_TTYPE] == TT.SATELLITE:
         parent = _BY_NAME[info[_PNAME]]
         if info[_NAME]:
-            return _full_name(parent) + '.' + info[_NAME]
+            return _numbered_name(parent) + '.' + info[_NAME]
 
         # An unnamed moon has slash stripped and maybe spaces
         if parent[_TTYPE] == TT.PLANET:
             squeezed = _name(info).replace('/', '').replace(' ', '')
         else:
             squeezed = _name(info).replace('/', '')
-        return f'{_full_name(parent)}.{squeezed}'
+        return f'{_numbered_name(parent)}.{squeezed}'
 
     if info[_TTYPE] == TT.RING:
         parent = _BY_NAME[info[_PNAME]]
-        return _full_name(parent) + '.Rings'
+        return _numbered_name(parent) + '.Rings'
 
     if info[_TTYPE] == TT.TORUS:
         parent = _BY_NAME[info[_PNAME]]
-        return _full_name(parent) + '.' + info[_NAME]
+        return _numbered_name(parent) + '.' + info[_NAME]
 
-    return _full_name(info)
+    return _numbered_name(info)
 
 
 def _aliases(info):
@@ -159,7 +175,7 @@ def _aliases(info):
         if info[_NUMBER]:
             roman = int_to_roman(info[_NUMBER])
             # E.g., "50000 Quaoar I", "Quaoar II"
-            aliases += [_full_name(parent) + ' ' + roman, pname + ' ' + roman]
+            aliases += [_numbered_name(parent) + ' ' + roman, pname + ' ' + roman]
             if parent[_NUMBER]:
                 # E.g., "S/2006 (50000) 1", "S/2006 Quaoar 1"
                 for sub in (f'({parent[_NUMBER]})', pname):
