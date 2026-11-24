@@ -227,16 +227,26 @@ def _dicts_from_pickle(
 
 
 _COMET_DICTS = None
+_COMET_BUILDING = False
 _CENTAUR_DICTS = None
 _DAMOCLOID_DICTS = None
 
 
 def _comet_dicts():
     """Comet dict by primary key, dict by any key; list of dicts by ambiguous key."""
-    global _COMET_DICTS
+    global _COMET_DICTS, _COMET_BUILDING
     if not _COMET_DICTS:
+        if _COMET_BUILDING:
+            # Rebuilding the comet dicts looks up minor-planet bodies, which in turn ask for
+            # the comet dicts (to merge aliases). Those are not available yet, so return empty
+            # ones rather than recursing forever.
+            return {}, {}, {}
         from ._build_comet_dicts import _build_comet_dicts  # here; it imports this module
-        _COMET_DICTS = _dicts_from_pickle(_COMET_BASENAME, _build_comet_dicts)
+        _COMET_BUILDING = True
+        try:
+            _COMET_DICTS = _dicts_from_pickle(_COMET_BASENAME, _build_comet_dicts)
+        finally:
+            _COMET_BUILDING = False
     return _COMET_DICTS
 
 
