@@ -13,6 +13,7 @@ from typing import Any
 import pytest
 
 from targets import target_xml_cache_support, target_xml_support
+from targets.cometdb import comet_lookup
 from targets.standard_bodies import STANDARD_BODY_DICT
 from targets.target_xml_support import _complete_target, _lid_tail, get_target_xml_path
 from targets.targettype import TargetType
@@ -283,5 +284,89 @@ def test_pluto_names() -> None:
 
     # Other dwarf planets keep their numbers
     assert STANDARD_BODY_DICT['Eris']['full_name'] == '136199 Eris'
+
+def _fake_registered(products: dict[str, dict[str, Any]]) -> Any:
+    """Stand-in for _registered_xml_dict over the given products, keyed by LID tail."""
+
+    def fake(lid_tail: str) -> dict[str, Any] | None:
+        return products.get(lid_tail)
+    return fake
+
+
+def test_complete_target_title_from_registered_product(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # A registered product that accepts neither full_name as a name supplies the title, and
+    # full_name moves to the front of the alternate titles. The registered title is not
+    # repeated among the alternate titles.
+    product = {'title': '73P/Schwassmann-Wachmann 3 B', 'alt_titles': ['NAIF ID 1000320']}
+    monkeypatch.setattr(target_xml_support, '_registered_xml_dict',
+                        _fake_registered({'comet.73p_schwassmann-wachmann_3-b': product}))
+
+    target = _complete_target({'full_name': '73P/Schwassmann-Wachmann 3-B',
+                               'ttype': TargetType.COMET, 'parent_key': '',
+                               'aliases': ['73P/Schwassmann-Wachmann 3 B', 'Alias'],
+                               'description': []})
+    assert target['title'] == '73P/Schwassmann-Wachmann 3 B'
+    assert target['alt_titles'] == ['73P/Schwassmann-Wachmann 3-B', 'Alias']
+    assert target['lid_tail'] == 'comet.73p_schwassmann-wachmann_3-b'
+
+    # Completing the same dictionary again, as happens to the shared dictionaries of a
+    # lookup, changes nothing.
+    before = copy.deepcopy(target)
+    assert _complete_target(target) == before
+
+
+@pytest.mark.parametrize('products', [
+    {},                                                                  # not registered
+    {'asteroid.99999_fake': {'title': '99999 Fake', 'alt_titles': []}},  # same title
+    {'asteroid.99999_fake': {'title': '(99999) Fake', 'alt_titles': ['99999 Fake']}},
+])
+def test_complete_target_title_kept(monkeypatch: pytest.MonkeyPatch,
+                                    products: dict[str, dict[str, Any]]) -> None:
+    # full_name stays the title if no product is registered, or if the registered product
+    # accepts full_name as its title or as an alternate title.
+    monkeypatch.setattr(target_xml_support, '_registered_xml_dict', _fake_registered(products))
+
+    target = _complete_target({'name': 'Fake', 'full_name': '99999 Fake', 'aliases': [],
+                               'mnum': '', 'ttype': TargetType.ASTEROID, 'parent_key': ''})
+    assert target['title'] == '99999 Fake'
+    assert target['alt_titles'] == []
+
+
+def test_registered_xml_dict(tmp_path: pathlib.Path,
+                             monkeypatch: pytest.MonkeyPatch) -> None:
+    # The registered product is read from the committed cache, never from the overlay, and
+    # its LID must match exactly.
+    _install_existing_product(tmp_path, monkeypatch)
+    overlay = tmp_path / 'overlay'
+    with target_xml_cache_support.use_local_xml_dir(overlay):
+        local = _EXISTING_XML.replace('<title>9999 Testbody', '<title>Revised')
+        (overlay / 'asteroid.9999_testbody_1.2_local.xml').write_text(local)
+        (overlay / 'asteroid.8888_other_1.0_local.xml').write_text(local)
+
+        registered = target_xml_cache_support._registered_xml_dict('asteroid.9999_testbody')
+        assert registered is not None
+        assert registered['title'] == '9999 Testbody'
+        assert registered['alt_titles'] == ['AliasA', 'AliasB']
+
+        assert target_xml_cache_support._registered_xml_dict('asteroid.9999_test') is None
+        assert target_xml_cache_support._registered_xml_dict('asteroid.8888_other') is None
+
+def test_complete_target_73p_fragment_titles() -> None:
+    # With the committed cache: fragments B and C are registered with a space before the
+    # fragment letter, G is not registered, and Pluto's "Pluto" is an alternate title of its
+    # registered product, "(134340) Pluto".
+    lookup = comet_lookup()
+    for frag in 'BC':
+        target = _complete_target(copy.deepcopy(lookup['73P-' + frag]))
+        assert target['title'] == '73P/Schwassmann-Wachmann 3 ' + frag
+        assert target['alt_titles'][0] == '73P/Schwassmann-Wachmann 3-' + frag
+        assert target['lid_tail'] == 'comet.73p_schwassmann-wachmann_3-' + frag.lower()
+
+    target = _complete_target(copy.deepcopy(lookup['73P-G']))
+    assert target['title'] == '73P/Schwassmann-Wachmann 3-G'
+
+    assert _complete_target(copy.deepcopy(STANDARD_BODY_DICT['Pluto']))['title'] == 'Pluto'
+
 
 ##########################################################################################

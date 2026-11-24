@@ -20,6 +20,7 @@ overlay-first, and the committed cache is left untouched.
 
 import contextlib
 import datetime
+import glob
 import pathlib
 import pickle
 import re
@@ -228,6 +229,32 @@ def _read_target_xml_dict(xml_path: str | pathlib.Path) -> dict | None:
         target_dict['description'] = [line for line in desc if line]
 
     return target_dict
+
+
+def _registered_xml_dict(lid_tail: str) -> dict | None:
+    """Return the content of the registered context product with the given LID tail.
+
+    Only the committed mirror of the Engineering Node is searched, never the overlay, so
+    the result is the product as registered, not a "_local" revision of it.
+
+    Parameters:
+        lid_tail: The LID following "urn:nasa:pds:context:target:".
+
+    Returns:
+        The dictionary returned by `target_xml_dict`; None if no registered product has
+        this LID.
+    """
+
+    paths = []
+    for path in _TARGET_XML_CACHE.glob(glob.escape(lid_tail) + '_*.xml'):
+        match = _BASENAME_SPLITTER.match(path.name)
+        if match and match.group(1) == lid_tail and not match.group(4):
+            paths.append(path)
+
+    if not paths:
+        return None
+
+    return _read_target_xml_dict(max(paths, key=lambda p: _sort_key(p.name)))
 
 
 def find_xml_path(body_dict: dict) -> dict | None:

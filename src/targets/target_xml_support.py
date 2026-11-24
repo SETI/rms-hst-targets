@@ -4,8 +4,9 @@
 
 from targets.cometdb         import comet_lookup
 from targets.standard_bodies import STANDARD_BODY_LOOKUP
-from targets.target_xml_cache_support import (_lid_tail, find_xml_dict, find_xml_path,
-                                              new_target_xml_dict, update_target_xml_dict)
+from targets.target_xml_cache_support import (_lid_tail, _registered_xml_dict, find_xml_dict,
+                                              find_xml_path, new_target_xml_dict,
+                                              update_target_xml_dict)
 from targets.targettype      import TargetType
 
 _LID_PREFIX = 'urn:nasa:pds:context:target:'
@@ -19,7 +20,9 @@ def _complete_target(target):
 
     These items are required:
 
-    * "title": The title (with preferred capitalization).
+    * "title": The title (with preferred capitalization): `full_name`, unless a registered
+      context product with the same LID has neither it as a name, in which case that
+      product's title, and `full_name` becomes the first alternate title.
     * "lid_tail": The name as it will appear in the LID, following "target:".
     * "lid": The full LID, beginning with "urn:nasa:pds:context:target:".
     * "type_name": The full name of the target type, e.g., "Trans-Neptunian Object".
@@ -69,6 +72,19 @@ def _complete_target(target):
     lid_tail = _lid_tail(target)
     target['lid_tail'] = lid_tail
     target['lid'] = _LID_PREFIX + lid_tail
+
+    # A reference to a registered context product must use one of its names, so if that
+    # product accepts neither the title as its title nor as an alternate title, use its own
+    # title instead, and keep `full_name` as an alternate title. E.g., comet fragment 73P-B
+    # is registered as "73P/Schwassmann-Wachmann 3 B", not "73P/Schwassmann-Wachmann 3-B".
+    # A target dictionary can come from a shared lookup and be completed more than once, so
+    # this must not add `full_name` to `alt_titles` again.
+    registered = _registered_xml_dict(lid_tail)
+    if registered and target['title'] not in [registered['title']] + registered['alt_titles']:
+        names = (registered['title'], target['title'])
+        alt_titles = [t for t in target['alt_titles'] if t not in names]
+        target['alt_titles'] = [target['title']] + alt_titles
+        target['title'] = registered['title']
 
     # description (a list of strings, one per line; an empty list means "none")
     if 'description' not in target:

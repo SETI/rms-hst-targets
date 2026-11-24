@@ -114,6 +114,14 @@ for body in identify_target_dicts(headers):
 keys are what the context product is built from; they are not present on the
 dictionaries returned by `identify_target_dicts`.
 
+`title` is normally `full_name`. If a registered context product, in the
+committed mirror, has the same LID but accepts `full_name` neither as its title
+nor as an alternate title, `title` is that product's title, and `full_name`
+becomes the first of the `alt_titles`. A label that refers to the product by
+`title` then names it in a way that `validate` accepts. For example, comet
+fragment 73P-B has `full_name` `'73P/Schwassmann-Wachmann 3-B'` and `title`
+`'73P/Schwassmann-Wachmann 3 B'`.
+
 ## Output: context-product paths
 
 `identify_targets` returns `pathlib.Path` objects, one per identified body,
